@@ -16,7 +16,7 @@ from functools import partial
 from PyQt5 import QtCore, QtSql
 from PyQt5.QtGui import QPixmap, QTransform, QImage
 from os.path import expanduser, dirname
-from PyQt5.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QGraphicsView, QMenu, QLabel, QFileDialog, QFormLayout, QHBoxLayout, QGraphicsRectItem, QGridLayout
+from PyQt5.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QGraphicsView, QMenu, QLabel, QFileDialog, QFormLayout, QHBoxLayout, QGraphicsRectItem, QGridLayout, QGraphicsLineItem
 import skvideo.io
 import sys
 from PyQt5 import QtCore, QtWidgets
@@ -37,7 +37,7 @@ import utils
 from Camera import Camera
 from Laser import Laser
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+DEVICE = "cpu" #"cuda" if torch.cuda.is_available() else "cpu"
 
 def cvImgToQT(image):
     height, width, channel = image.shape
@@ -120,7 +120,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Structured Light Labelling")
 
-        self.video = skvideo.io.vread(video_path)
+        self.video = skvideo.io.vread(video_path)[:200, :, :, :]
         self.current_img_index = 0
 
         self.img = QPixmap(cvImgToQT(self.video[self.current_img_index]))
@@ -144,8 +144,8 @@ class MainWindow(QMainWindow):
 
         self.segmentation_mode = False
         self.pointAddMode = False
-        self.removeBoundingBoxMode = False
-        self.boundingBoxMode = False
+        self.removeSearchLineMode = False
+        self.searchLineMode = False
 
         self.menu_widget.button_dict["Segment Images"].clicked.connect(self.toggleSegmentation)
         self.menu_widget.button_dict["Generate Points"].clicked.connect(self.generatePoints)
@@ -153,8 +153,8 @@ class MainWindow(QMainWindow):
         self.menu_widget.button_dict["Add Points"].clicked.connect(self.togglePointAddMode)
         self.menu_widget.buttonGrid.buttonSignal.connect(self.getGridButtonClicked)
         self.menu_widget.button_dict["Compute Correspondences"].clicked.connect(self.computeCorrespondences)
-        self.menu_widget.button_dict["Remove Bounding Boxes"].clicked.connect(self.toggleRemoveBoundingBoxMode)
-        self.menu_widget.button_dict["Show Bounding Boxes"].clicked.connect(self.toggleShowBoundingBoxes)
+        self.menu_widget.button_dict["Remove Search Lines"].clicked.connect(self.toggleRemoveSearchLineMode)
+        self.menu_widget.button_dict["Show Search Lines"].clicked.connect(self.toggleShowSearchLines)
         self.menu_widget.button_dict["Show Pointlabels"].clicked.connect(self.toggleShowLabels)
         self.menu_widget.button_dict["Show Epipolar Lines"].clicked.connect(self.toggleShowEpipolarLines)
 
@@ -167,19 +167,19 @@ class MainWindow(QMainWindow):
         self.view.pointSignal.connect(self.segmentationPointAdded)
         self.view.removePointSignal.connect(self.removePoint)
         self.view.pointSignal.connect(self.addPoint)
-        self.view.pointSignal.connect(self.generateBoundingBox)
-        self.view.pointSignal.connect(self.removeBoundingBox)
+        self.view.pointSignal.connect(self.generateSearchLine)
+        self.view.pointSignal.connect(self.removeSearchLine)
 
         self.menu_widget.edit_dict["Min Distance"].editingFinished.connect(self.generateEpipolarLines)
         self.menu_widget.edit_dict["Max Distance"].editingFinished.connect(self.generateEpipolarLines)
 
-        self.showBoundingBoxes = True
+        self.showSearchLines = True
         self.showLabels = True
         self.showEpipolarLines = True
 
-        self.boundingBoxTuple = [None, None]
-        self.boundingBoxes = []
-        self.boundingBoxIndex = 0
+        self.searchLineTuple = [None, None]
+        self.searchLines = []
+        self.searchLineIndex = 0
         self.currentButton = [0, 0]
 
         self.epipolarLines = None
@@ -212,19 +212,19 @@ class MainWindow(QMainWindow):
     def generatePointsAt(self, distance):
         return self.camera.project(self.laser.origin().reshape(-1, 3) + self.laser.rays() * distance)
 
-    def toggleRemoveBoundingBoxMode(self):
-        self.removeBoundingBoxMode = not self.removeBoundingBoxMode
+    def toggleRemoveSearchLineMode(self):
+        self.removeSearchLineMode = not self.removeSearchLineMode
 
-        if self.removeBoundingBoxMode:
-            self.menu_widget.disableEverythingExcept("Remove Bounding Boxes")
+        if self.removeSearchLineMode:
+            self.menu_widget.disableEverythingExcept("Remove Search Lines")
         else:
             self.menu_widget.enableEverything()
 
-    def toggleShowBoundingBoxes(self):
-        self.showBoundingBoxes = not self.showBoundingBoxes
+    def toggleShowSearchLines(self):
+        self.showSearchLines = not self.showSearchLines
         self.redraw()
 
-    def computeCorrespondencesFromEpipolars(self, threshold=3.0):
+    def computeCorrespondences(self, threshold=3.0):
         self.labels = []
 
         for perFramePoints in self.points2d:
@@ -237,6 +237,7 @@ class MainWindow(QMainWindow):
                         self.pointArray[i, x, y, 0] = perFramePoints[i, 1]
                         self.labels[-1].append([x, y])
 
+    '''
     def computeCorrespondences(self):
 
         # Go through every frame
@@ -252,7 +253,8 @@ class MainWindow(QMainWindow):
                         self.pointArray[i, boundingbox.x, boundingbox.y, 1] = perFramePoints[i, 1]
                         self.pointArray[i, boundingbox.x, boundingbox.y, 0] = perFramePoints[i, 0]
                         self.labels[-1].append([boundingbox.x, boundingbox.y])
-    
+    '''
+
     def toggleShowEpipolarLines(self):
         self.showEpipolarLines = not self.showEpipolarLines
         self.redraw()
@@ -260,44 +262,44 @@ class MainWindow(QMainWindow):
     def toggleShowLabels(self):
         self.showLabels = not self.showLabels
 
-    def toggleBoundingBoxMode(self):
-        self.boundingBoxMode = not self.boundingBoxMode
+    def toggleSearchLineMode(self):
+        self.searchLineMode = not self.searchLineMode
 
-        if self.boundingBoxMode:
+        if self.searchLineMode:
             self.menu_widget.disableEverythingExcept("")
         else:
             self.menu_widget.enableEverything()
 
     QtCore.pyqtSlot(QPointF)
-    def generateBoundingBox(self, point):
-        if not self.boundingBoxMode:
+    def generateSearchLine(self, point):
+        if not self.searchLineMode:
             return
 
-        if self.boundingBoxIndex == 0:
-            self.boundingBoxTuple[0] = point
-            self.boundingBoxIndex = 1
+        if self.searchLineIndex == 0:
+            self.searchLineTuple[0] = point
+            self.searchLineIndex = 1
             return
 
-        if self.boundingBoxIndex == 1:
-            self.boundingBoxTuple[1] = point
-            self.boundingBoxIndex = 0
+        if self.searchLineIndex == 1:
+            self.searchLineTuple[1] = point
+            self.searchLineIndex = 0
 
         x = self.currentButton[0]
         y = self.currentButton[1]
 
-        self.boundingBoxes.append(IdentifiableRectItem(self.boundingBoxTuple[0].toPoint(), self.boundingBoxTuple[1].toPoint(), x, y))
-        self.toggleBoundingBoxMode()
+        self.searchLines.append(IdentifiableLineItem(self.searchLineTuple[0].toPoint(), self.searchLineTuple[1].toPoint(), x, y))
+        self.toggleSearchLineMode()
         self.redraw()
 
     @QtCore.pyqtSlot(QPointF)
-    def removeBoundingBox(self, point):
-        if not self.removeBoundingBoxMode:
+    def removeSearchLine(self, point):
+        if not self.removeSearchLineMode:
             return
 
-        for boundingBox in self.boundingBoxes:
+        for searchLine in self.searchLines:
             item = self.scene.itemAt(point, QTransform())
-            if type(item) == QGraphicsRectItem and boundingBox.isEqualsToQGraphicsRect(item):
-                self.boundingBoxes.remove(boundingBox)
+            if type(item) == QGraphicsLineItem and searchLine.isEqualsToQGraphicsLine(item):
+                self.searchLines.remove(searchLine)
 
         self.redraw()
 
@@ -366,9 +368,9 @@ class MainWindow(QMainWindow):
 
         self.polygonhandle = self.scene.addPolygon(QPolygonF(self.segmentationPoints), QPen(QColor(128, 128, 255, 128)), QBrush(QColor(128, 128, 255, 128)))
 
-    def drawBoundingBoxes(self):
-        for bounding_box in self.boundingBoxes:
-            self.scene.addRect(bounding_box, QPen(QColor(128, 255, 128, 128)), QBrush(QColor(128, 255, 128, 128)))
+    def drawSearchLines(self):
+        for searchLine in self.searchLines:
+            self.scene.addLine(searchLine, QPen(QColor(128, 255, 128, 128)), QBrush(QColor(128, 255, 128, 128)))
 
     def drawLabels(self):
         try:
@@ -397,8 +399,8 @@ class MainWindow(QMainWindow):
             print("Please generate a segmentation")
             return
 
-        model = Model(in_channels=1, out_channels=2, state_dict=torch.load("rhine_hard_net.pth.tar")).to(DEVICE)
-        loc = LSQLocalization(local_maxima_window=25)
+        model = Model(in_channels=1, out_channels=2, state_dict=torch.load("rhine_hard_net_large.pth.tar"), features=[32, 64, 128, 256, 512, 1024]).to(DEVICE)
+        loc = LSQLocalization(local_maxima_window=25, device=DEVICE)
         transform = A.Compose([A.Resize(height=1200, width=800), A.Normalize(mean=[0.0], std=[1.0], max_pixel_value=255.0,), ToTensorV2(), ])
         segment_transform = A.Compose([A.Resize(height=1200, width=800), ToTensorV2(),])
 
@@ -517,8 +519,8 @@ class MainWindow(QMainWindow):
         self.scene.addPixmap(self.img)
         self.draw_point_estimates()
 
-        if self.showBoundingBoxes:
-            self.drawBoundingBoxes()
+        if self.showSearchLines:
+            self.drawSearchLines()
 
         if self.showLabels:
             self.drawLabels()
@@ -532,8 +534,8 @@ class MainWindow(QMainWindow):
         self.scene.addPixmap(self.img)
         self.draw_point_estimates()
         
-        if self.showBoundingBoxes:
-            self.drawBoundingBoxes()
+        if self.showSearchLines:
+            self.drawSearchLines()
 
         if self.showLabels:
             self.drawLabels()
@@ -571,10 +573,10 @@ class LeftMenuWidget(QWidget):
         self.addLineEdit("Min Distance", 80.0)
         self.addLineEdit("Max Distance", 100.0)
         self.addButton("Show Epipolar Lines")
-        self.addButton("Show Bounding Boxes")
+        self.addButton("Show Search Lines")
         self.addButton("Show Pointlabels")
         self.layout().addWidget(self.buttonGrid)
-        self.addButton("Remove Bounding Boxes")
+        self.addButton("Remove Search Lines")
         self.addButton("Compute Correspondences")
 
     def getValueFromEdit(self, key):
@@ -616,9 +618,19 @@ class IdentifiableRectItem(QRectF):
         return self == qGraphicsRect.rect()
 
 
+class IdentifiableLineItem(QLineF):
+    def __init__(self, pointa, pointb, x, y):
+        super(IdentifiableLineItem, self).__init__(pointa, pointb)
+        self.x = x
+        self.y = y
+
+    def isEquals(self, x, y):
+        return self.x == x and self.y == y
+
+    def isEqualsToQGraphicsLine(self, qGraphicsLine):
+        return self == qGraphicsLine.line()
 
 if __name__ == '__main__':
-
     app = QApplication(sys.argv)
     shufti = MainWindow("og_data/Human_I180928_Broc1.mp4", "Dataset/calibration.mat", "Dataset/calibration.mat")
     shufti.show()
