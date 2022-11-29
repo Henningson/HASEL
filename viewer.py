@@ -12,11 +12,14 @@
 '''
 
 import os, sys, glob
+
+os.environ["CUDA_VISIBLE_DEVICES"]=""
+
 from functools import partial
 from PyQt5 import QtCore, QtSql
 from PyQt5.QtGui import QPixmap, QTransform, QImage
 from os.path import expanduser, dirname
-from PyQt5.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QGraphicsView, QMenu, QLabel, QFileDialog, QFormLayout, QHBoxLayout, QGraphicsRectItem, QGridLayout, QGraphicsLineItem
+from PyQt5.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QProgressDialog, QGraphicsView, QMenu, QLabel, QFileDialog, QFormLayout, QHBoxLayout, QGraphicsRectItem, QGridLayout, QGraphicsLineItem
 import skvideo.io
 import sys
 from PyQt5 import QtCore, QtWidgets
@@ -33,11 +36,14 @@ from albumentations.pytorch import ToTensorV2
 from tqdm import tqdm
 import Visualizer
 import utils
-
+import json
 from Camera import Camera
 from Laser import Laser
 
+
 DEVICE = "cpu" #"cuda" if torch.cuda.is_available() else "cpu"
+
+
 
 def cvImgToQT(image):
     height, width, channel = image.shape
@@ -120,7 +126,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Structured Light Labelling")
 
-        self.video = skvideo.io.vread(video_path)[:200, :, :, :]
+        self.video = skvideo.io.vread(video_path)[:5, :, :, :]
         self.current_img_index = 0
 
         self.img = QPixmap(cvImgToQT(self.video[self.current_img_index]))
@@ -156,7 +162,8 @@ class MainWindow(QMainWindow):
         self.menu_widget.button_dict["Remove Search Lines"].clicked.connect(self.toggleRemoveSearchLineMode)
         self.menu_widget.button_dict["Show Search Lines"].clicked.connect(self.toggleShowSearchLines)
         self.menu_widget.button_dict["Show Pointlabels"].clicked.connect(self.toggleShowLabels)
-        self.menu_widget.button_dict["Show Epipolar Lines"].clicked.connect(self.toggleShowEpipolarLines)
+        self.menu_widget.button_dict["Save as JSON"].clicked.connect(self.save)
+        #self.menu_widget.button_dict["Show Epipolar Lines"].clicked.connect(self.toggleShowEpipolarLines)
 
         self.points2d = []
         self.labels = []
@@ -170,19 +177,19 @@ class MainWindow(QMainWindow):
         self.view.pointSignal.connect(self.generateSearchLine)
         self.view.pointSignal.connect(self.removeSearchLine)
 
-        self.menu_widget.edit_dict["Min Distance"].editingFinished.connect(self.generateEpipolarLines)
-        self.menu_widget.edit_dict["Max Distance"].editingFinished.connect(self.generateEpipolarLines)
+        #self.menu_widget.edit_dict["Min Distance"].editingFinished.connect(self.generateEpipolarLines)
+        #self.menu_widget.edit_dict["Max Distance"].editingFinished.connect(self.generateEpipolarLines)
 
         self.showSearchLines = True
         self.showLabels = True
-        self.showEpipolarLines = True
+        #self.showEpipolarLines = True
 
         self.searchLineTuple = [None, None]
         self.searchLines = []
         self.searchLineIndex = 0
         self.currentButton = [0, 0]
 
-        self.epipolarLines = None
+        #self.epipolarLines = None
 
         self.polygonhandle = None
 
@@ -192,22 +199,22 @@ class MainWindow(QMainWindow):
         self.pointArray = np.zeros([self.video.shape[0], 18, 18, 2], dtype=np.float32)
         self.pointArray[:] = np.nan
 
-        self.generateEpipolarLines()
+        #self.generateEpipolarLines()
         self.redraw()
 
 
-    def generateEpipolarLines(self):
-        self.epipolarLines = []
+    # def generateEpipolarLines(self):
+    #     self.epipolarLines = []
 
-        minDistance = self.menu_widget.getValueFromEdit("Min Distance")
-        maxDistance = self.menu_widget.getValueFromEdit("Max Distance")
-        minPoints = self.generatePointsAt(minDistance)
-        maxPoints = self.generatePointsAt(maxDistance)
+    #     minDistance = self.menu_widget.getValueFromEdit("Min Distance")
+    #     maxDistance = self.menu_widget.getValueFromEdit("Max Distance")
+    #     minPoints = self.generatePointsAt(minDistance)
+    #     maxPoints = self.generatePointsAt(maxDistance)
 
-        for pointA, pointB in zip(minPoints.tolist(), maxPoints.tolist()):
-            self.epipolarLines.append(QLineF(pointA[0], pointA[1], pointB[0], pointB[1]))
+    #     for pointA, pointB in zip(minPoints.tolist(), maxPoints.tolist()):
+    #         self.epipolarLines.append(QLineF(pointA[0], pointA[1], pointB[0], pointB[1]))
 
-        self.redraw()
+    #     self.redraw()
 
     def generatePointsAt(self, distance):
         return self.camera.project(self.laser.origin().reshape(-1, 3) + self.laser.rays() * distance)
@@ -227,37 +234,38 @@ class MainWindow(QMainWindow):
     def computeCorrespondences(self, threshold=3.0):
         self.labels = []
 
-        for perFramePoints in self.points2d:
+        progress = QProgressDialog("Computing Correspondences", None, 0, len(self.points2d), self)
+        progress.setWindowModality(Qt.WindowModal)
+
+        for frame_num, perFramePoints in enumerate(self.points2d):
+            progress.setValue(frame_num)
             self.labels.append([])
-            for line_index, line in enumerate(self.epipolarLines):
+
+
+            foundPoints = np.zeros(perFramePoints.shape[0], dtype=np.bool8)
+            for line_index, line in enumerate(self.searchLines):
                 for i in range(perFramePoints.shape[0]):
-                    if utils.pointLineSegmentDistance(line[0], line[0], perFramePoints[i]) < threshold:
+                    # Already matched this point, continue
+                    if foundPoints[i]:
+                        continue
+
+                    if utils.pointLineSegmentDistance(np.array([line.p1().y(), line.p1().x()]), np.array([line.p2().y(), line.p2().x()]), perFramePoints[i]) < self.menu_widget.getValueFromEdit("Threshold"):
                         x, y = self.laser.getXYfromN(line_index)
-                        self.pointArray[i, x, y, 1] = perFramePoints[i, 1]
-                        self.pointArray[i, x, y, 0] = perFramePoints[i, 1]
+                        self.pointArray[frame_num, x, y, 1] = perFramePoints[i, 0]
+                        self.pointArray[frame_num, x, y, 0] = perFramePoints[i, 1]
                         self.labels[-1].append([x, y])
+                        foundPoints[i] = True
 
-    '''
-    def computeCorrespondences(self):
+                # Remove foundPoints from perFramePoints
+            self.points2d[frame_num] = perFramePoints[foundPoints, :]
 
-        # Go through every frame
-        for perFramePoints in self.points2d:
-            self.labels.append([])
-
-            # For every bounding box
-            for boundingbox in self.boundingBoxes:
-                # And for every point inside this frame
-                for i in range(perFramePoints.shape[0]):
-                    # Check if the bounding box contains the point (point is ordered in opencv Y, X fashion)
-                    if boundingbox.contains(perFramePoints[i, 1], perFramePoints[i, 0]):
-                        self.pointArray[i, boundingbox.x, boundingbox.y, 1] = perFramePoints[i, 1]
-                        self.pointArray[i, boundingbox.x, boundingbox.y, 0] = perFramePoints[i, 0]
-                        self.labels[-1].append([boundingbox.x, boundingbox.y])
-    '''
-
-    def toggleShowEpipolarLines(self):
-        self.showEpipolarLines = not self.showEpipolarLines
+        progress.setValue(len(self.points2d))
         self.redraw()
+
+
+    # def toggleShowEpipolarLines(self):
+    #     self.showEpipolarLines = not self.showEpipolarLines
+    #     self.redraw()
 
     def toggleShowLabels(self):
         self.showLabels = not self.showLabels
@@ -308,7 +316,7 @@ class MainWindow(QMainWindow):
         print("Setting laser point {} {}".format(x, y))
         self.currentButton = (x, y)
         self.boundingBoxIndex = 0
-        self.toggleBoundingBoxMode()
+        self.toggleSearchLineMode()
     
     @QtCore.pyqtSlot(QPointF)
     def segmentationPointAdded(self, point):
@@ -370,7 +378,7 @@ class MainWindow(QMainWindow):
 
     def drawSearchLines(self):
         for searchLine in self.searchLines:
-            self.scene.addLine(searchLine, QPen(QColor(128, 255, 128, 128)), QBrush(QColor(128, 255, 128, 128)))
+            self.scene.addLine(searchLine, QPen(QColor(128, 255, 128, 128)))
 
     def drawLabels(self):
         try:
@@ -384,9 +392,9 @@ class MainWindow(QMainWindow):
         except:
             return
 
-    def drawEpipolarLines(self):
-        for line in self.epipolarLines:
-            self.scene.addLine(line, QPen(QColor(255, 255, 255, 255)))
+    #def drawEpipolarLines(self):
+    #    for line in self.epipolarLines:
+    #        self.scene.addLine(line, QPen(QColor(255, 255, 255, 255)))
 
     def generateCVSegmentation(self):
         base = np.zeros((self.video[0].shape[0], self.video[0].shape[1]), dtype=np.uint8)
@@ -399,13 +407,19 @@ class MainWindow(QMainWindow):
             print("Please generate a segmentation")
             return
 
-        model = Model(in_channels=1, out_channels=2, state_dict=torch.load("rhine_hard_net_large.pth.tar"), features=[32, 64, 128, 256, 512, 1024]).to(DEVICE)
+        model = Model(in_channels=1, out_channels=2, state_dict=torch.load("rhine_hard_net_large.pth.tar", map_location=DEVICE), features=[32, 64, 128, 256, 512, 1024]).to(DEVICE)
         loc = LSQLocalization(local_maxima_window=25, device=DEVICE)
         transform = A.Compose([A.Resize(height=1200, width=800), A.Normalize(mean=[0.0], std=[1.0], max_pixel_value=255.0,), ToTensorV2(), ])
         segment_transform = A.Compose([A.Resize(height=1200, width=800), ToTensorV2(),])
 
+
+        progress = QProgressDialog("Generating Points", None, 0, self.video.shape[0], self)
+        progress.setWindowModality(Qt.WindowModal)
+        progress.setCancelButton(None)
+
         with torch.no_grad():
-            for count in tqdm(range(self.video.shape[0])):
+            for count in range(self.video.shape[0]):
+                progress.setValue(count)
                 image = cv2.cvtColor(self.video[count], cv2.COLOR_RGB2GRAY)
                 image = transform(image=image)["image"].to(DEVICE)
                 segment = segment_transform(image=self.segmentation)["image"].to(DEVICE)
@@ -418,6 +432,8 @@ class MainWindow(QMainWindow):
 
                     self.points2d.append(means[~np.isnan(means).any(axis=1)])
 
+
+        progress.setValue(self.video.shape[0])
         self.redraw()
 
     def draw_point_estimates(self):
@@ -433,22 +449,54 @@ class MainWindow(QMainWindow):
         self.winState()
 
     def openCall(self):
-        self.camera_calib_path, _ = QFileDialog.getOpenFileName(self, 'Open Camera Calibration file', '', "Camera Calibration Files (*.json *.mat)")
-        self.laser_calib_path, _ = QFileDialog.getOpenFileName(self, 'Open Laser Calibration file', '', "Laser Calibration Files (*.json *.mat)")
-        self.video_path, _ = QFileDialog.getOpenFileName(self, 'Open Video', '', "Video Files (*.avi *.mp4 *.mkv *.AVI *.MP4)")
-        self.fileOpenedSignal.emit(self.camera_calib_path, self.laser_calib_path, self.video_path)
+        #self.camera_calib_path, _ = QFileDialog.getOpenFileName(self, 'Open Camera Calibration file', '', "Camera Calibration Files (*.json *.mat)")
+        #self.laser_calib_path, _ = QFileDialog.getOpenFileName(self, 'Open Laser Calibration file', '', "Laser Calibration Files (*.json *.mat)")
+        video_path, _ = QFileDialog.getOpenFileName(self, 'Open Video', '', "Video Files (*.avi *.mp4 *.mkv *.AVI *.MP4)")
+        self.zoom = 1.0
+
+        self.video = skvideo.io.vread(video_path)
+        self.current_img_index = 0
+
+        self.segmentation_mode = False
+        self.pointAddMode = False
+        self.removeSearchLineMode = False
+        self.searchLineMode = False
+
+        self.points2d = []
+        self.labels = []
+        self.polygon_points = []
+        self.segmentationPoints = []
+        self.segmentation = None
+
+        self.showSearchLines = True
+        self.showLabels = True
+
+        self.searchLineTuple = [None, None]
+        self.searchLines = []
+        self.searchLineIndex = 0
+        self.currentButton = [0, 0]
+
+        self.polygonhandle = None
+
+        self.pointArray = np.zeros([self.video.shape[0], 18, 18, 2], dtype=np.float32)
+        self.pointArray[:] = np.nan
+
+        self.menu_widget.buttonGrid.reset()
+        self.redraw()
+
 
     def newCall(self):
-        self.camera_calib_path, _ = QFileDialog.getOpenFileName(self, 'Open Camera Calibration file', '', "Camera Calibration Files (*.json *.mat)")
-        self.laser_calib_path, _ = QFileDialog.getOpenFileName(self, 'Open Laser Calibration file', '', "Laser Calibration Files (*.json *.mat)")
-        self.video_path, _ = QFileDialog.getOpenFileName(self, 'Open Video', '', "Video Files (*.avi *.mp4 *.mkv *.AVI *.MP4)")
-        self.fileOpenedSignal.emit(self.camera_calib_path, self.laser_calib_path, self.video_path)
+        #self.camera_calib_path, _ = QFileDialog.getOpenFileName(self, 'Open Camera Calibration file', '', "Camera Calibration Files (*.json *.mat)")
+        #self.laser_calib_path, _ = QFileDialog.getOpenFileName(self, 'Open Laser Calibration file', '', "Laser Calibration Files (*.json *.mat)")
+        #self.video_path, _ = QFileDialog.getOpenFileName(self, 'Open Video', '', "Video Files (*.avi *.mp4 *.mkv *.AVI *.MP4)")
+        #self.fileOpenedSignal.emit(self.camera_calib_path, self.laser_calib_path, self.video_path)
+        print("New call")
 
     def exitCall(self):
         print('Exit app')
 
     def saveCall(self):
-        print('Save')
+        self.save()
     
     def toggleFullscreen(self):
         if self.isFullScreen():
@@ -525,8 +573,8 @@ class MainWindow(QMainWindow):
         if self.showLabels:
             self.drawLabels()
 
-        if self.showEpipolarLines:
-            self.drawEpipolarLines()
+        #if self.showEpipolarLines:
+        #    self.drawEpipolarLines()
 
     def redraw(self):
         self.scene.clear()
@@ -540,8 +588,8 @@ class MainWindow(QMainWindow):
         if self.showLabels:
             self.drawLabels()
 
-        if self.showEpipolarLines:
-            self.drawEpipolarLines()
+        #if self.showEpipolarLines:
+        #    self.drawEpipolarLines()
 
     def resetScroll(self):
         self.view.verticalScrollBar().setValue(0)
@@ -551,6 +599,23 @@ class MainWindow(QMainWindow):
         self.screen_res = app.desktop().availableGeometry()
         self.screenw = self.screen_res.width()
         self.screenh = self.screen_res.height()
+
+    def save(self):
+        path = QFileDialog.getSaveFileName(self, 'Save correspondences as JSON', '', ".json")
+        path = ''.join(path)
+        # Generating per Frame point dicttest_dict = {}
+
+        point_dict = {}
+        for frame, (per_frame_labels, per_frame_points) in enumerate(zip(self.labels, self.points2d)):
+            frame_list = []
+            for label, point in zip(per_frame_labels, per_frame_points.tolist()):
+                frame_list.append({"position_x": float(point[1]), "position_y": float(point[0]), "laser_x": int(label[0]), "laser_y": int(label[1])})
+            point_dict["Frame{0}".format(frame)] = frame_list
+
+        with open(path, "w") as fp:
+            json.dump(point_dict,fp)
+
+        print("Saved file to " + path) 
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QPushButton
@@ -570,14 +635,16 @@ class LeftMenuWidget(QWidget):
         self.addButton("Generate Points")
         self.addButton("Remove Points")
         self.addButton("Add Points")
-        self.addLineEdit("Min Distance", 80.0)
-        self.addLineEdit("Max Distance", 100.0)
-        self.addButton("Show Epipolar Lines")
+        #self.addLineEdit("Min Distance", 80.0)
+        #self.addLineEdit("Max Distance", 100.0)
+        #self.addButton("Show Epipolar Lines")
         self.addButton("Show Search Lines")
         self.addButton("Show Pointlabels")
         self.layout().addWidget(self.buttonGrid)
         self.addButton("Remove Search Lines")
+        self.addLineEdit("Threshold", 3.0)
         self.addButton("Compute Correspondences")
+        self.addButton("Save as JSON")
 
     def getValueFromEdit(self, key):
         return float(self.edit_dict[key].text())
