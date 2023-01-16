@@ -55,7 +55,7 @@ class ZoomableView(QGraphicsView):
     def wheelEvent(self, event):
         mouse = event.angleDelta().y()/120
         self.wheelSignal.emit(mouse > 0)
-        
+    
     def contextMenuEvent(self, event):
         menu = QMenu()
         menu.addAction('Zoom in               +, E', shufti.zoomIn)

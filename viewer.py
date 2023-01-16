@@ -13,7 +13,7 @@
 
 import os, sys, glob
 
-os.environ["CUDA_VISIBLE_DEVICES"]=""
+#os.environ["CUDA_VISIBLE_DEVICES"]=""
 
 from functools import partial
 from PyQt5 import QtCore, QtSql
@@ -41,7 +41,7 @@ from Camera import Camera
 from Laser import Laser
 
 
-DEVICE = "cpu" #"cuda" if torch.cuda.is_available() else "cpu"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 
@@ -126,7 +126,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Structured Light Labelling")
 
-        self.video = skvideo.io.vread(video_path)[:5, :, :, :]
+        self.video = skvideo.io.vread(video_path)[:200, :, :, :]
         self.current_img_index = 0
 
         self.img = QPixmap(cvImgToQT(self.video[self.current_img_index]))
@@ -615,7 +615,7 @@ class MainWindow(QMainWindow):
         with open(path, "w") as fp:
             json.dump(point_dict,fp)
 
-        print("Saved file to " + path) 
+        print("Saved file to " + path)
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QPushButton
