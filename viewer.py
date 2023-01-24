@@ -60,9 +60,9 @@ class ZoomableView(QGraphicsView):
         self.pointRemovalMode = not self.pointRemovalMode
 
         if self.pointRemovalMode:
-            self.menu_widget.disableEverythingExcept("Add Points")
+            shufti.menu_widget.disableEverythingExcept("Remove Points")
         else:
-            self.menu_widget.enableEverything()
+            shufti.menu_widget.enableEverything()
 
     def wheelEvent(self, event):
         mouse = event.angleDelta().y()/120
@@ -215,7 +215,7 @@ class MainWindow(QMainWindow):
             print("Folder {0} already exists.".format(self.folder_path))
         
         self.initMemberVariables()
-        self.video = skvideo.io.vread(video_path)
+        self.video = skvideo.io.vread(video_path)[:10, :, :, :]
         self.current_img_index = 0
         self.pointArray = np.zeros([self.video.shape[0], 18, 18, 2], dtype=np.float32)
         self.pointArray[:] = np.nan
