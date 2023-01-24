@@ -301,23 +301,26 @@ class MainWindow(QMainWindow):
             progress.setValue(frame_num)
             self.labels.append([])
 
+            test_labels = []
             foundPoints = np.zeros(perFramePoints.shape[0], dtype=np.bool8)
             for line in self.searchLines:
                 for i in range(perFramePoints.shape[0]):
                     # Already matched this point, continue
                     if foundPoints[i]:
                         continue
-
-                    if utils.pointLineSegmentDistance(np.array([line.p1().y(), line.p1().x()]), np.array([line.p2().y(), line.p2().x()]), perFramePoints[i]) < self.menu_widget.getValueFromEdit("Threshold"):
+                    
+                    pointLineDistance = utils.pointLineSegmentDistance(np.array([line.p1().y(), line.p1().x()]), np.array([line.p2().y(), line.p2().x()]), perFramePoints[i])
+                    if pointLineDistance < self.menu_widget.getValueFromEdit("Threshold"):
                         x = line.x
                         y = line.y
                         self.pointArray[frame_num, x, y, 1] = perFramePoints[i, 0]
                         self.pointArray[frame_num, x, y, 0] = perFramePoints[i, 1]
                         self.labels[-1].append([x, y])
                         foundPoints[i] = True
+                        test_labels.append(perFramePoints[i])
 
                 # Remove foundPoints from perFramePoints
-            self.labeledpoints2d[frame_num] = perFramePoints[foundPoints, :]
+            self.labeledpoints2d[frame_num] = np.stack(test_labels)
 
         progress.setValue(len(self.points2d))
         self.redraw()
@@ -638,7 +641,7 @@ class MainWindow(QMainWindow):
         labeled_points_file_path = os.path.join(self.folder_path, "labeled_points.json")
 
         point_dict = {}
-        for frame, (per_frame_labels, per_frame_points) in enumerate(zip(self.labels, self.points2d)):
+        for frame, (per_frame_labels, per_frame_points) in enumerate(zip(self.labels, self.labeledpoints2d)):
             frame_list = []
             for label, point in zip(per_frame_labels, per_frame_points.tolist()):
                 frame_list.append({"position_x": float(point[1]), "position_y": float(point[0]), "label_x": int(label[0]), "label_y": int(label[1])})
