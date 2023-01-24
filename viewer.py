@@ -59,6 +59,11 @@ class ZoomableView(QGraphicsView):
     def togglePointRemovalMode(self):
         self.pointRemovalMode = not self.pointRemovalMode
 
+        if self.pointRemovalMode:
+            self.menu_widget.disableEverythingExcept("Add Points")
+        else:
+            self.menu_widget.enableEverything()
+
     def wheelEvent(self, event):
         mouse = event.angleDelta().y()/120
         if mouse > 0:
