@@ -236,7 +236,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("Structured Light Labelling - " + os.path.basename(self.folder_path))
 
-        self.video = skvideo.io.vread(os.path.join(self.folder_path, os.path.basename(self.folder_path) + ".mp4"))
+        self.video = skvideo.io.vread(os.path.join(self.folder_path, os.path.basename(self.folder_path) + ".mp4"))[:10, :, :, :]
         self.segmentation = self.loadSegmentationMask(os.path.join(self.folder_path, "segmentation.png"))
         self.segmentationPoints = self.loadSegmentationPoints(os.path.join(self.folder_path, "segmentation_points.npy"))
         self.points2d = self.loadGeneratedPoints(os.path.join(self.folder_path, "generated_points.json"))
@@ -628,7 +628,7 @@ class MainWindow(QMainWindow):
                 x = data[key]["label_x"]
                 y = data[key]["label_y"]
                 
-                self.menu_widget.buttonGrid.getButton(x, y).setActivated()
+                self.menu_widget.buttonGrid.getButton(y, x).setActivated()
                 searchLines.append(IdentifiableLineItem(QPointF(data[key]["x0"], data[key]["y0"]), QPointF(data[key]["x1"], data[key]["y1"]), x, y))
             return searchLines
         except:
