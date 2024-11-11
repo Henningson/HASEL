@@ -518,8 +518,8 @@ class MainWindow(QMainWindow):
 
                 with torch.cuda.amp.autocast():
                     prediction = model(image.unsqueeze(0)).softmax(dim=1)
+                    #_, mean, _ = loc.test_with_image(image, prediction, segmentation=segment)
                     _, mean, _ = loc.test(prediction, segmentation=segment)
-
                     means = mean[0].detach().cpu().numpy()
 
                     self.points2d.append(means[~np.isnan(means).any(axis=1)])

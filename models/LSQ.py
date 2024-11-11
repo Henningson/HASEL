@@ -108,6 +108,45 @@ class LSQLocalization:
 
 
 
+    def test_with_image(self, image, x, segmentation=None):
+        heat = x[:, self.heatmapaxis, :, :].clone()
+        heat = heat.unsqueeze(1)
+
+        # Generate thresholded image
+        threshed_heat = (heat > self.threshold) * heat
+        threshed_heat = kornia.filters.gaussian_blur2d(threshed_heat, self.kernel.shape, [self.kernel.shape[0]/4, self.kernel.shape[0]/4])
+        
+
+        # Use dilation filtering to generate local maxima and squeeze first dimension
+        dilated_heat = kornia.morphology.dilation(threshed_heat, self.kernel)
+        local_maxima = threshed_heat > dilated_heat
+        local_maxima = local_maxima[:, 0, :, :]
+
+        if segmentation is not None:
+            local_maxima = local_maxima * segmentation
+
+        # Find local maxima and indices at which we need to split the data
+        maxima_indices = local_maxima.nonzero()
+        split_indices = get_split_indices(maxima_indices[:, 0], device=self.device).tolist()
+
+        # Extract windows around the local maxima
+        intensities, y_windows, x_windows = extractWindow(image, maxima_indices, self.gauss_window_size, device=self.device)
+
+        # Reformat [-2, -1, 0, ..] tensors for x-y-indexing
+        reformat_x = self.x_sub.repeat(x_windows.size(0), 1, 1).reshape(-1, self.gauss_window_size**2)
+        reformat_y = self.y_sub.repeat(y_windows.size(0), 1, 1).reshape(-1, self.gauss_window_size**2)
+
+        # Use Guos Weighted Gaussian Fitting algorithm based on the intensities of the non-thresholded image
+        sigma, mu, amplitude = GuosBatchAnalytic(reformat_x, reformat_y, intensities.reshape(-1, self.gauss_window_size**2))
+
+        # Add found mus to the initial quantized local maxima
+        mu = maxima_indices[:, 1:] + mu[:, [1, 0]]
+
+        # Split the tensors and return lists of sigma, mus, and the amplitudes per batch
+        return torch.tensor_split(sigma, split_indices), torch.tensor_split(mu, split_indices), torch.tensor_split(amplitude, split_indices)
+
+
+
     def test(self, x, segmentation=None):
         heat = x[:, self.heatmapaxis, :, :].clone()
         heat = heat.unsqueeze(1)
