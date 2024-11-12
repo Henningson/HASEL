@@ -1,8 +1,8 @@
-# VFLabel
-An AI-supported tool for generating ground-truth data for High-Speed Video Structured Light Laryngoscopy.
-This tool enables multiple features:
-* Generation of glottis segmentation data via Deep Learning
-* Generation of vocal fold segmentation
+![image info](assets/hasel_fullres.png)
+HASEL (**H**igh-Speed Video **A**nnotation Tool for **S**tructured Light **E**ndoscopy in the Human **L**arynx) is a Deep-Learning-supported tool for generating ground-truth data for High-Speed Video Structured Light Laryngoscopy.
+This tool enables to robustly and rapidly generate data of:
+* Glottal segmentation with different segmentation architectures
+* Vocal fold segmentation via frame-wise interpolation
 * Semi-automatic and Deep Learning enhanced generation of laserpoint data.
 
 # Installation (TODO)
