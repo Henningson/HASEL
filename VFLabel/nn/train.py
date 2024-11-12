@@ -6,20 +6,20 @@ import torch.nn as nn
 import torch.optim as optim
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
-from dataset import HLEDataset, ReinhardDatasetV2
+from VFLabel.io.dataset import HLEDataset, ReinhardDatasetV2
 from torch.utils.data import DataLoader
 from models.UNet import Model
 from models.LSQ import LSQLocalization
-from utils import (
+from VFLabel.utils.utils import (
     class_to_color,
     load_checkpoint,
     save_checkpoint,
     check_accuracy,
     save_predictions_as_imgs,
     draw_points,
-    draw_heatmap
+    draw_heatmap,
 )
-import Visualizer
+import VFLabel.utils.Visualizer as Visualizer
 import os
 
 # Hyperparameters etc.
@@ -29,7 +29,7 @@ BATCH_SIZE = 1
 NUM_EPOCHS = 50
 NUM_WORKERS = 2
 IMAGE_HEIGHT = 1200  # 1280 originally
-IMAGE_WIDTH = 800 # 1918 originally
+IMAGE_WIDTH = 800  # 1918 originally
 PIN_MEMORY = True
 LOAD_MODEL = False
 DATASET_BASE_DIR = "Dataset/"
@@ -40,6 +40,7 @@ for entry in os.listdir(DATASET_BASE_DIR):
         continue
 
     DATASET_FOLDERS.append(entry)
+
 
 def main():
     train_transform = A.Compose(
@@ -69,23 +70,47 @@ def main():
         ]
     )
 
-    model = Model(in_channels=1, out_channels=2, features = [32, 64, 128, 256, 512, 1024]).to(DEVICE)
+    model = Model(
+        in_channels=1, out_channels=2, features=[32, 64, 128, 256, 512, 1024]
+    ).to(DEVICE)
     BCELoss = nn.CrossEntropyLoss()
     loc = LSQLocalization(local_maxima_window=21)
 
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-    train_ds = ReinhardDatasetV2(base_path=DATASET_BASE_DIR, keys=DATASET_FOLDERS, transform=train_transform, is_train=True)
-    train_loader = DataLoader(train_ds, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, pin_memory=PIN_MEMORY, shuffle=True)
-    val_ds = ReinhardDatasetV2(base_path=DATASET_BASE_DIR, keys=DATASET_FOLDERS, transform=val_transforms, is_train=False)
-    val_loader = DataLoader(val_ds, batch_size=BATCH_SIZE, num_workers=NUM_WORKERS, pin_memory=PIN_MEMORY, shuffle=False)
+    train_ds = ReinhardDatasetV2(
+        base_path=DATASET_BASE_DIR,
+        keys=DATASET_FOLDERS,
+        transform=train_transform,
+        is_train=True,
+    )
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=BATCH_SIZE,
+        num_workers=NUM_WORKERS,
+        pin_memory=PIN_MEMORY,
+        shuffle=True,
+    )
+    val_ds = ReinhardDatasetV2(
+        base_path=DATASET_BASE_DIR,
+        keys=DATASET_FOLDERS,
+        transform=val_transforms,
+        is_train=False,
+    )
+    val_loader = DataLoader(
+        val_ds,
+        batch_size=BATCH_SIZE,
+        num_workers=NUM_WORKERS,
+        pin_memory=PIN_MEMORY,
+        shuffle=False,
+    )
 
-    #visual = Visualizer.Visualize2D(x=1)
+    # visual = Visualizer.Visualize2D(x=1)
     scaler = torch.cuda.amp.GradScaler()
 
     for epoch in range(NUM_EPOCHS):
-        
-        '''
+
+        """
         if epoch % 5 == 0:
             with torch.no_grad():
                 val_image, gt_seg = val_ds[0]
@@ -98,7 +123,7 @@ def main():
                 visual.draw_points(mean)
                 visual.show()
                 plt.show(block=True)
-        '''
+        """
 
         loop = tqdm(train_loader)
         for images, gt_seg in loop:
@@ -118,9 +143,10 @@ def main():
             # update tqdm loop
             loop.set_postfix(loss=loss.item())
 
-        checkpoint = {"optimizer": optimizer.state_dict(),} | model.get_statedict()
+        checkpoint = {
+            "optimizer": optimizer.state_dict(),
+        } | model.get_statedict()
         torch.save(checkpoint, "rhine_hard_net_large.pth.tar")
-
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-'''
+"""
 "Segment Images"
 "Generate Points"
 "Remove Points"
@@ -9,18 +9,40 @@
 "Compute Correspondences"
 "Show Bounding Boxes"
 "Show Pointlabels"
-'''
+"""
 
 import os, sys, glob
 from functools import partial
 from PyQt5 import QtCore, QtSql
 from PyQt5.QtGui import QPixmap, QTransform, QImage
 from os.path import expanduser, dirname
-from PyQt5.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QGraphicsView, QMenu, QLabel, QLineEdit, QFileDialog, QFormLayout, QVBoxLayout, QHBoxLayout, QGraphicsRectItem, QGridLayout, QGraphicsLineItem
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QApplication,
+    QGraphicsScene,
+    QGraphicsView,
+    QMenu,
+    QLabel,
+    QLineEdit,
+    QFileDialog,
+    QFormLayout,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGraphicsRectItem,
+    QGridLayout,
+    QGraphicsLineItem,
+)
 import skvideo.io
 import sys
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction, QGraphicsPolygonItem, QGraphicsEllipseItem
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QPushButton,
+    QAction,
+    QGraphicsPolygonItem,
+    QGraphicsEllipseItem,
+)
 from PyQt5.QtCore import QSize, pyqtSignal, QPointF, QRectF, QLineF, QRect, QPoint
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
 import torch
@@ -31,13 +53,14 @@ import cv2
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from tqdm import tqdm
-import Visualizer
-import utils
+import VFLabel.utils.Visualizer as Visualizer
+import VFLabel.utils.utils as utils
 
-from Camera import Camera
-from Laser import Laser
+from VFLabel.vision.Camera import Camera
+from VFLabel.vision.Laser import Laser
 
-DEVICE = "cpu" #"cuda" if torch.cuda.is_available() else "cpu"
+DEVICE = "cpu"  # "cuda" if torch.cuda.is_available() else "cpu"
+
 
 def cvImgToQT(image):
     height, width, channel = image.shape
@@ -53,28 +76,29 @@ class ZoomableView(QGraphicsView):
         super(ZoomableView, self).__init__(parent)
 
     def wheelEvent(self, event):
-        mouse = event.angleDelta().y()/120
+        mouse = event.angleDelta().y() / 120
         self.wheelSignal.emit(mouse > 0)
-    
+
     def contextMenuEvent(self, event):
         menu = QMenu()
-        menu.addAction('Zoom in               +, E', shufti.zoomIn)
-        menu.addAction('Zoom out              -, D', shufti.zoomOut)
-        menu.addAction('Toggle fullscreen     F11',  shufti.toggleFullscreen)
-        menu.addAction('Next image            D',    shufti.nextImage)
-        menu.addAction('Previous image        D',    shufti.prevImage)
-        menu.addAction('Forward n frames      E',    shufti.nextImage)
-        menu.addAction('Backward n frames     A',    shufti.prevImage)
-        menu.addAction('Fit view              F',    shufti.fitView)
-        menu.addAction('Reset zoom            1',    shufti.zoomReset)
-        menu.addAction('Validate Segmentation Enter',shufti.validateSegmentation)
-        menu.addAction('Quit                  ESC',  shufti.close)
+        menu.addAction("Zoom in               +, E", shufti.zoomIn)
+        menu.addAction("Zoom out              -, D", shufti.zoomOut)
+        menu.addAction("Toggle fullscreen     F11", shufti.toggleFullscreen)
+        menu.addAction("Next image            D", shufti.nextImage)
+        menu.addAction("Previous image        D", shufti.prevImage)
+        menu.addAction("Forward n frames      E", shufti.nextImage)
+        menu.addAction("Backward n frames     A", shufti.prevImage)
+        menu.addAction("Fit view              F", shufti.fitView)
+        menu.addAction("Reset zoom            1", shufti.zoomReset)
+        menu.addAction("Validate Segmentation Enter", shufti.validateSegmentation)
+        menu.addAction("Quit                  ESC", shufti.close)
         menu.exec_(event.globalPos())
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         point = self.mapToScene(self.mapFromGlobal(event.globalPos()))
         self.pointSignal.emit(point)
+
 
 class MainWindow(QMainWindow):
     def __init__(self, video_path):
@@ -105,11 +129,21 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.mainwidget)
 
         self.menu_widget.button_dict["Open Video"].clicked.connect(self.openVideo)
-        self.menu_widget.button_dict["Draw Initial Segmentation"].clicked.connect(self.toggleInitialSegmentationMode)
-        self.menu_widget.button_dict["Transform"].clicked.connect(self.toggleTransformMode)
-        self.menu_widget.button_dict["Interpolate Segmentations"].clicked.connect(self.interpolateSegmentations)
-        self.menu_widget.button_dict["Toggle Segmentation"].clicked.connect(self.toggleDrawSegmenation)
-        self.menu_widget.button_dict["Save Segmentations"].clicked.connect(self.saveSegmentations)
+        self.menu_widget.button_dict["Draw Initial Segmentation"].clicked.connect(
+            self.toggleInitialSegmentationMode
+        )
+        self.menu_widget.button_dict["Transform"].clicked.connect(
+            self.toggleTransformMode
+        )
+        self.menu_widget.button_dict["Interpolate Segmentations"].clicked.connect(
+            self.interpolateSegmentations
+        )
+        self.menu_widget.button_dict["Toggle Segmentation"].clicked.connect(
+            self.toggleDrawSegmenation
+        )
+        self.menu_widget.button_dict["Save Segmentations"].clicked.connect(
+            self.saveSegmentations
+        )
 
         self.view.pointSignal.connect(self.segmentationPointAdded)
         self.view.wheelSignal.connect(self.mouseScrollEvent)
@@ -141,7 +175,9 @@ class MainWindow(QMainWindow):
         self.saveTransform()
 
     def openVideo(self):
-        video_path, _ = QFileDialog.getOpenFileName(self, 'Open Video', '', "Video Files (*.avi *.mp4 *.mkv *.AVI *.MP4)")
+        video_path, _ = QFileDialog.getOpenFileName(
+            self, "Open Video", "", "Video Files (*.avi *.mp4 *.mkv *.AVI *.MP4)"
+        )
 
         self.video = skvideo.io.vread(video_path)
         self.current_img_index = 0
@@ -166,7 +202,9 @@ class MainWindow(QMainWindow):
         self.redraw()
 
     def saveSegmentations(self):
-        save_folder = QFileDialog.getExistingDirectory(self, 'Open Video', '', QFileDialog.ShowDirsOnly)
+        save_folder = QFileDialog.getExistingDirectory(
+            self, "Open Video", "", QFileDialog.ShowDirsOnly
+        )
 
         self.fitView()
         for i in range(self.video.shape[0]):
@@ -186,7 +224,10 @@ class MainWindow(QMainWindow):
                 pol.setTransformOriginPoint(pol.boundingRect().center())
                 pol.setScale(self.lerpedTransforms[i]["Scale"])
                 pol.setRotation(self.lerpedTransforms[i]["Rot"])
-                pol.moveBy(self.lerpedTransforms[i]["Trans_X"], self.lerpedTransforms[i]["Trans_Y"])
+                pol.moveBy(
+                    self.lerpedTransforms[i]["Trans_X"],
+                    self.lerpedTransforms[i]["Trans_Y"],
+                )
 
                 self.scene.addItem(pol)
 
@@ -194,10 +235,9 @@ class MainWindow(QMainWindow):
             pixmap = pixmap.scaled(self.video.shape[2], self.video.shape[1])
             pixmap.save(os.path.join(save_folder, "{:05d}.png".format(i)))
 
-
     def toggleDrawSegmenation(self):
         self.drawSegmentation = not self.drawSegmentation
-        self.redraw()                
+        self.redraw()
 
     def toggleTransformMode(self):
         self.transformMode = not self.transformMode
@@ -210,10 +250,16 @@ class MainWindow(QMainWindow):
             if self.baseSegmentation is not None:
                 self.saveTransform()
 
-
     def saveTransform(self):
-        self.transforms.append({"Frame": self.current_img_index, "Scale": self.scale, "Trans_X": self.translateX, "Trans_Y": self.translateY, "Rot": self.rotAngle})
-
+        self.transforms.append(
+            {
+                "Frame": self.current_img_index,
+                "Scale": self.scale,
+                "Trans_X": self.translateX,
+                "Trans_Y": self.translateY,
+                "Rot": self.rotAngle,
+            }
+        )
 
     def toggleInitialSegmentationMode(self):
         self.initialSegmentationMode = not self.initialSegmentationMode
@@ -231,20 +277,22 @@ class MainWindow(QMainWindow):
         if point.x() < 0 or point.y() < 0:
             return
 
-        if point.y() > self.video[0].shape[0] - 1 or point.x() > self.video[0].shape[1] - 1:
+        if (
+            point.y() > self.video[0].shape[0] - 1
+            or point.x() > self.video[0].shape[1] - 1
+        ):
             return
 
         self.segmentationPoints.append(point)
         self.baseSegmentation = QPolygonF(self.segmentationPoints)
         self.redraw()
 
-
     def exitCall(self):
-        print('Exit app')
+        print("Exit app")
 
     def saveCall(self):
-        print('Save')
-    
+        print("Save")
+
     def toggleFullscreen(self):
         if self.isFullScreen():
             self.showNormal()
@@ -308,7 +356,6 @@ class MainWindow(QMainWindow):
                 self.saveTransform()
                 self.toggleTransformMode()
 
-
             elif event.key() == QtCore.Qt.Key_W:
                 self.upscale()
             elif event.key() == QtCore.Qt.Key_S:
@@ -318,7 +365,6 @@ class MainWindow(QMainWindow):
                 self.rotateClockwise()
             elif event.key() == QtCore.Qt.Key_E:
                 self.rotateAntiClockwise()
-            
 
             elif event.key() == QtCore.Qt.Key_I:
                 self.translateUp()
@@ -330,7 +376,7 @@ class MainWindow(QMainWindow):
                 self.translateRight()
 
     def lerp(self, v0, v1, t):
-        return (1 - t)*v0 + t*v1
+        return (1 - t) * v0 + t * v1
 
     def interpolateSegmentations(self):
         self.lerpedTransforms = []
@@ -343,14 +389,21 @@ class MainWindow(QMainWindow):
                 t = frame / numFrames
 
                 new_transform = {}
-                new_transform["Scale"] = self.lerp(transformA["Scale"], transformB["Scale"], t)
-                new_transform["Trans_X"] = self.lerp(transformA["Trans_X"], transformB["Trans_X"], t)
-                new_transform["Trans_Y"] = self.lerp(transformA["Trans_Y"], transformB["Trans_Y"], t)
-                new_transform["Rot"] = self.lerp(transformA["Rot"], transformB["Rot"], t)
+                new_transform["Scale"] = self.lerp(
+                    transformA["Scale"], transformB["Scale"], t
+                )
+                new_transform["Trans_X"] = self.lerp(
+                    transformA["Trans_X"], transformB["Trans_X"], t
+                )
+                new_transform["Trans_Y"] = self.lerp(
+                    transformA["Trans_Y"], transformB["Trans_Y"], t
+                )
+                new_transform["Rot"] = self.lerp(
+                    transformA["Rot"], transformB["Rot"], t
+                )
 
                 self.lerpedTransforms.append(new_transform)
 
-        
         new_transform = {}
         new_transform["Scale"] = self.lerpedTransforms[-1]["Scale"]
         new_transform["Trans_X"] = self.lerpedTransforms[-1]["Trans_X"]
@@ -360,7 +413,6 @@ class MainWindow(QMainWindow):
         self.lerpedTransforms.append(new_transform)
 
         self.redraw()
-
 
     def zoomIn(self):
         self.zoom *= 1.1
@@ -390,12 +442,20 @@ class MainWindow(QMainWindow):
         self.winposy = self.pos().y()
 
     def prevImage(self):
-        prev_index = self.video.shape[0] - 1 if self.current_img_index - 1 == -1 else self.current_img_index - 1
+        prev_index = (
+            self.video.shape[0] - 1
+            if self.current_img_index - 1 == -1
+            else self.current_img_index - 1
+        )
         self.current_img_index = prev_index
         self.redraw()
 
     def nextImage(self):
-        next_index = 0 if self.current_img_index + 1 == self.video.shape[0] else self.current_img_index + 1
+        next_index = (
+            0
+            if self.current_img_index + 1 == self.video.shape[0]
+            else self.current_img_index + 1
+        )
         self.current_img_index = next_index
         self.redraw()
 
@@ -425,7 +485,10 @@ class MainWindow(QMainWindow):
             pol.setTransformOriginPoint(pol.boundingRect().center())
             pol.setScale(self.lerpedTransforms[self.current_img_index]["Scale"])
             pol.setRotation(self.lerpedTransforms[self.current_img_index]["Rot"])
-            pol.moveBy(self.lerpedTransforms[self.current_img_index]["Trans_X"], self.lerpedTransforms[self.current_img_index]["Trans_Y"])
+            pol.moveBy(
+                self.lerpedTransforms[self.current_img_index]["Trans_X"],
+                self.lerpedTransforms[self.current_img_index]["Trans_Y"],
+            )
 
             self.scene.addItem(pol)
 
@@ -442,7 +505,7 @@ class MainWindow(QMainWindow):
 class LeftMenuWidget(QWidget):
     def __init__(self, parent=None):
         super(LeftMenuWidget, self).__init__()
-        #self.setStyle(QFrame.Panel | QFrame.Raised)
+        # self.setStyle(QFrame.Panel | QFrame.Raised)
         self.setLayout(QVBoxLayout())
         self.layout().setAlignment(QtCore.Qt.AlignTop)
         self.button_dict = {}
@@ -481,7 +544,7 @@ class LeftMenuWidget(QWidget):
         self.button_dict[label] = button
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     shufti = MainWindow("../HLEDataset/dataset/CF/CF.avi")
     shufti.show()

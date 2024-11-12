@@ -1,14 +1,32 @@
-
 import os, sys, glob
 from functools import partial
 from PyQt5 import QtCore, QtSql
 from PyQt5.QtGui import QPixmap, QTransform, QImage
 from os.path import expanduser, dirname
-from PyQt5.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QGraphicsView, QMenu, QLabel, QFileDialog, QFormLayout, QHBoxLayout, QGraphicsRectItem, QGridLayout
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QApplication,
+    QGraphicsScene,
+    QGraphicsView,
+    QMenu,
+    QLabel,
+    QFileDialog,
+    QFormLayout,
+    QHBoxLayout,
+    QGraphicsRectItem,
+    QGridLayout,
+)
 import skvideo.io
 import sys
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction, QGraphicsPolygonItem, QGraphicsEllipseItem
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QPushButton,
+    QAction,
+    QGraphicsPolygonItem,
+    QGraphicsEllipseItem,
+)
 from PyQt5.QtCore import QSize, pyqtSignal, QPointF, QRectF, QLineF
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
 import torch
@@ -18,9 +36,10 @@ import cv2
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from tqdm import tqdm
-import Visualizer
-from Camera import Camera
-from Laser import Laser
+import VFLabel.utils.Visualizer as Visualizer
+from VFLabel.vision.Camera import Camera
+from VFLabel.vision.Laser import Laser
+
 
 class ZoomableView(QGraphicsView):
 
@@ -32,7 +51,7 @@ class ZoomableView(QGraphicsView):
         self.zoom = 1.0
 
     def wheelEvent(self, event):
-        mouse = event.angleDelta().y()/120
+        mouse = event.angleDelta().y() / 120
         if mouse > 0:
             self.zoomIn()
         elif mouse < 0:
@@ -49,12 +68,13 @@ class ZoomableView(QGraphicsView):
         self.zoom /= 1.1
         self.updateView()
 
-class MainWindow(QMainWindow):  
+
+class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
 
         self.setWindowTitle("Structured Light Labelling")
-        #self.mainwidget.buttonSignal.connect(self.getGridButtonClicked)
+        # self.mainwidget.buttonSignal.connect(self.getGridButtonClicked)
         ## Set the central widget of the Window.
         self.setMinimumSize(500, 500)
 
@@ -62,7 +82,7 @@ class MainWindow(QMainWindow):
         self.camera = Camera(calib_path)
         self.laser = Laser("data/laser_calib.json", "JSON")
 
-        self.img = QPixmap(cvImgToQT(np.ones((1200, 800, 3), dtype=np.uint8)*255))
+        self.img = QPixmap(cvImgToQT(np.ones((1200, 800, 3), dtype=np.uint8) * 255))
         self.scene = QGraphicsScene()
         self.scene.addPixmap(self.img)
         self.view = ZoomableView(self)
@@ -83,7 +103,9 @@ class MainWindow(QMainWindow):
             self.lines.append(QLineF(pointA[0], pointA[1], pointB[0], pointB[1]))
 
     def generatePointsAt(self, distance):
-        return self.camera.project(self.laser.origin().reshape(-1, 3) + self.laser.rays() * distance)
+        return self.camera.project(
+            self.laser.origin().reshape(-1, 3) + self.laser.rays() * distance
+        )
 
     def drawEpipolarLines(self):
         for line in self.lines:
@@ -92,6 +114,7 @@ class MainWindow(QMainWindow):
     @QtCore.pyqtSlot(int, int)
     def getGridButtonClicked(self, x, y):
         print("Clicked button {} {}".format(x, y))
+
 
 class ButtonGrid(QWidget):
     buttonSignal = pyqtSignal(int, int)
@@ -125,6 +148,7 @@ class ButtonGrid(QWidget):
             for button in row:
                 button.reset()
 
+
 class GridButton(QPushButton):
     clickedSignal = pyqtSignal(int, int)
 
@@ -148,7 +172,7 @@ class GridButton(QPushButton):
         self.setStyleSheet("border: 1px solid #333333;")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     shufti = MainWindow()
     shufti.show()

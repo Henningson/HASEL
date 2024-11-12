@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-'''
+"""
 "Segment Images"
 "Generate Points"
 "Remove Points"
@@ -9,21 +9,42 @@
 "Compute Correspondences"
 "Show Bounding Boxes"
 "Show Pointlabels"
-'''
+"""
 
 import os, sys, glob
 
-#os.environ["CUDA_VISIBLE_DEVICES"]=""
+# os.environ["CUDA_VISIBLE_DEVICES"]=""
 
 from functools import partial
 from PyQt5 import QtCore, QtSql
 from PyQt5.QtGui import QPixmap, QTransform, QImage
 from os.path import expanduser, dirname
-from PyQt5.QtWidgets import QMainWindow, QApplication, QGraphicsScene, QProgressDialog, QGraphicsView, QMenu, QLabel, QFileDialog, QFormLayout, QHBoxLayout, QGraphicsRectItem, QGridLayout, QGraphicsLineItem
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QApplication,
+    QGraphicsScene,
+    QProgressDialog,
+    QGraphicsView,
+    QMenu,
+    QLabel,
+    QFileDialog,
+    QFormLayout,
+    QHBoxLayout,
+    QGraphicsRectItem,
+    QGridLayout,
+    QGraphicsLineItem,
+)
 import skvideo.io
 import sys
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QMainWindow, QWidget, QPushButton, QAction, QGraphicsPolygonItem, QGraphicsEllipseItem
+from PyQt5.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QPushButton,
+    QAction,
+    QGraphicsPolygonItem,
+    QGraphicsEllipseItem,
+)
 from PyQt5.QtCore import QSize, pyqtSignal, QPointF, QRectF, QLineF
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
 import torch
@@ -34,13 +55,14 @@ import cv2
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from tqdm import tqdm
-import Visualizer
-import utils
+import VFLabel.utils.Visualizer as Visualizer
+import VFLabel.utils.utils as utils
 import json
 import shutil
 
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
 
 def cvImgToQT(image):
     height, width, channel = image.shape
@@ -65,7 +87,7 @@ class ZoomableView(QGraphicsView):
             shufti.menu_widget.enableEverything()
 
     def wheelEvent(self, event):
-        mouse = event.angleDelta().y()/120
+        mouse = event.angleDelta().y() / 120
         if mouse > 0:
             shufti.zoomIn()
         elif mouse < 0:
@@ -73,22 +95,22 @@ class ZoomableView(QGraphicsView):
 
     def contextMenuEvent(self, event):
         menu = QMenu()
-        menu.addAction('Zoom in               +, E', shufti.zoomIn)
-        menu.addAction('Zoom out              -, D', shufti.zoomOut)
-        menu.addAction('Toggle fullscreen     F11',  shufti.toggleFullscreen)
-        menu.addAction('Next image            D',    shufti.nextImage)
-        menu.addAction('Previous image        D',    shufti.prevImage)
-        menu.addAction('Forward n frames      E',    shufti.nextImage)
-        menu.addAction('Backward n frames     A',    shufti.prevImage)
-        menu.addAction('Fit view              F',    shufti.fitView)
-        menu.addAction('Reset zoom            1',    shufti.zoomReset)
-        menu.addAction('Quit                  ESC',  shufti.close)
+        menu.addAction("Zoom in               +, E", shufti.zoomIn)
+        menu.addAction("Zoom out              -, D", shufti.zoomOut)
+        menu.addAction("Toggle fullscreen     F11", shufti.toggleFullscreen)
+        menu.addAction("Next image            D", shufti.nextImage)
+        menu.addAction("Previous image        D", shufti.prevImage)
+        menu.addAction("Forward n frames      E", shufti.nextImage)
+        menu.addAction("Backward n frames     A", shufti.prevImage)
+        menu.addAction("Fit view              F", shufti.fitView)
+        menu.addAction("Reset zoom            1", shufti.zoomReset)
+        menu.addAction("Quit                  ESC", shufti.close)
         menu.exec_(event.globalPos())
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         point = self.mapToScene(self.mapFromGlobal(event.globalPos()))
-        
+
         print(type(self.scene().itemAt(point, QTransform())))
 
         if not self.pointRemovalMode:
@@ -97,9 +119,10 @@ class ZoomableView(QGraphicsView):
             self.scene().removeItem(self.scene().itemAt(point, QTransform()))
             self.removePointSignal.emit(point)
 
-class MainWindow(QMainWindow):    
+
+class MainWindow(QMainWindow):
     def createAction(self, text, shortcut, statustip, function):
-        action = QAction(text, self)        
+        action = QAction(text, self)
         action.setShortcut(shortcut)
         action.setStatusTip(statustip)
         action.triggered.connect(function)
@@ -141,17 +164,17 @@ class MainWindow(QMainWindow):
         QMainWindow.__init__(self)
         self.initMemberVariables()
 
-        self.setMinimumSize(QSize(800, 600))            
+        self.setMinimumSize(QSize(800, 600))
 
         # Create new action
-        newAction = self.createAction('&New', 'Ctrl+N', 'New Project', self.newCall)
-        loadAction = self.createAction('&Load', 'Ctrl+O', 'Load Project', self.loadCall)
-        saveAction = self.createAction('&Save', 'Ctrl+S', 'Save Project', self.saveCall)
-        exitAction = self.createAction('&Exit', 'Ctrl+Q', 'Exit program', self.exitCall)
+        newAction = self.createAction("&New", "Ctrl+N", "New Project", self.newCall)
+        loadAction = self.createAction("&Load", "Ctrl+O", "Load Project", self.loadCall)
+        saveAction = self.createAction("&Save", "Ctrl+S", "Save Project", self.saveCall)
+        exitAction = self.createAction("&Exit", "Ctrl+Q", "Exit program", self.exitCall)
 
         # Create menu bar and add action
         menuBar = self.menuBar()
-        fileMenu = menuBar.addMenu('&File')
+        fileMenu = menuBar.addMenu("&File")
         fileMenu.addAction(newAction)
         fileMenu.addAction(loadAction)
         fileMenu.addAction(saveAction)
@@ -178,42 +201,73 @@ class MainWindow(QMainWindow):
         ## Set the central widget of the Window.
         self.setCentralWidget(self.mainwidget)
 
-        self.menu_widget.button_dict["Segment Images"].clicked.connect(self.toggleSegmentation)
-        self.menu_widget.button_dict["Generate Points"].clicked.connect(self.generatePoints)
-        self.menu_widget.button_dict["Remove Points"].clicked.connect(self.view.togglePointRemovalMode)
-        self.menu_widget.button_dict["Add Points"].clicked.connect(self.togglePointAddMode)
+        self.menu_widget.button_dict["Segment Images"].clicked.connect(
+            self.toggleSegmentation
+        )
+        self.menu_widget.button_dict["Generate Points"].clicked.connect(
+            self.generatePoints
+        )
+        self.menu_widget.button_dict["Remove Points"].clicked.connect(
+            self.view.togglePointRemovalMode
+        )
+        self.menu_widget.button_dict["Add Points"].clicked.connect(
+            self.togglePointAddMode
+        )
         self.menu_widget.buttonGrid.buttonSignal.connect(self.getGridButtonClicked)
-        self.menu_widget.button_dict["Compute Correspondences"].clicked.connect(self.computeCorrespondences)
-        self.menu_widget.button_dict["Interpolate Correspondences"].clicked.connect(self.interpolate)
-        self.menu_widget.button_dict["Remove Search Lines"].clicked.connect(self.toggleRemoveSearchLineMode)
-        self.menu_widget.button_dict["Show Search Lines"].clicked.connect(self.toggleShowSearchLines)
-        self.menu_widget.button_dict["Show Generated Points"].clicked.connect(self.toggleShowGeneratedPoints)
-        self.menu_widget.button_dict["Show Labeled Points"].clicked.connect(self.toggleShowLabeledPoints)
-        self.menu_widget.button_dict["Show Pointlabels"].clicked.connect(self.toggleShowLabels)
+        self.menu_widget.button_dict["Compute Correspondences"].clicked.connect(
+            self.computeCorrespondences
+        )
+        self.menu_widget.button_dict["Interpolate Correspondences"].clicked.connect(
+            self.interpolate
+        )
+        self.menu_widget.button_dict["Remove Search Lines"].clicked.connect(
+            self.toggleRemoveSearchLineMode
+        )
+        self.menu_widget.button_dict["Show Search Lines"].clicked.connect(
+            self.toggleShowSearchLines
+        )
+        self.menu_widget.button_dict["Show Generated Points"].clicked.connect(
+            self.toggleShowGeneratedPoints
+        )
+        self.menu_widget.button_dict["Show Labeled Points"].clicked.connect(
+            self.toggleShowLabeledPoints
+        )
+        self.menu_widget.button_dict["Show Pointlabels"].clicked.connect(
+            self.toggleShowLabels
+        )
 
         self.view.pointSignal.connect(self.segmentationPointAdded)
         self.view.removePointSignal.connect(self.removePoint)
         self.view.pointSignal.connect(self.addPoint)
         self.view.pointSignal.connect(self.generateSearchLine)
         self.view.pointSignal.connect(self.removeSearchLine)
-        
+
         self.menu_widget.disableEverythingExcept(None)
 
     def closeEvent(self, event):
         self.winState()
 
     def newCall(self):
-        video_path, _ = QFileDialog.getOpenFileName(self, 'Open Video', '', "Video Files (*.avi *.mp4 *.mkv *.AVI *.MP4)")
-        self.folder_path = os.path.join("projects", os.path.splitext(os.path.basename(video_path))[0])
+        video_path, _ = QFileDialog.getOpenFileName(
+            self, "Open Video", "", "Video Files (*.avi *.mp4 *.mkv *.AVI *.MP4)"
+        )
+        self.folder_path = os.path.join(
+            "projects", os.path.splitext(os.path.basename(video_path))[0]
+        )
 
-        self.setWindowTitle("Structured Light Labelling - " + os.path.splitext(os.path.basename(video_path))[0])
+        self.setWindowTitle(
+            "Structured Light Labelling - "
+            + os.path.splitext(os.path.basename(video_path))[0]
+        )
 
         try:
             os.mkdir(self.folder_path)
-            shutil.copy(video_path,  os.path.join(self.folder_path, os.path.basename(video_path)))
+            shutil.copy(
+                video_path, os.path.join(self.folder_path, os.path.basename(video_path))
+            )
         except:
             print("Folder {0} already exists.".format(self.folder_path))
-        
+
         self.initMemberVariables()
         self.video = skvideo.io.vread(video_path)[:10, :, :, :]
         self.current_img_index = 0
@@ -225,31 +279,46 @@ class MainWindow(QMainWindow):
         self.redraw()
 
     def loadCall(self):
-        self.folder_path = QFileDialog.getExistingDirectory(self, 'Open Folder')
+        self.folder_path = QFileDialog.getExistingDirectory(self, "Open Folder")
 
-        if self.folder_path == '':
+        if self.folder_path == "":
             return
 
         self.initMemberVariables()
         self.menu_widget.buttonGrid.reset()
 
+        self.setWindowTitle(
+            "Structured Light Labelling - " + os.path.basename(self.folder_path)
+        )
 
-        self.setWindowTitle("Structured Light Labelling - " + os.path.basename(self.folder_path))
-
-        self.video = skvideo.io.vread(os.path.join(self.folder_path, os.path.basename(self.folder_path) + ".mp4"))[:10, :, :, :]
-        self.segmentation = self.loadSegmentationMask(os.path.join(self.folder_path, "segmentation.png"))
-        self.segmentationPoints = self.loadSegmentationPoints(os.path.join(self.folder_path, "segmentation_points.npy"))
-        self.points2d = self.loadGeneratedPoints(os.path.join(self.folder_path, "generated_points.json"))
-        self.searchLines = self.loadSearchLines(os.path.join(self.folder_path, "search_lines.json"))
-        self.labels, self.labeledpoints2d = self.loadLabelsAndPoints(os.path.join(self.folder_path, "labeled_points.json"))
-        self.pointArray = self.loadPointArray(os.path.join(self.folder_path, "pointsInGrid.npy"))
+        self.video = skvideo.io.vread(
+            os.path.join(self.folder_path, os.path.basename(self.folder_path) + ".mp4")
+        )[:10, :, :, :]
+        self.segmentation = self.loadSegmentationMask(
+            os.path.join(self.folder_path, "segmentation.png")
+        )
+        self.segmentationPoints = self.loadSegmentationPoints(
+            os.path.join(self.folder_path, "segmentation_points.npy")
+        )
+        self.points2d = self.loadGeneratedPoints(
+            os.path.join(self.folder_path, "generated_points.json")
+        )
+        self.searchLines = self.loadSearchLines(
+            os.path.join(self.folder_path, "search_lines.json")
+        )
+        self.labels, self.labeledpoints2d = self.loadLabelsAndPoints(
+            os.path.join(self.folder_path, "labeled_points.json")
+        )
+        self.pointArray = self.loadPointArray(
+            os.path.join(self.folder_path, "pointsInGrid.npy")
+        )
 
         self.menu_widget.enableEverything()
         self.redraw()
 
     def exitCall(self):
         self.close()
-        print('Exit app')
+        print("Exit app")
 
     def saveCall(self):
         if len(self.segmentationPoints) != 0:
@@ -294,7 +363,9 @@ class MainWindow(QMainWindow):
         self.labels = []
         self.labeledpoints2d = self.points2d.copy()
 
-        progress = QProgressDialog("Computing Correspondences", None, 0, len(self.points2d), self)
+        progress = QProgressDialog(
+            "Computing Correspondences", None, 0, len(self.points2d), self
+        )
         progress.setWindowModality(Qt.WindowModal)
 
         for frame_num, perFramePoints in enumerate(self.points2d):
@@ -308,9 +379,15 @@ class MainWindow(QMainWindow):
                     # Already matched this point, continue
                     if foundPoints[i]:
                         continue
-                    
-                    pointLineDistance = utils.pointLineSegmentDistance(np.array([line.p1().y(), line.p1().x()]), np.array([line.p2().y(), line.p2().x()]), perFramePoints[i])
-                    if pointLineDistance < self.menu_widget.getValueFromEdit("Threshold"):
+
+                    pointLineDistance = utils.pointLineSegmentDistance(
+                        np.array([line.p1().y(), line.p1().x()]),
+                        np.array([line.p2().y(), line.p2().x()]),
+                        perFramePoints[i],
+                    )
+                    if pointLineDistance < self.menu_widget.getValueFromEdit(
+                        "Threshold"
+                    ):
                         x = line.x
                         y = line.y
                         self.pointArray[frame_num, x, y, 1] = perFramePoints[i, 0]
@@ -332,7 +409,9 @@ class MainWindow(QMainWindow):
                 return
 
             video_length, height, width, _ = self.pointArray.shape
-            progress = QProgressDialog("Interpolating Correspondences", None, 0, video_length - 2, self)
+            progress = QProgressDialog(
+                "Interpolating Correspondences", None, 0, video_length - 2, self
+            )
             progress.setWindowModality(Qt.WindowModal)
 
             for i in range(1, video_length - 1):
@@ -341,7 +420,7 @@ class MainWindow(QMainWindow):
                 for y in range(height):
                     for x in range(width):
                         # Check point at (FRAME[i-1 -> i+1] x X x Y x 2 )
-                        points = self.pointArray[i-1:i+2, y, x, :]
+                        points = self.pointArray[i - 1 : i + 2, y, x, :]
                         if np.isnan(points[0]).any():
                             continue
 
@@ -352,15 +431,17 @@ class MainWindow(QMainWindow):
                             new_point = (points[0] + points[2]) / 2.0
                             self.pointArray[i, y, x, :] = new_point
                             self.labels[i].append([y, x])
-                            self.labeledpoints2d[i] = np.concatenate([self.labeledpoints2d[i], np.expand_dims(new_point, 0)[:, [1, 0]]])
-
+                            self.labeledpoints2d[i] = np.concatenate(
+                                [
+                                    self.labeledpoints2d[i],
+                                    np.expand_dims(new_point, 0)[:, [1, 0]],
+                                ]
+                            )
 
             progress.setValue(video_length - 2)
             self.redraw()
         except Exception as e:
             print(e)
-
-
 
     def toggleShowLabels(self):
         self.showLabels = not self.showLabels
@@ -375,6 +456,7 @@ class MainWindow(QMainWindow):
             self.menu_widget.enableEverything()
 
     QtCore.pyqtSlot(QPointF)
+
     def generateSearchLine(self, point):
         if not self.searchLineMode:
             return
@@ -391,7 +473,14 @@ class MainWindow(QMainWindow):
         x = self.currentButton[0]
         y = self.currentButton[1]
 
-        self.searchLines.append(IdentifiableLineItem(self.searchLineTuple[0].toPoint(), self.searchLineTuple[1].toPoint(), x, y))
+        self.searchLines.append(
+            IdentifiableLineItem(
+                self.searchLineTuple[0].toPoint(),
+                self.searchLineTuple[1].toPoint(),
+                x,
+                y,
+            )
+        )
         self.toggleSearchLineMode()
         self.redraw()
 
@@ -402,7 +491,9 @@ class MainWindow(QMainWindow):
 
         for searchLine in self.searchLines:
             item = self.scene.itemAt(point, QTransform())
-            if type(item) == QGraphicsLineItem and searchLine.isEqualsToQGraphicsLine(item):
+            if type(item) == QGraphicsLineItem and searchLine.isEqualsToQGraphicsLine(
+                item
+            ):
                 self.searchLines.remove(searchLine)
 
         self.redraw()
@@ -413,7 +504,7 @@ class MainWindow(QMainWindow):
         self.currentButton = (x, y)
         self.boundingBoxIndex = 0
         self.toggleSearchLineMode()
-    
+
     @QtCore.pyqtSlot(QPointF)
     def segmentationPointAdded(self, point):
         if not self.segmentation_mode:
@@ -422,7 +513,10 @@ class MainWindow(QMainWindow):
         if point.x() < 0 or point.y() < 0:
             return
 
-        if point.y() > self.video[0].shape[0] - 1 or point.x() > self.video[0].shape[1] - 1:
+        if (
+            point.y() > self.video[0].shape[0] - 1
+            or point.x() > self.video[0].shape[1] - 1
+        ):
             return
 
         self.segmentationPoints.append(point)
@@ -434,7 +528,7 @@ class MainWindow(QMainWindow):
     def removePoint(self, clicked_point):
         points = self.points2d[self.current_img_index]
         clicked_point = np.array([clicked_point.y(), clicked_point.x()]).reshape(-1, 2)
-        minimum = np.sqrt(np.sum((points - clicked_point)**2, axis=1)).argmin()
+        minimum = np.sqrt(np.sum((points - clicked_point) ** 2, axis=1)).argmin()
         self.points2d[self.current_img_index] = np.delete(points, minimum, axis=0)
 
     def togglePointAddMode(self):
@@ -451,7 +545,9 @@ class MainWindow(QMainWindow):
             return
 
         point = np.array([clicked_point.y(), clicked_point.x()])
-        self.points2d[self.current_img_index] = np.concatenate([self.points2d[self.current_img_index], point.reshape(-1, 2)])
+        self.points2d[self.current_img_index] = np.concatenate(
+            [self.points2d[self.current_img_index], point.reshape(-1, 2)]
+        )
         self.redraw()
 
     def toggleSegmentation(self):
@@ -462,7 +558,6 @@ class MainWindow(QMainWindow):
         else:
             self.menu_widget.enableEverything()
 
-
         if len(self.segmentationPoints) > 2:
             self.generateCVSegmentation()
 
@@ -470,7 +565,11 @@ class MainWindow(QMainWindow):
         if self.polygonhandle:
             self.scene.removeItem(self.polygonhandle)
 
-        self.polygonhandle = self.scene.addPolygon(QPolygonF(self.segmentationPoints), QPen(QColor(128, 128, 255, 128)), QBrush(QColor(128, 128, 255, 128)))
+        self.polygonhandle = self.scene.addPolygon(
+            QPolygonF(self.segmentationPoints),
+            QPen(QColor(128, 128, 255, 128)),
+            QBrush(QColor(128, 128, 255, 128)),
+        )
 
     def drawSearchLines(self):
         for searchLine in self.searchLines:
@@ -478,7 +577,10 @@ class MainWindow(QMainWindow):
 
     def drawLabels(self):
         try:
-            for label, pos in zip(self.labels[self.current_img_index], self.labeledpoints2d[self.current_img_index].tolist()):
+            for label, pos in zip(
+                self.labels[self.current_img_index],
+                self.labeledpoints2d[self.current_img_index].tolist(),
+            ):
                 if np.isnan(np.array(pos)).any():
                     continue
 
@@ -489,8 +591,13 @@ class MainWindow(QMainWindow):
             return
 
     def generateCVSegmentation(self):
-        base = np.zeros((self.video[0].shape[0], self.video[0].shape[1]), dtype=np.uint8)
-        np_points = np.array([[point.x(), point.y()] for point in self.segmentationPoints], dtype=np.int32)
+        base = np.zeros(
+            (self.video[0].shape[0], self.video[0].shape[1]), dtype=np.uint8
+        )
+        np_points = np.array(
+            [[point.x(), point.y()] for point in self.segmentationPoints],
+            dtype=np.int32,
+        )
         test = cv2.drawContours(base, [np_points], 0, thickness=-1, color=1)
         self.segmentation = test
 
@@ -499,13 +606,34 @@ class MainWindow(QMainWindow):
             print("Please generate a segmentation")
             return
 
-        model = Model(in_channels=1, out_channels=2, state_dict=torch.load("rhine_hard_net_large.pth.tar", map_location=DEVICE), features=[32, 64, 128, 256, 512, 1024]).to(DEVICE)
+        model = Model(
+            in_channels=1,
+            out_channels=2,
+            state_dict=torch.load("rhine_hard_net_large.pth.tar", map_location=DEVICE),
+            features=[32, 64, 128, 256, 512, 1024],
+        ).to(DEVICE)
         loc = LSQLocalization(local_maxima_window=25, device=DEVICE)
-        transform = A.Compose([A.Resize(height=1200, width=800), A.Normalize(mean=[0.0], std=[1.0], max_pixel_value=255.0,), ToTensorV2(), ])
-        segment_transform = A.Compose([A.Resize(height=1200, width=800), ToTensorV2(),])
+        transform = A.Compose(
+            [
+                A.Resize(height=1200, width=800),
+                A.Normalize(
+                    mean=[0.0],
+                    std=[1.0],
+                    max_pixel_value=255.0,
+                ),
+                ToTensorV2(),
+            ]
+        )
+        segment_transform = A.Compose(
+            [
+                A.Resize(height=1200, width=800),
+                ToTensorV2(),
+            ]
+        )
 
-
-        progress = QProgressDialog("Generating Points", None, 0, self.video.shape[0], self)
+        progress = QProgressDialog(
+            "Generating Points", None, 0, self.video.shape[0], self
+        )
         progress.setWindowModality(Qt.WindowModal)
         progress.setCancelButton(None)
 
@@ -518,12 +646,11 @@ class MainWindow(QMainWindow):
 
                 with torch.cuda.amp.autocast():
                     prediction = model(image.unsqueeze(0)).softmax(dim=1)
-                    #_, mean, _ = loc.test_with_image(image, prediction, segmentation=segment)
+                    # _, mean, _ = loc.test_with_image(image, prediction, segmentation=segment)
                     _, mean, _ = loc.test(prediction, segmentation=segment)
                     means = mean[0].detach().cpu().numpy()
 
                     self.points2d.append(means[~np.isnan(means).any(axis=1)])
-
 
         progress.setValue(self.video.shape[0])
         self.redraw()
@@ -532,25 +659,50 @@ class MainWindow(QMainWindow):
         if not len(self.points2d) > 0:
             return
 
-        print("Num of Points2D at Frame {0}: {1}".format(self.current_img_index, self.points2d[self.current_img_index].shape[0]))
+        print(
+            "Num of Points2D at Frame {0}: {1}".format(
+                self.current_img_index, self.points2d[self.current_img_index].shape[0]
+            )
+        )
 
         for point in self.points2d[self.current_img_index].tolist():
-            self.scene.addEllipse(point[1] - self.pointsize//2, point[0] - self.pointsize//2, self.pointsize, self.pointsize, QPen(QColor(128, 128, 255, 128)), QBrush(QColor(128, 128, 255, 128)))
+            self.scene.addEllipse(
+                point[1] - self.pointsize // 2,
+                point[0] - self.pointsize // 2,
+                self.pointsize,
+                self.pointsize,
+                QPen(QColor(128, 128, 255, 128)),
+                QBrush(QColor(128, 128, 255, 128)),
+            )
 
     def drawLabeledPoints(self):
         if not len(self.labeledpoints2d) > 0:
             return
 
-        print("Num of Points2D at Frame {0}: {1}".format(self.current_img_index, self.points2d[self.current_img_index].shape[0]))
+        print(
+            "Num of Points2D at Frame {0}: {1}".format(
+                self.current_img_index, self.points2d[self.current_img_index].shape[0]
+            )
+        )
 
         for point in self.labeledpoints2d[self.current_img_index].tolist():
-            self.scene.addEllipse(point[1] - self.pointsize//2, point[0] - self.pointsize//2, self.pointsize, self.pointsize, QPen(QColor(255, 128, 128, 128)), QBrush(QColor(255, 128, 128, 128)))
+            self.scene.addEllipse(
+                point[1] - self.pointsize // 2,
+                point[0] - self.pointsize // 2,
+                self.pointsize,
+                self.pointsize,
+                QPen(QColor(255, 128, 128, 128)),
+                QBrush(QColor(255, 128, 128, 128)),
+            )
 
     def saveSegmentationPoints(self):
-        np.save(os.path.join(self.folder_path, "segmentation_points.npy"), np.array(self.segmentationPoints))
+        np.save(
+            os.path.join(self.folder_path, "segmentation_points.npy"),
+            np.array(self.segmentationPoints),
+        )
 
     def loadSegmentationPoints(self, path):
-        try: 
+        try:
             return np.load(path)
         except:
             return []
@@ -558,8 +710,10 @@ class MainWindow(QMainWindow):
         return []
 
     def saveSegmentationMask(self):
-        segmentation_image_file_path = os.path.join(self.folder_path, "segmentation.png")
-        cv2.imwrite(segmentation_image_file_path, self.segmentation*255)
+        segmentation_image_file_path = os.path.join(
+            self.folder_path, "segmentation.png"
+        )
+        cv2.imwrite(segmentation_image_file_path, self.segmentation * 255)
 
     def loadSegmentationMask(self, path):
         try:
@@ -568,17 +722,21 @@ class MainWindow(QMainWindow):
             return None
 
     def saveGeneratedPoints(self):
-        generated_points_file_path = os.path.join(self.folder_path, "generated_points.json")
+        generated_points_file_path = os.path.join(
+            self.folder_path, "generated_points.json"
+        )
 
         point_dict = {}
         for frame, per_frame_points in enumerate(self.points2d):
             frame_list = []
             for point in per_frame_points.tolist():
-                frame_list.append({"position_x": float(point[1]), "position_y": float(point[0])})
+                frame_list.append(
+                    {"position_x": float(point[1]), "position_y": float(point[0])}
+                )
             point_dict["Frame{0}".format(frame)] = frame_list
 
         with open(generated_points_file_path, "w") as fp:
-            json.dump(point_dict,fp)
+            json.dump(point_dict, fp)
 
     def loadGeneratedPoints(self, path):
         try:
@@ -590,7 +748,9 @@ class MainWindow(QMainWindow):
             for key in keys:
                 framePoints = []
                 for point in data[key]:
-                    framePoints.append(np.array((point["position_y"], point["position_x"])))
+                    framePoints.append(
+                        np.array((point["position_y"], point["position_x"]))
+                    )
                 framePoints = np.array(framePoints)
                 points.append(framePoints)
 
@@ -604,7 +764,6 @@ class MainWindow(QMainWindow):
         except:
             return np.zeros([self.video.shape[0], 18, 18, 2], dtype=np.float32)
 
-
     def savePointArray(self):
         np.save(os.path.join(self.folder_path, "pointsInGrid.npy"), self.pointArray)
 
@@ -613,12 +772,13 @@ class MainWindow(QMainWindow):
         search_line_dict = {}
         for count, line in enumerate(self.searchLines):
             search_line_dict["Line{0}".format(count)] = {
-                "x0": float(line.p1().x()), 
-                "x1": float(line.p2().x()), 
-                "y0": float(line.p1().y()), 
-                "y1": float(line.p2().y()), 
-                "label_x": int(line.x), 
-                "label_y": int(line.y)}
+                "x0": float(line.p1().x()),
+                "x1": float(line.p2().x()),
+                "y0": float(line.p1().y()),
+                "y1": float(line.p2().y()),
+                "label_x": int(line.x),
+                "label_y": int(line.y),
+            }
 
         with open(search_lines_file_path, "w") as fp:
             json.dump(search_line_dict, fp)
@@ -630,9 +790,16 @@ class MainWindow(QMainWindow):
             for key in data.keys():
                 x = data[key]["label_x"]
                 y = data[key]["label_y"]
-                
+
                 self.menu_widget.buttonGrid.getButton(y, x).setActivated()
-                searchLines.append(IdentifiableLineItem(QPointF(data[key]["x0"], data[key]["y0"]), QPointF(data[key]["x1"], data[key]["y1"]), x, y))
+                searchLines.append(
+                    IdentifiableLineItem(
+                        QPointF(data[key]["x0"], data[key]["y0"]),
+                        QPointF(data[key]["x1"], data[key]["y1"]),
+                        x,
+                        y,
+                    )
+                )
             return searchLines
         except:
             []
@@ -641,15 +808,24 @@ class MainWindow(QMainWindow):
         labeled_points_file_path = os.path.join(self.folder_path, "labeled_points.json")
 
         point_dict = {}
-        for frame, (per_frame_labels, per_frame_points) in enumerate(zip(self.labels, self.labeledpoints2d)):
+        for frame, (per_frame_labels, per_frame_points) in enumerate(
+            zip(self.labels, self.labeledpoints2d)
+        ):
             frame_list = []
             for label, point in zip(per_frame_labels, per_frame_points.tolist()):
-                frame_list.append({"position_x": float(point[1]), "position_y": float(point[0]), "label_x": int(label[0]), "label_y": int(label[1])})
+                frame_list.append(
+                    {
+                        "position_x": float(point[1]),
+                        "position_y": float(point[0]),
+                        "label_x": int(label[0]),
+                        "label_y": int(label[1]),
+                    }
+                )
             point_dict["Frame{0}".format(frame)] = frame_list
 
         with open(labeled_points_file_path, "w") as fp:
-            json.dump(point_dict,fp)
-    
+            json.dump(point_dict, fp)
+
     def loadLabelsAndPoints(self, path):
         try:
             data = json.load(open(path))
@@ -661,9 +837,11 @@ class MainWindow(QMainWindow):
             for key in keys:
                 frameLabels = []
                 framePoints = []
-                
+
                 for point in data[key]:
-                    framePoints.append(np.array((point["position_y"], point["position_x"])))
+                    framePoints.append(
+                        np.array((point["position_y"], point["position_x"]))
+                    )
                     frameLabels.append([point["label_x"], point["label_y"]])
 
                 framePoints = np.array(framePoints)
@@ -726,13 +904,21 @@ class MainWindow(QMainWindow):
         self.winposy = self.pos().y()
 
     def prevImage(self):
-        prev_index = self.current_img_index - 1 if self.current_img_index > 0 else self.current_img_index
+        prev_index = (
+            self.current_img_index - 1
+            if self.current_img_index > 0
+            else self.current_img_index
+        )
         self.current_img_index = prev_index
 
         self.setImage(self.video[self.current_img_index])
 
     def nextImage(self):
-        next_index = self.current_img_index + 1 if self.current_img_index < self.video.shape[0] - 1 else self.current_img_index
+        next_index = (
+            self.current_img_index + 1
+            if self.current_img_index < self.video.shape[0] - 1
+            else self.current_img_index
+        )
         self.current_img_index = next_index
 
         self.setImage(self.video[self.current_img_index])
@@ -744,7 +930,7 @@ class MainWindow(QMainWindow):
 
         if self.showGeneratedPoints:
             self.drawGeneratedPoints()
-        
+
         if self.showLabeledPoints:
             self.drawLabeledPoints()
 
@@ -761,7 +947,7 @@ class MainWindow(QMainWindow):
 
         if self.showGeneratedPoints:
             self.drawGeneratedPoints()
-        
+
         if self.showLabeledPoints:
             self.drawLabeledPoints()
 
@@ -783,7 +969,8 @@ class MainWindow(QMainWindow):
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QLineEdit, QPushButton
-from gridbuttonclick import ButtonGrid
+from VFLabel.GUI.gridbuttonclick import ButtonGrid
+
 
 class LeftMenuWidget(QWidget):
     def __init__(self, parent=None):
@@ -859,7 +1046,8 @@ class IdentifiableLineItem(QLineF):
     def isEqualsToQGraphicsLine(self, qGraphicsLine):
         return self == qGraphicsLine.line()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     app = QApplication(sys.argv)
     shufti = MainWindow()
     shufti.show()
