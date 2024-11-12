@@ -80,6 +80,7 @@ class ZoomableViewWidget(QGraphicsView):
         menu = QMenu()
         menu.addAction("Zoom in               MouseWheel Up", self.zoomIn)
         menu.addAction("Zoom out              MouseWheel Down", self.zoomOut)
+        menu.addAction("Reset Zoom", self.zoomReset)
         menu.exec_(event.globalPos())
 
     def zoomIn(self) -> None:

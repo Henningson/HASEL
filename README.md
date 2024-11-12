@@ -16,7 +16,14 @@ pip install torchmetrics albumentations imageio
 
 ```
 
-Install VFLabel
+Install VFLabel for **development**:
+```
+git clone https://github.com/Henningson/VFLabel.git
+cd VFLabel
+python3 -m pip install -e .
+```
+
+Install VFLabel for **general usage**:
 ```
 git clone https://github.com/Henningson/VFLabel.git
 cd VFLabel

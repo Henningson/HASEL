@@ -1,1 +1,2 @@
 from .zoomableViewWidget import ZoomableViewWidget
+from .drawSegmentationWidget import DrawSegmentationWidget
