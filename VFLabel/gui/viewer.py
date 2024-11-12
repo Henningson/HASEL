@@ -70,56 +70,6 @@ def cvImgToQT(image):
     return QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
 
 
-class ZoomableView(QGraphicsView):
-    pointSignal = pyqtSignal(QPointF)
-    removePointSignal = pyqtSignal(QPointF)
-
-    def __init__(self, parent=None):
-        super(ZoomableView, self).__init__(parent)
-        self.pointRemovalMode = False
-
-    def togglePointRemovalMode(self):
-        self.pointRemovalMode = not self.pointRemovalMode
-
-        if self.pointRemovalMode:
-            shufti.menu_widget.disableEverythingExcept("Remove Points")
-        else:
-            shufti.menu_widget.enableEverything()
-
-    def wheelEvent(self, event):
-        mouse = event.angleDelta().y() / 120
-        if mouse > 0:
-            shufti.zoomIn()
-        elif mouse < 0:
-            shufti.zoomOut()
-
-    def contextMenuEvent(self, event):
-        menu = QMenu()
-        menu.addAction("Zoom in               +, E", shufti.zoomIn)
-        menu.addAction("Zoom out              -, D", shufti.zoomOut)
-        menu.addAction("Toggle fullscreen     F11", shufti.toggleFullscreen)
-        menu.addAction("Next image            D", shufti.nextImage)
-        menu.addAction("Previous image        D", shufti.prevImage)
-        menu.addAction("Forward n frames      E", shufti.nextImage)
-        menu.addAction("Backward n frames     A", shufti.prevImage)
-        menu.addAction("Fit view              F", shufti.fitView)
-        menu.addAction("Reset zoom            1", shufti.zoomReset)
-        menu.addAction("Quit                  ESC", shufti.close)
-        menu.exec_(event.globalPos())
-
-    def mousePressEvent(self, event):
-        super().mousePressEvent(event)
-        point = self.mapToScene(self.mapFromGlobal(event.globalPos()))
-
-        print(type(self.scene().itemAt(point, QTransform())))
-
-        if not self.pointRemovalMode:
-            self.pointSignal.emit(point)
-        elif type(self.scene().itemAt(point, QTransform())) == QGraphicsEllipseItem:
-            self.scene().removeItem(self.scene().itemAt(point, QTransform()))
-            self.removePointSignal.emit(point)
-
-
 class MainWindow(QMainWindow):
     def createAction(self, text, shortcut, statustip, function):
         action = QAction(text, self)

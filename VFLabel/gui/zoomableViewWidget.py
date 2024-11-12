@@ -1,5 +1,19 @@
-from PyQt5.QtGui import QTransform
+from PyQt5.QtGui import QTransform, QImage, QPixmap
 from PyQt5.QtWidgets import QGraphicsView, QMenu
+
+# For testing purposes. We should probably write tests somewhere else, as to not clutter those files here.
+import sys
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QImage, QPixmap
+from PyQt5.QtWidgets import (
+    QApplication,
+    QGraphicsScene,
+    QMainWindow,
+    QVBoxLayout,
+    QWidget,
+)
+from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsPixmapItem
+from PyQt5.QtGui import QTransform
 
 
 class ZoomableViewWidget(QGraphicsView):
@@ -45,6 +59,10 @@ class ZoomableViewWidget(QGraphicsView):
         super(ZoomableViewWidget, self).__init__(parent)
         self._zoom: float = 1.0
         self._zoom_speed: float = 1.1
+        self._image_pointer: QGraphicsPixmapItem = None
+        self.setDragMode(QGraphicsView.ScrollHandDrag)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
     def wheelEvent(self, event) -> None:
         """
@@ -77,21 +95,21 @@ class ZoomableViewWidget(QGraphicsView):
         Increases the zoom level by a factor of self._zoom_speed.
         """
         self._zoom *= self._zoom_speed
-        self.updateView()
+        self.update_view()
 
     def zoomOut(self) -> None:
         """
         Decreases the zoom level by a factor of self._zoom_speed.
         """
         self._zoom /= self._zoom_speed
-        self.updateView()
+        self.update_view()
 
     def zoomReset(self) -> None:
         """
         Resets the zoom level to 1.
         """
         self._zoom = 1
-        self.updateView()
+        self.update_view()
 
     def zoom(self) -> float:
         """
@@ -117,28 +135,26 @@ class ZoomableViewWidget(QGraphicsView):
         """
         self._zoom_speed = zoom_speed
 
-    def updateView(self) -> None:
+    def update_view(self) -> None:
         """
         Updates the view transformation based on the current zoom level.
         """
-        self.setTransform(QTransform().scale(self.zoom, self.zoom))
+        self.setTransform(QTransform().scale(self._zoom, self._zoom))
+
+    def set_image(self, image: QImage) -> None:
+        """
+        Update the shown image.
+        """
+
+        if self.scene().items():
+            self.scene().removeItem(self._image_pointer)
+
+        pixmap = QPixmap(image)
+        pixmap_item = QGraphicsPixmapItem(pixmap)
+        self._image_pointer = self.scene().addItem(pixmap_item)
 
 
 if __name__ == "__main__":
-    import sys
-    from PyQt5.QtCore import Qt
-    from PyQt5.QtGui import QImage, QPixmap
-    from PyQt5.QtWidgets import (
-        QApplication,
-        QGraphicsScene,
-        QGraphicsView,
-        QGraphicsPixmapItem,
-        QMainWindow,
-        QVBoxLayout,
-        QWidget,
-    )
-    from PyQt5.QtWidgets import QGraphicsView, QMenu
-    from PyQt5.QtGui import QTransform
 
     class MainWindow(QMainWindow):
         def __init__(self):
@@ -150,18 +166,16 @@ if __name__ == "__main__":
             layout = QVBoxLayout(central_widget)
 
             # Set up the zoomable view
-            self.view = ZoomableViewWidget(self)
-            layout.addWidget(self.view)
+            view = ZoomableViewWidget(self)
+            layout.addWidget(view)
 
             # Set up the scene for the view
-            self.scene = QGraphicsScene(self)
-            self.view.setScene(self.scene)
+            scene = QGraphicsScene(self)
+            view.setScene(scene)
 
             # Load an image to display in the view
-            self.image = QImage("path_to_your_image.jpg")
-            pixmap = QPixmap(self.image)
-            pixmap_item = QGraphicsPixmapItem(pixmap)
-            self.scene.addItem(pixmap_item)
+            image = QImage("assets/test_data/test_image.png")
+            view.set_image(image)
 
             # Set up the main window
             self.setCentralWidget(central_widget)
