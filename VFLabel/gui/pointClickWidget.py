@@ -14,17 +14,14 @@ class DRAW_MODE(Enum):
     ON = 1
 
 
-class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
+class PointClickWidget(zoomableViewWidget.ZoomableViewWidget):
 
     def __init__(self, parent=None, image_height: int = 512, image_width: int = 256):
-        super(DrawSegmentationWidget, self).__init__(parent)
+        super(PointClickWidget, self).__init__(parent)
         self._draw_mode = DRAW_MODE.OFF
 
         self._pointpen = QPen(QColor(128, 255, 128, 255))
         self._pointbrush = QBrush(QColor(128, 255, 128, 128))
-
-        self._polygonpen = QPen(QColor(255, 128, 128, 255))
-        self._polygonbrush = QBrush(QColor(200, 128, 128, 128))
 
         self._pointsize: int = 10
 
@@ -52,7 +49,7 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
             self.remove_last_point()
 
     def mousePressEvent(self, event) -> None:
-        super(DrawSegmentationWidget, self).mousePressEvent(event)
+        super(PointClickWidget, self).mousePressEvent(event)
 
         if self._draw_mode == DRAW_MODE.ON:
             global_pos = event.pos()
@@ -101,17 +98,7 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         point_pointer = self._polygon_items.pop()
         self.scene().removeItem(point_pointer)
 
-        if len(self._polygon_points) > 2:
-            self.add_polygon(QPolygonF(self._polygon_points))
-        else:
-            self.remove_polygon()
-
-    def remove_polygon(self) -> None:
-        if self._polygon_pointer:
-            self.scene().removeItem(self._polygon_pointer)
-
     def add_point(self, point: QPointF) -> None:
-
         if point.x() < 0 or point.x() >= self._image_width:
             return
 
@@ -131,14 +118,3 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
             self._pointbrush,
         )
         self._polygon_items.append(ellipse_item)
-
-        if len(self._polygon_points) > 2:
-            self.add_polygon(QPolygonF(self._polygon_points))
-
-    def add_polygon(self, polygon: QPolygonF) -> None:
-        if self._polygon_pointer:
-            self.scene().removeItem(self._polygon_pointer)
-
-        self._polygon_pointer = self.scene().addPolygon(
-            polygon, self._polygonpen, self._polygonbrush
-        )
