@@ -1,5 +1,6 @@
-![image info](assets/hasel_fullres.png)
-HASEL (**H**igh-Speed Video **A**nnotation Tool for **S**tructured Light **E**ndoscopy in the Human **L**arynx) is a Deep-Learning-supported tool for generating ground-truth data for High-Speed Video Structured Light Laryngoscopy.
+![hasel_fullres](https://github.com/user-attachments/assets/4abb22f1-58d2-4ec4-b1e2-c95420f37ae0)
+#
+**HASEL** (**H**igh-Speed Video **A**nnotation Tool for **S**tructured Light **E**ndoscopy in the Human **L**arynx) is a Deep-Learning-supported tool for generating ground-truth data for High-Speed Video Structured Light Laryngoscopy.
 This tool enables to robustly and rapidly generate data of:
 * Glottal segmentation with different segmentation architectures
 * Vocal fold segmentation via frame-wise interpolation
