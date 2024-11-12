@@ -133,3 +133,10 @@ dmypy.json
 *.mp4
 assets/test_data/*
 *.json
+*.png
+*.pth.tar
+test/*
+og_data/*
+projects/*
+Dataset*
+data/*

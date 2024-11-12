@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 import torch.nn.functional as F
 from VFLabel.io.dataset import HLEDataset, ReinhardDatasetV2
 from torch.utils.data import DataLoader
-from models.UNet import Model
-from models.LSQ import LSQLocalization
+from VFLabel.nn.UNet import Model
+from VFLabel.utils.LSQ import LSQLocalization
 from VFLabel.utils.utils import (
     class_to_color,
     load_checkpoint,
