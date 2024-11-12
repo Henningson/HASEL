@@ -30,7 +30,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QSize, pyqtSignal, QPointF, QRectF, QLineF
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
 import torch
-from models.UNet import Model
+from VFLabel.nn.UNet import Model
 import numpy as np
 import cv2
 import albumentations as A

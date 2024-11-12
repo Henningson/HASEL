@@ -46,8 +46,8 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QSize, pyqtSignal, QPointF, QRectF, QLineF, QRect, QPoint
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
 import torch
-from models.UNet import Model
-from models.LSQ import LSQLocalization
+from VFLabel.nn.UNet import Model
+from VFLabel.utils.LSQ import LSQLocalization
 import numpy as np
 import cv2
 import albumentations as A
