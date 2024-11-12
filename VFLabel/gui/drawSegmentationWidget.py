@@ -26,15 +26,15 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self._polygonpen = QPen(QColor(255, 128, 128, 255))
         self._polygonbrush = QBrush(QColor(200, 128, 128, 128))
 
-        self._pointsize = 10
+        self._pointsize: int = 10
 
         self._polygon_points: List[QPointF] = []
 
         self._polygon_items: List[QGraphicsEllipseItem] = []
         self._polygon_pointer: QPolygonF = None
 
-        self._image_height = image_height
-        self._image_width = image_width
+        self._image_height: int = image_height
+        self._image_width: int = image_width
 
     def wheelEvent(self, event) -> None:
         mouse = event.angleDelta().y() / 120
