@@ -15,45 +15,8 @@ class DRAW_MODE(Enum):
 
 
 class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
-    """
-    A QGraphicsView widget that allows zooming in and out with the mouse wheel.
-
-    :param parent: The parent widget for the ZoomableViewWidget instance.
-    :type parent: QWidget, optional
-
-    Attributes:
-        _zoom (float): The current zoom level of the view.
-
-    Methods:
-        wheelEvent(event):
-            Handles mouse wheel events to zoom in or out based on scroll direction.
-
-        contextMenuEvent(event):
-            Opens a context menu with options for zooming in and out.
-
-        zoomIn():
-            Increases the zoom level by a factor of zoom_speed.
-
-        zoomOut():
-            Decreases the zoom level by a factor of zoom_speed.
-
-        zoomReset():
-            Resets the zoom level to 1.
-
-        zoom() -> float:
-            Returns the current zoom level.
-
-        updateView():
-            Updates the view transformation based on the current zoom level.
-    """
 
     def __init__(self, parent=None, image_height: int = 512, image_width: int = 256):
-        """
-        Initializes the DrawSegmentationWidget with an optional parent.
-
-        :param parent: The parent widget for the DrawSegmentationWidget instance.
-        :type parent: QWidget, optional
-        """
         super(DrawSegmentationWidget, self).__init__(parent)
         self._draw_mode = DRAW_MODE.OFF
 
@@ -74,12 +37,6 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self._image_width = image_width
 
     def wheelEvent(self, event) -> None:
-        """
-        Handles mouse wheel events to adjust the zoom level.
-
-        :param event: The QWheelEvent containing information about the mouse wheel event.
-        :type event: QWheelEvent
-        """
         mouse = event.angleDelta().y() / 120
 
         if mouse > 0:
@@ -113,6 +70,9 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         menu = QMenu()
         menu.addAction("Zoom in               MouseWheel Up", self.zoomIn)
         menu.addAction("Zoom out              MouseWheel Down", self.zoomOut)
+        menu.addAction("Toggle Edit Mode      E", self.toggle_draw_mode)
+        menu.addAction("Draw Mode ON", self.draw_mode_on)
+        menu.addAction("Draw Mode OFF", self.draw_mode_off)
         menu.addAction("Remove Point          R", self.remove_last_point)
         menu.addAction("Reset View", self.zoomReset)
         menu.exec_(event.globalPos())
