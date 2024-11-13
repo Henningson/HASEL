@@ -2,6 +2,8 @@ from enum import Enum
 
 
 class Specularity(Enum):
+    """For classification if a point is visible or not"""
+
     UNIDENTIFIABLE = 0
     SPECULARITY = 1
     VISIBLE = 2
