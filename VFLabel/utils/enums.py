@@ -29,3 +29,8 @@ class GlottisSegmentation(Enum):
 class VocalfoldSegmentation(Enum):
     BACKGROUND = 0
     VOCALFOLD = 1
+
+
+class DRAW_MODE(Enum):
+    OFF = 0
+    ON = 1

@@ -1,6 +1,6 @@
 import VFLabel.gui.zoomableViewWidget as zoomableViewWidget
+import VFLabel.utils.enums as enums
 
-from enum import Enum
 from typing import List
 from PyQt5.QtCore import QPointF
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
@@ -9,16 +9,11 @@ import PyQt5.QtCore
 import PyQt5.Qt
 
 
-class DRAW_MODE(Enum):
-    OFF = 0
-    ON = 1
-
-
 class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
 
     def __init__(self, parent=None, image_height: int = 512, image_width: int = 256):
         super(DrawSegmentationWidget, self).__init__(parent)
-        self._draw_mode = DRAW_MODE.OFF
+        self._draw_mode = enums.DRAW_MODE.OFF
 
         self._pointpen = QPen(QColor(128, 255, 128, 255))
         self._pointbrush = QBrush(QColor(128, 255, 128, 128))
@@ -54,7 +49,7 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
     def mousePressEvent(self, event) -> None:
         super(DrawSegmentationWidget, self).mousePressEvent(event)
 
-        if self._draw_mode == DRAW_MODE.ON:
+        if self._draw_mode == enums.DRAW_MODE.ON:
             global_pos = event.pos()
             pos = self.mapToScene(global_pos)
             self.add_point(pos)
@@ -77,20 +72,20 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         menu.exec_(event.globalPos())
 
     def toggle_draw_mode(self) -> None:
-        if self._draw_mode == DRAW_MODE.OFF:
-            self._draw_mode = DRAW_MODE.ON
-        elif self._draw_mode == DRAW_MODE.ON:
-            self._draw_mode = DRAW_MODE.OFF
+        if self._draw_mode == enums.DRAW_MODE.OFF:
+            self._draw_mode = enums.DRAW_MODE.ON
+        elif self._draw_mode == enums.DRAW_MODE.ON:
+            self._draw_mode = enums.DRAW_MODE.OFF
         else:
             raise ValueError()
 
     def draw_mode_on(self) -> None:
-        self._draw_mode = DRAW_MODE.ON
+        self._draw_mode = enums.DRAW_MODE.ON
 
     def draw_mode_off(self) -> None:
-        self._draw_mode = DRAW_MODE.OFF
+        self._draw_mode = enums.DRAW_MODE.OFF
 
-    def get_draw_mode(self) -> DRAW_MODE:
+    def get_draw_mode(self) -> enums.DRAW_MODE:
         return self._draw_mode
 
     def remove_last_point(self) -> None:
