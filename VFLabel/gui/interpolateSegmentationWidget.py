@@ -3,7 +3,7 @@ import VFLabel.utils.enums as enums
 import VFLabel.utils.transforms as transforms
 
 from typing import List
-from PyQt5.QtCore import QPointF
+from PyQt5.QtCore import QPointF, pyqtSignal
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
 from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem, QGraphicsScene
 from PyQt5 import QtCore
@@ -70,14 +70,22 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         # TODO: Implement me
         return np.zeros(3)
 
-    def redraw(self, frame_num: int) -> None:
-        if frame_num < 0 or frame_num > self._num_frames - 1:
-            return
+    def update_transforms(
+        self, x_trans: float, y_trans: float, scale: float, rot: float
+    ):
+        self.x_translation = x_trans
+        self.y_translation = y_trans
+        self.scale = scale
+        self.rotation_angle = rot
+        self.redraw()
 
+    def redraw(self) -> None:
         self.set_image(self.frames[self._current_frame])
 
         if not self._polygon_pointer:
             return
+
+        self._polygon_pointer.setZValue(1.0)
 
         self._polygon_pointer.setTransformOriginPoint(
             self._polygon_pointer.boundingRect().center()
@@ -124,9 +132,13 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
             polygon, self._polygonpen, self._polygonbrush
         )
 
+    def change_frame(self, frame: int) -> None:
+        self._current_frame = frame
+        self.redraw()
+
     def next_frame(self) -> None:
         if self._current_frame == self._num_frames - 1:
             return
 
         self._current_frame += 1
-        self.redraw(self._current_frame)
+        self.redraw()

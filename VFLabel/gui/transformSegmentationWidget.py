@@ -2,7 +2,7 @@ import VFLabel.gui.zoomableViewWidget as zoomableViewWidget
 import VFLabel.utils.enums as enums
 
 from typing import List
-from PyQt5.QtCore import QPointF
+from PyQt5.QtCore import QPointF, pyqtSignal
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
 from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem, QGraphicsScene
 from PyQt5 import QtCore
@@ -12,6 +12,8 @@ import numpy as np
 
 
 class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
+    transform_updated = pyqtSignal()
+
     def __init__(self, image: QImage, polygon_points: List[QPointF], parent=None):
         super(TransformSegmentationWidget, self).__init__(parent)
         self._polygonpen = QPen(QColor(255, 128, 128, 255))
@@ -129,6 +131,8 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self._polygon_pointer.setScale(self.scale)
         self._polygon_pointer.setRotation(self.rotation_angle)
         self._polygon_pointer.setPos(self.x_translation, self.y_translation)
+
+        self.transform_updated.emit()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Space:

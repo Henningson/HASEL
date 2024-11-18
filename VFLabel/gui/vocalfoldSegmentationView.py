@@ -69,10 +69,8 @@ class VocalfoldSegmentationView(QWidget):
             len(qvideo), 100
         )
 
-        self.interpolate_button = QPushButton("Interpolate")
         self.save_button = QPushButton("Save")
 
-        self.interpolate_button.clicked.connect(self.show_interpolation)
         self.save_button.clicked.connect(self.save)
 
         horizontal_layout_top.addWidget(self.draw_view)
@@ -80,7 +78,6 @@ class VocalfoldSegmentationView(QWidget):
         horizontal_layout_top.addWidget(self.interpolate_view)
         top_widget.setLayout(horizontal_layout_top)
 
-        horizontal_layout_bot.addWidget(self.interpolate_button)
         horizontal_layout_bot.addWidget(self.video_player)
         horizontal_layout_bot.addWidget(self.save_button)
         bot_widget.setLayout(horizontal_layout_bot)
@@ -90,7 +87,10 @@ class VocalfoldSegmentationView(QWidget):
         self.setLayout(vertical_layout)
 
         self.draw_view.segmentation_updated.connect(self.add_polygon_to_transform_view)
-        self.video_player.slider.valueChanged.connect(self.interpolate_view.next_frame)
+        self.video_player.slider.valueChanged.connect(self.change_frame)
+        self.move_view.transform_updated.connect(
+            self.add_transform_to_interpolation_view
+        )
 
     def save(self) -> None:
         # TODO: Implement me
@@ -103,4 +103,12 @@ class VocalfoldSegmentationView(QWidget):
         pass
 
     def add_polygon_to_transform_view(self) -> None:
-        self.move_view.add_polygon(QPolygonF(self.draw_view.getPolygonPoints()))
+        polygon = QPolygonF(self.draw_view.getPolygonPoints())
+        self.move_view.add_polygon(polygon)
+        self.interpolate_view.add_polygon(polygon)
+
+    def add_transform_to_interpolation_view(self) -> None:
+        self.interpolate_view.update_transforms(*self.move_view.get_transform())
+
+    def change_frame(self) -> None:
+        self.interpolate_view.change_frame(self.video_player.slider.value())
