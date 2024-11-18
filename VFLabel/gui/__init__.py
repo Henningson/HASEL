@@ -2,3 +2,4 @@ from .zoomableViewWidget import ZoomableViewWidget
 from .drawSegmentationWidget import DrawSegmentationWidget
 from .pointClickWidget import PointClickWidget
 from .videoPlayerWidget import VideoPlayerWidget
+from .transformSegmentationWidget import TransformSegmentationWidget

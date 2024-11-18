@@ -8,7 +8,6 @@ import numpy as np
 
 import utils.transforms
 import gui.drawSegmentationWidget
-import 
 
 ############################### ^
 #         #         #         # |
