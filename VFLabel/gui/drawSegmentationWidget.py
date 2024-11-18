@@ -2,14 +2,15 @@ import VFLabel.gui.zoomableViewWidget as zoomableViewWidget
 import VFLabel.utils.enums as enums
 
 from typing import List
-from PyQt5.QtCore import QPointF
+from PyQt5.QtCore import QPointF, pyqtSignal
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
-from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem
+from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem, QGraphicsScene
 import PyQt5.QtCore
 import PyQt5.Qt
 
 
 class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
+    segmentation_updated = pyqtSignal()
 
     def __init__(self, parent=None, image_height: int = 512, image_width: int = 256):
         super(DrawSegmentationWidget, self).__init__(parent)
@@ -30,6 +31,12 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
 
         self._image_height: int = image_height
         self._image_width: int = image_width
+
+        scene = QGraphicsScene(self)
+        self.setScene(scene)
+
+    def getPolygonPoints(self) -> List[QPointF]:
+        return self._polygon_points
 
     def wheelEvent(self, event) -> None:
         mouse = event.angleDelta().y() / 120
@@ -137,3 +144,4 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self._polygon_pointer = self.scene().addPolygon(
             polygon, self._polygonpen, self._polygonbrush
         )
+        self.segmentation_updated.emit()

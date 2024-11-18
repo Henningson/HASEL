@@ -1,5 +1,8 @@
 from .zoomableViewWidget import ZoomableViewWidget
-from .drawSegmentationWidget import DrawSegmentationWidget
 from .pointClickWidget import PointClickWidget
 from .videoPlayerWidget import VideoPlayerWidget
+
+from .drawSegmentationWidget import DrawSegmentationWidget
 from .transformSegmentationWidget import TransformSegmentationWidget
+from .interpolateSegmentationWidget import InterpolateSegmentationWidget
+from .vocalfoldSegmentationView import VocalfoldSegmentationView

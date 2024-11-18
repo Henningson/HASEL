@@ -25,7 +25,8 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         )
 
         self._polygon_pointer = None
-        self.add_polygon(QPolygonF(polygon_points))
+        if polygon_points:
+            self.add_polygon(QPolygonF(polygon_points))
 
         self.scale = 1.0
         self.rotation_angle = 0.0
@@ -33,12 +34,6 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self.y_translation = 0.0
 
         self._zoom_mode: bool = True
-
-        self.final_transform = {
-            "scale": 0.0,
-            "translation": [0.0, 0.0],
-            "rotation": 0.0,
-        }
 
     def mousePressEvent(self, event) -> None:
         super(TransformSegmentationWidget, self).mousePressEvent(event)
@@ -84,7 +79,7 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self._zoom_mode = not self._zoom_mode
         print(f"Zoom Mode: {self._zoom_mode}")
 
-    def get_transform(self) -> List[float, float, float, float]:
+    def get_transform(self) -> List[float]:
         return self.x_translation, self.y_translation, self.scale, self.rotation_angle
 
     def downscale(self):

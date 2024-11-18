@@ -144,4 +144,4 @@ class ZoomableViewWidget(QGraphicsView):
 
         pixmap = QPixmap(image)
         pixmap_item = QGraphicsPixmapItem(pixmap)
-        self._image_pointer = self.scene().addItem(pixmap_item)
+        self._image_pointer = self.scene().addPixmap(pixmap)
