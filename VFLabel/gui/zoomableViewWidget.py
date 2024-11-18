@@ -7,6 +7,8 @@ from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsPixmapItem
 from PyQt5.QtGui import QTransform
 
+import PyQt5.QtCore
+
 
 class ZoomableViewWidget(QGraphicsView):
     """
@@ -145,3 +147,7 @@ class ZoomableViewWidget(QGraphicsView):
         pixmap = QPixmap(image)
         pixmap_item = QGraphicsPixmapItem(pixmap)
         self._image_pointer = self.scene().addPixmap(pixmap)
+
+    def fit_view(self) -> None:
+        self.fitInView(self.scene().sceneRect(), Qt.KeepAspectRatio)
+        self._zoom = self.transform().m11()

@@ -3,8 +3,8 @@ import VFLabel.utils.enums as enums
 import VFLabel.utils.transforms as transforms
 
 from typing import List
-from PyQt5.QtCore import QPointF, pyqtSignal
-from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
+from PyQt5.QtCore import QPointF, pyqtSignal, QPoint, QRect
+from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QPixmap
 from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem, QGraphicsScene
 from PyQt5 import QtCore
 from PyQt5.QtGui import QImage
@@ -66,9 +66,47 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         menu.addAction("Zoom out              MouseWheel Down", self.zoomOut)
         menu.exec_(event.globalPos())
 
-    def generate_segmentations(self) -> List[np.array]:
-        # TODO: Implement me
-        return np.zeros(3)
+    def generate_segmentation_for_frame(self, index: int) -> np.array:
+        self.fit_view()
+
+        # Make background black
+        black_image = transforms.np_2_QImage(
+            np.zeros([self.frames[0].height(), self.frames[0].width(), 3], np.uint8)
+        )
+        pixmap = QPixmap(black_image)
+        self.set_image(QImage(pixmap))
+
+        focusRect = self.scene().addPixmap(pixmap).boundingRect()
+        topLeft = self.mapFromScene(focusRect.topLeft()) + QPoint(1, 1)
+        bottomRight = self.mapFromScene(focusRect.bottomRight())
+
+        self._polygon_pointer.setPen(QPen(QColor(255, 255, 255, 255)))
+        self._polygon_pointer.setBrush(QBrush(QColor(255, 255, 255, 255)))
+
+        self._polygon_pointer.setTransformOriginPoint(
+            self._polygon_pointer.boundingRect().center()
+        )
+        self._polygon_pointer.setZValue(1.0)
+
+        interpolation_factor = index / (self._num_frames - 1)
+        lerped_scale = transforms.lerp(1.0, self.scale, interpolation_factor)
+        lerped_x_trans = transforms.lerp(0.0, self.x_translation, interpolation_factor)
+        lerped_y_trans = transforms.lerp(0.0, self.y_translation, interpolation_factor)
+        lerped_rot = transforms.lerp(0.0, self.rotation_angle, interpolation_factor)
+
+        self._polygon_pointer.setScale(lerped_scale)
+        self._polygon_pointer.setRotation(lerped_rot)
+        self._polygon_pointer.setPos(lerped_x_trans, lerped_y_trans)
+
+        pixmap = self.grab().copy(QRect(topLeft, bottomRight))
+        pixmap = pixmap.scaled(
+            self.frames[0].width(), self.frames[0].height(), transformMode=0
+        )
+
+        self._polygon_pointer.setPen(self._polygonpen)
+        self._polygon_pointer.setBrush(self._polygonbrush)
+
+        return pixmap
 
     def update_transforms(
         self, x_trans: float, y_trans: float, scale: float, rot: float

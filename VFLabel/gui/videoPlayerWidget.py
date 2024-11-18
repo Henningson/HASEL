@@ -83,3 +83,6 @@ class VideoPlayerWidget(QWidget):
 
     def update_current_from_slider(self):
         self._current_frame = self.slider.value()
+
+    def get_video_length(self) -> int:
+        return self._video_length

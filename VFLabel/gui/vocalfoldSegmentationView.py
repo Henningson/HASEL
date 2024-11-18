@@ -11,9 +11,18 @@ from PyQt5.QtWidgets import (
     QSlider,
     QPushButton,
     QLabel,
+    QFileDialog,
 )
 
-from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
+from PyQt5.QtGui import (
+    QIcon,
+    QPen,
+    QBrush,
+    QPolygonF,
+    QColor,
+    QPixmap,
+)
+import os
 
 import VFLabel.utils.transforms
 
@@ -21,6 +30,8 @@ import VFLabel.gui.drawSegmentationWidget
 import VFLabel.gui.transformSegmentationWidget
 import VFLabel.gui.interpolateSegmentationWidget
 import VFLabel.gui.videoPlayerWidget
+
+import VFLabel.utils.transforms
 
 ############################### ^
 #         #         #         # |
@@ -93,14 +104,14 @@ class VocalfoldSegmentationView(QWidget):
         )
 
     def save(self) -> None:
-        # TODO: Implement me
-        pass
+        save_folder = QFileDialog.getExistingDirectory(
+            self, "Save Frames to", "", QFileDialog.ShowDirsOnly
+        )
 
-    def start_transform(self):
-        pass
-
-    def show_interpolation(self):
-        pass
+        for i in range(self.video_player.get_video_length()):
+            pixmap = self.interpolate_view.generate_segmentation_for_frame(i)
+            path = os.path.join(save_folder, f"{i:05d}.png")
+            pixmap.save(path)
 
     def add_polygon_to_transform_view(self) -> None:
         polygon = QPolygonF(self.draw_view.getPolygonPoints())
