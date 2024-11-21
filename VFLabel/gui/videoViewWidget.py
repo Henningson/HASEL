@@ -16,7 +16,7 @@ from PyQt5.QtCore import Qt, QTimer
 class VideoViewWidget(zoomableViewWidget.ZoomableViewWidget):
     def __init__(
         self,
-        images: List[QImage],
+        images: List[QImage] = None,
         parent=None,
     ):
         super(VideoViewWidget, self).__init__(parent)
@@ -25,14 +25,20 @@ class VideoViewWidget(zoomableViewWidget.ZoomableViewWidget):
         scene = QGraphicsScene(self)
         self.setScene(scene)
 
-        self.set_image(self.images_a[0])
+        if self.images:
+            self.set_image(self.images[0])
 
         self._current_frame: int = 0
-        self._num_frames = len(self.images)
+        self._num_frames = len(self.images) if self.images else 0
 
     def redraw(self) -> None:
-        self.set_image(self.images[self._current_frame])
+        if self.images:
+            self.set_image(self.images[self._current_frame])
 
     def change_frame(self, frame: int) -> None:
         self._current_frame = frame
         self.redraw()
+
+    def add_video(self, video: List[QImage]) -> None:
+        self.images = video
+        self._num_frames = len(self.images)
