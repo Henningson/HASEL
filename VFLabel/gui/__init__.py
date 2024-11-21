@@ -1,4 +1,5 @@
 from .zoomableViewWidget import ZoomableViewWidget
+
 from .pointClickWidget import PointClickWidget
 from .videoPlayerWidget import VideoPlayerWidget
 
@@ -13,3 +14,4 @@ from .vocalfoldSegmentationView import VocalfoldSegmentationView
 from .selectCycleView import SelectCycleView
 
 from .mainWindow import MainWindow
+from .newProjectWidget import NewProjectWidget
