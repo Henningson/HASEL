@@ -170,3 +170,12 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
                 self._pointbrush,
             )
             self._point_items.append(ellipse_item)
+
+    def get_ok_point_indices(self, frame_index: int) -> np.array:
+        mask = ~np.isnan(self.point_positions[frame_index]).any(axis=-1)
+
+        # Get x, y indices of valid points
+        return np.argwhere(mask)
+
+    def get_ok_point_indices_at_current(self) -> np.array:
+        return self.get_set_point_indices(self._current_frame)

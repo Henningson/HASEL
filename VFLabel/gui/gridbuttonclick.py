@@ -16,7 +16,6 @@ from PyQt5.QtWidgets import (
     QGraphicsRectItem,
     QGridLayout,
 )
-import skvideo.io
 import sys
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import (
@@ -114,62 +113,6 @@ class MainWindow(QMainWindow):
     @QtCore.pyqtSlot(int, int)
     def getGridButtonClicked(self, x, y):
         print("Clicked button {} {}".format(x, y))
-
-
-class ButtonGrid(QWidget):
-    buttonSignal = pyqtSignal(int, int)
-
-    def __init__(self, grid_size=18, parent=None):
-        super(ButtonGrid, self).__init__()
-
-        self.setLayout(QGridLayout())
-        self.layout().setSpacing(0)
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.buttons = []
-
-        for y in range(grid_size):
-            y_range = []
-            for x in range(grid_size):
-                button = GridButton(x, y)
-                button.clickedSignal.connect(self.clicked_button)
-                self.layout().addWidget(button, y, x, 1, 1)
-                y_range.append(button)
-            self.buttons.append(y_range)
-
-    @QtCore.pyqtSlot(int, int)
-    def clicked_button(self, x, y):
-        self.buttonSignal.emit(x, y)
-
-    def getButton(self, x, y):
-        return self.buttons[x][y]
-
-    def reset(self):
-        for row in self.buttons:
-            for button in row:
-                button.reset()
-
-
-class GridButton(QPushButton):
-    clickedSignal = pyqtSignal(int, int)
-
-    def __init__(self, x, y, parent=None):
-        super(GridButton, self).__init__("")
-        self.x = x
-        self.y = y
-        self.clicked.connect(self.on_clicked)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setFixedSize(QSize(25, 25))
-        self.setStyleSheet("border: 1px solid #333333;")
-
-    def setActivated(self):
-        self.setStyleSheet("background-color : #33DD33")
-
-    def on_clicked(self, bool):
-        self.setStyleSheet("background-color : #33DD33")
-        self.clickedSignal.emit(self.x, self.y)
-
-    def reset(self):
-        self.setStyleSheet("border: 1px solid #333333;")
 
 
 if __name__ == "__main__":
