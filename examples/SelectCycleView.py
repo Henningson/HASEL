@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-import VFLabel.gui
 import VFLabel.gui.glottisSegmentationView
 import VFLabel.gui.vocalfoldSegmentationView
 import VFLabel.gui.selectCycleView

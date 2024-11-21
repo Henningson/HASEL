@@ -109,10 +109,10 @@ class SelectCycleView(QWidget):
         self.video_player.slider.valueChanged.connect(self.change_frame)
 
     def keyPressEvent(self, event) -> None:
-        if event.key() == PyQt5.QtCore.Qt.Key_Left:
-            self.video_player.decrement_frame(force=True)
-
         if event.key() == PyQt5.QtCore.Qt.Key_Right:
+            self.video_player.increment_frame(force=True)
+
+        if event.key() == PyQt5.QtCore.Qt.Key_Left:
             self.video_player.decrement_frame(force=True)
 
     def save(self) -> None:

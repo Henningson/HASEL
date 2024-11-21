@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QPixmap, QPainter, QFont
 
-import gui
+import VFLabel.gui.newProjectWidget
 
 
 class MainWindow(QWidget):
@@ -74,7 +74,7 @@ class MainWindow(QWidget):
             None
         """
         # create widget to enter new project properties
-        new_project_widget = gui.NewProjectWidget()
+        new_project_widget = VFLabel.gui.newProjectWidget.NewProjectWidget()
 
         # connect signal between new_project_widget and this window
         new_project_widget.new_project_status_signal.connect(

@@ -1,55 +1,60 @@
-import VFLabel.gui.zoomableViewWidget as zoomableViewWidget
+import VFLabel.gui.videoViewWidget as videoViewWidget
 import VFLabel.utils.enums as enums
+import numpy as np
 
 from typing import List
-from PyQt5.QtCore import QPointF
-from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
+from PyQt5.QtCore import QPointF, pyqtSignal
+from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QImage
 from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem
 import PyQt5.QtCore
 import PyQt5.Qt
+from typing import List
 
 
-class PointClickWidget(zoomableViewWidget.ZoomableViewWidget):
+class PointClickWidget(videoViewWidget.VideoViewWidget):
+    point_added = pyqtSignal()
 
-    def __init__(self, parent=None, image_height: int = 512, image_width: int = 256):
-        super(PointClickWidget, self).__init__(parent)
+    def __init__(
+        self,
+        video: List[QImage],
+        grid_width: int = 18,
+        grid_height: int = 18,
+        parent=None,
+    ):
+        super(PointClickWidget, self).__init__(video, parent)
         self._draw_mode = enums.DRAW_MODE.OFF
+        self._remove_mode = enums.DRAW_MODE.OFF
 
         self._pointpen = QPen(QColor(128, 255, 128, 255))
         self._pointbrush = QBrush(QColor(128, 255, 128, 128))
 
         self._pointsize: int = 10
 
-        self._polygon_points: List[QPointF] = []
+        self._point_items: List[QGraphicsEllipseItem] = []
 
-        self._polygon_items: List[QGraphicsEllipseItem] = []
-        self._polygon_pointer: QPolygonF = None
-
-        self._image_height: int = image_height
-        self._image_width: int = image_width
-
-    def wheelEvent(self, event) -> None:
-        mouse = event.angleDelta().y() / 120
-
-        if mouse > 0:
-            self.zoomIn()
-        else:
-            self.zoomOut()
+        # Point positions is 4D Numpy array of size
+        # CYCLE_LENGTH x GRID_HEIGHT x GRID_WIDTH x 2
+        # For each frame, we can have at max grid_height*grid_width indices with 2 positions each.
+        # That should make it really easy to assign points to their specific laser index.
+        # Everything is indexed as nan at first. Makes it easy to find already set points.
+        self.point_positions = (
+            np.zeros([len(video), grid_height, grid_width, 2]) * np.nan
+        )
 
     def keyPressEvent(self, event) -> None:
         if event.key() == PyQt5.QtCore.Qt.Key_E:
             self.toggle_draw_mode()
 
-        if event.key() == PyQt5.QtCore.Qt.Key_R:
-            self.remove_last_point()
-
     def mousePressEvent(self, event) -> None:
         super(PointClickWidget, self).mousePressEvent(event)
+        global_pos = event.pos()
+        pos = self.mapToScene(global_pos)
 
         if self._draw_mode == enums.DRAW_MODE.ON:
-            global_pos = event.pos()
-            pos = self.mapToScene(global_pos)
             self.add_point(pos)
+
+        if self._remove_mode == enums.DRAW_MODE.ON:
+            self.remove_point(pos)
 
     def contextMenuEvent(self, event) -> None:
         """
@@ -68,7 +73,19 @@ class PointClickWidget(zoomableViewWidget.ZoomableViewWidget):
         menu.addAction("Reset View", self.zoomReset)
         menu.exec_(event.globalPos())
 
+    def toggle_remove_mode(self) -> None:
+        self._draw_mode = enums.DRAW_MODE.OFF
+
+        if self._remove_mode == enums.REMOVE_MODE.OFF:
+            self._remove_mode = enums.REMOVE_MODE.ON
+        elif self._remove_mode == enums.REMOVE_MODE.ON:
+            self._remove_mode = enums.REMOVE_MODE.OFF
+        else:
+            raise ValueError()
+
     def toggle_draw_mode(self) -> None:
+        self._remove_mode = enums.REMOVE_MODE.OFF
+
         if self._draw_mode == enums.DRAW_MODE.OFF:
             self._draw_mode = enums.DRAW_MODE.ON
         elif self._draw_mode == enums.DRAW_MODE.ON:
@@ -82,16 +99,24 @@ class PointClickWidget(zoomableViewWidget.ZoomableViewWidget):
     def DRAW_MODE_off(self) -> None:
         self._draw_mode = enums.DRAW_MODE.OFF
 
+    def REMOVE_MODE_on(self) -> None:
+        self._remove_mode = enums.REMOVE_MODE.ON
+
+    def REMOVE_MODE_off(self) -> None:
+        self._remove_mode = enums.REMOVE_MODE.OFF
+
     def get_draw_mode(self) -> enums.DRAW_MODE:
         return self._draw_mode
 
-    def remove_last_point(self) -> None:
-        if len(self._polygon_points) == 0:
-            return
+    def get_remove_mode(self) -> enums.REMOVE_MODE:
+        return self._remove_mode
 
-        self._polygon_points.pop()
-        point_pointer = self._polygon_items.pop()
-        self.scene().removeItem(point_pointer)
+    def remove_point(self, point: QPointF) -> None:
+        clicked_item = self.scene.itemAt(point)
+
+        if clicked_item in self._point_items:
+            self.scene.removeItem(point)
+            self._point_items.remove(clicked_item)
 
     def add_point(self, point: QPointF) -> None:
         if point.x() < 0 or point.x() >= self._image_width:
@@ -100,8 +125,10 @@ class PointClickWidget(zoomableViewWidget.ZoomableViewWidget):
         if point.y() < 0 or point.y() >= self._image_height:
             return
 
-        # The actual points
-        self._polygon_points.append(point)
+        self.point_positions[self._current_frame, self.y_index, self.x_index] = [
+            point.x(),
+            point.y(),
+        ]
 
         # Transformed point, such that ellipse center is at mouse position
         ellipse_item = self.scene().addEllipse(
@@ -113,3 +140,33 @@ class PointClickWidget(zoomableViewWidget.ZoomableViewWidget):
             self._pointbrush,
         )
         self._polygon_items.append(ellipse_item)
+        self.point_added.emit()
+
+    def set_laser_index(self, x: int, y: int) -> None:
+        self.y_index = y
+        self.x_index = x
+
+    def redraw(self) -> None:
+        if self.images:
+            self.set_image(self.images[self._current_frame])
+
+        for point_item in self._point_items:
+            self.scene.removeItem(point_item)
+
+        # Get current frame indices:
+        points_at_current_frame = self.point_positions[self._current_frame]
+        points_at_current_frame = points_at_current_frame.reshape(-1, 2)
+        filtered_points = points_at_current_frame[
+            ~np.isnan(points_at_current_frame).any(axis=1)
+        ]
+        for point in filtered_points:
+            # Transformed point, such that ellipse center is at mouse position
+            ellipse_item = self.scene().addEllipse(
+                point.x() - self._pointsize / 2,
+                point.y() - self._pointsize / 2,
+                self._pointsize,
+                self._pointsize,
+                self._pointpen,
+                self._pointbrush,
+            )
+            self._point_items.append(ellipse_item)

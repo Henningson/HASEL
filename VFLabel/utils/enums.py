@@ -34,3 +34,8 @@ class VocalfoldSegmentation(Enum):
 class DRAW_MODE(Enum):
     OFF = 0
     ON = 1
+
+
+class REMOVE_MODE(Enum):
+    OFF = 0
+    ON = 1
