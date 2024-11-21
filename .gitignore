@@ -140,3 +140,4 @@ og_data/*
 projects/*
 Dataset*
 data/*
+*.zip

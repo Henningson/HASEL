@@ -145,7 +145,6 @@ class ZoomableViewWidget(QGraphicsView):
             self.scene().removeItem(self._image_pointer)
 
         pixmap = QPixmap(image)
-        pixmap_item = QGraphicsPixmapItem(pixmap)
         self._image_pointer = self.scene().addPixmap(pixmap)
 
     def fit_view(self) -> None:

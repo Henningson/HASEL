@@ -6,3 +6,5 @@ from .drawSegmentationWidget import DrawSegmentationWidget
 from .transformSegmentationWidget import TransformSegmentationWidget
 from .interpolateSegmentationWidget import InterpolateSegmentationWidget
 from .vocalfoldSegmentationView import VocalfoldSegmentationView
+
+from .mainWindow import MainWindow

@@ -111,6 +111,7 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
     def remove_polygon(self) -> None:
         if self._polygon_pointer:
             self.scene().removeItem(self._polygon_pointer)
+            self.segmentation_updated.emit()
 
     def add_point(self, point: QPointF) -> None:
 
