@@ -19,9 +19,6 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self._polygonpen = QPen(QColor(255, 128, 128, 255))
         self._polygonbrush = QBrush(QColor(200, 128, 128, 128))
 
-        scene = QGraphicsScene(self)
-        self.setScene(scene)
-
         self.set_image(
             image,
         )

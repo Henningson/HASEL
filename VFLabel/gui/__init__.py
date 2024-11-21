@@ -10,5 +10,6 @@ from .videoOverlayWidget import VideoOverlayWidget
 
 from .glottisSegmentationView import GlottisSegmentationView
 from .vocalfoldSegmentationView import VocalfoldSegmentationView
+from .selectCycleView import SelectCycleView
 
 from .mainWindow import MainWindow

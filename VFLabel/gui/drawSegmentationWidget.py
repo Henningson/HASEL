@@ -32,9 +32,6 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self._image_height: int = image_height
         self._image_width: int = image_width
 
-        scene = QGraphicsScene(self)
-        self.setScene(scene)
-
     def getPolygonPoints(self) -> List[QPointF]:
         return self._polygon_points
 

@@ -20,10 +20,7 @@ class VideoViewWidget(zoomableViewWidget.ZoomableViewWidget):
         parent=None,
     ):
         super(VideoViewWidget, self).__init__(parent)
-
         self.images = images
-        scene = QGraphicsScene(self)
-        self.setScene(scene)
 
         if self.images:
             self.set_image(self.images[0])

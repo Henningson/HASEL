@@ -32,9 +32,6 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
 
         self.frames = images
 
-        scene = QGraphicsScene(self)
-        self.setScene(scene)
-
         self.set_image(images[0])
 
         self._polygon_pointer = None

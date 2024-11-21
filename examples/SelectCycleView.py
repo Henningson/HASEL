@@ -1,34 +1,43 @@
 import sys
+import numpy as np
 
 from PyQt5.QtWidgets import (
     QApplication,
-    QGraphicsScene,
     QMainWindow,
     QVBoxLayout,
     QWidget,
 )
-from PyQt5.QtGui import QImage
 
 import VFLabel.gui
+import VFLabel.gui.glottisSegmentationView
+import VFLabel.gui.vocalfoldSegmentationView
+import VFLabel.gui.selectCycleView
+
+
+import VFLabel.io
+import VFLabel.utils.utils
 
 if __name__ == "__main__":
 
     class MainWindow(QMainWindow):
         def __init__(self):
             super().__init__()
-            self.setWindowTitle("Generate Some Points for a Video")
+            self.setWindowTitle("Select Oscillation Cycle")
 
             # Create a central widget and a layout
             central_widget = QWidget(self)
             layout = QVBoxLayout(central_widget)
 
-            # Set up the zoomable view
-            view = VFLabel.gui.PointClickWidget(self)
-            layout.addWidget(view)
+            videodata = VFLabel.io.data.read_images_from_folder(
+                "assets/test_data/CF/png"
+            )
+            videodata = np.array(videodata)
 
-            # Load an image to display in the view
-            image = QImage("assets/test_data/test_image.png")
-            view.set_image(image)
+            # Set up the zoomable view
+            view = VFLabel.gui.SelectCycleView(
+                videodata, VFLabel.utils.defines.TEST_PROJECT_PATH
+            )
+            layout.addWidget(view)
 
             # Set up the main window^
             self.setCentralWidget(central_widget)

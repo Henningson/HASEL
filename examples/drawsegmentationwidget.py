@@ -26,10 +26,6 @@ if __name__ == "__main__":
             view = VFLabel.gui.DrawSegmentationWidget(self)
             layout.addWidget(view)
 
-            # Set up the scene for the view
-            scene = QGraphicsScene(self)
-            view.setScene(scene)
-
             # Load an image to display in the view
             image = QImage("assets/test_data/test_image.png")
             view.set_image(image)

@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QGraphicsView, QMenu
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QImage, QPixmap
 
-from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsPixmapItem
+from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsPixmapItem, QGraphicsScene
 from PyQt5.QtGui import QTransform
 
 import PyQt5.QtCore
@@ -57,6 +57,9 @@ class ZoomableViewWidget(QGraphicsView):
         self.setDragMode(QGraphicsView.ScrollHandDrag)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        scene = QGraphicsScene(self)
+        self.setScene(scene)
 
     def wheelEvent(self, event) -> None:
         """
