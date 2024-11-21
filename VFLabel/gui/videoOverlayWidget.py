@@ -14,15 +14,15 @@ import numpy as np
 from PyQt5.QtCore import Qt, QTimer
 
 
-class ImageOverlayWidget(videoViewWidget.VideoViewWidget):
+class VideoOverlayWidget(videoViewWidget.VideoViewWidget):
     def __init__(
         self,
         images: List[QImage],
-        overlay_images: List[QImage],
+        overlay_images: List[QImage] = None,
         opacity: float = 0.8,
         parent=None,
     ):
-        super(ImageOverlayWidget, self).__init__(images, parent)
+        super(VideoOverlayWidget, self).__init__(images, parent)
 
         self.overlay_images = overlay_images
         self._overlay_pointer = None
@@ -50,7 +50,7 @@ class ImageOverlayWidget(videoViewWidget.VideoViewWidget):
     def increaseOpacity(self) -> None:
         self._opacity += self._opacity_delta
 
-        if self._opactiy > 1.0:
+        if self._opacity > 1.0:
             self._opactiy = 1.0
 
     def decreaseOpacity(self) -> None:
@@ -60,7 +60,8 @@ class ImageOverlayWidget(videoViewWidget.VideoViewWidget):
             self._opactiy = 0.0
 
     def redraw(self) -> None:
-        self.set_image(self.images[self._current_frame])
+        if self.images:
+            self.set_image(self.images[self._current_frame])
 
         if self.overlay_images:
             self.set_overlay(self.overlay_images[self._current_frame])
@@ -72,6 +73,9 @@ class ImageOverlayWidget(videoViewWidget.VideoViewWidget):
     def set_opacity(self, opacity: float) -> None:
         self._opacity = opacity
         self.redraw()
+
+    def add_overlay(self, video: List[QImage]) -> None:
+        self.overlay_images = video
 
     def set_overlay(self, overlay_image: QImage) -> None:
         """

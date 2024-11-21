@@ -6,6 +6,10 @@ from .videoPlayerWidget import VideoPlayerWidget
 from .drawSegmentationWidget import DrawSegmentationWidget
 from .transformSegmentationWidget import TransformSegmentationWidget
 from .interpolateSegmentationWidget import InterpolateSegmentationWidget
+from .videoViewWidget import VideoViewWidget
+from .videoOverlayWidget import VideoOverlayWidget
+
+from .glottisSegmentationView import GlottisSegmentationView
 from .vocalfoldSegmentationView import VocalfoldSegmentationView
 
 from .mainWindow import MainWindow

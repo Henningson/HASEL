@@ -4,6 +4,8 @@ import scipy
 import numpy as np
 import json
 
+from typing import List
+
 
 def create_image_data(image_dir, video_file):
     try:
@@ -106,6 +108,17 @@ def read_video(path):
             frames.append(img)
 
     return np.array(frames)
+
+
+def read_images_from_folder(path: str, is_gray: bool = False) -> List[np.array]:
+    files = sorted(os.listdir(path))
+
+    images = []
+    for file in files:
+        filepath = os.path.join(path, file)
+        images.append(cv2.imread(filepath, 0 if is_gray else 1))
+
+    return images
 
 
 if __name__ == "__main__":
