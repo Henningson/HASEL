@@ -32,6 +32,9 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
 
         self._point_items: List[QGraphicsEllipseItem] = []
 
+        self._image_width = video[0].width()
+        self._image_height = video[0].height()
+
         # Point positions is 4D Numpy array of size
         # CYCLE_LENGTH x GRID_HEIGHT x GRID_WIDTH x 2
         # For each frame, we can have at max grid_height*grid_width indices with 2 positions each.
@@ -139,7 +142,7 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
             self._pointpen,
             self._pointbrush,
         )
-        self._polygon_items.append(ellipse_item)
+        self._point_items.append(ellipse_item)
         self.point_added.emit()
 
     def set_laser_index(self, x: int, y: int) -> None:
@@ -178,4 +181,4 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
         return np.argwhere(mask)
 
     def get_ok_point_indices_at_current(self) -> np.array:
-        return self.get_set_point_indices(self._current_frame)
+        return self.get_ok_point_indices(self._current_frame)

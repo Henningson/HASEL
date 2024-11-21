@@ -90,33 +90,30 @@ class PointClickView(QWidget):
 
         grid_button_widget = QWidget()
         grid_button_layout = QVBoxLayout()
-        grid_button_layout.addWidget()
+        grid_button_layout.addWidget(self.button_grid)
         grid_button_layout.addWidget(self.button_draw)
         grid_button_layout.addWidget(self.button_remove)
         grid_button_layout.addWidget(self.button_disable_modes)
-        grid_button_widget.addLayout(grid_button_layout)
+        grid_button_widget.setLayout(grid_button_layout)
 
         horizontal_layout_top.addWidget(grid_button_widget)
-        horizontal_layout_top.addWidget(self.video_view)
+        horizontal_layout_top.addWidget(self.point_clicker_view)
         top_widget.setLayout(horizontal_layout_top)
 
-        horizontal_layout_bot.addWidget(self.model_label)
-        horizontal_layout_bot.addWidget(self.model_dropdown)
-        horizontal_layout_bot.addWidget(self.generate_button)
         horizontal_layout_bot.addWidget(self.video_player)
         horizontal_layout_bot.addWidget(self.save_button)
-        horizontal_layout_bot.addWidget(self.opacity_label)
-        horizontal_layout_bot.addWidget(self.alpha_slider)
         bot_widget.setLayout(horizontal_layout_bot)
 
         vertical_layout.addWidget(top_widget)
         vertical_layout.addWidget(bot_widget)
         self.setLayout(vertical_layout)
 
+        self.button_draw.clicked.connect(self.set_draw_mode)
+        self.button_remove.clicked.connect(self.set_remove_mode)
+        self.button_disable_modes.clicked.connect(self.disable_modes)
         self.save_button.clicked.connect(self.save)
-        self.generate_button.clicked.connect(self.generate_segmentations)
-        self.alpha_slider.valueChanged.connect(self.change_opacity)
-        self.video_player.slider.valueChanged.connect(self.change_frame)
+        self.point_clicker_view.point_added.connect(self.video_player.increment_frame)
+        self.button_grid.buttonSignal.connect(self.point_clicker_view.set_laser_index)
 
     def save(self) -> None:
         dlg = QMessageBox(self)
@@ -133,10 +130,14 @@ class PointClickView(QWidget):
 
         # TODO: Implement me
 
-    def change_opacity(self) -> None:
-        self.overlay_view.set_opacity(self.alpha_slider.value() / 100)
+    def set_draw_mode(self) -> None:
+        self.point_clicker_view.DRAW_MODE_on()
+        self.point_clicker_view.REMOVE_MODE_off()
 
-    def change_frame(self) -> None:
-        self.video_view.change_frame(self.video_player.slider.value())
-        self.segmentation_view.change_frame(self.video_player.slider.value())
-        self.overlay_view.change_frame(self.video_player.slider.value())
+    def set_remove_mode(self) -> None:
+        self.point_clicker_view.REMOVE_MODE_on()
+        self.point_clicker_view.DRAW_MODE_off()
+
+    def disable_modes(self) -> None:
+        self.point_clicker_view.REMOVE_MODE_off()
+        self.point_clicker_view.DRAW_MODE_off()

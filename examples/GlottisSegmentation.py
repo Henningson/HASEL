@@ -19,7 +19,7 @@ from VFLabel.utils.defines import COLOR
 
 if __name__ == "__main__":
     video = VFLabel.io.data.read_images_from_folder(
-        "assets/test_data/CF/glottal_mask", is_gray=True
+        "assets/test_data/CF/glottal_mask",
     )
     videodata = np.array(video) // 255
     for image in videodata:
