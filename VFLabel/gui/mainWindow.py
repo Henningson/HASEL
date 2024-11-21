@@ -1,7 +1,16 @@
 import os
 
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QFileDialog, QInputDialog
+from PyQt5.QtWidgets import (
+    QWidget,
+    QPushButton,
+    QHBoxLayout,
+    QFileDialog,
+    QInputDialog,
+    QLineEdit,
+)
 from PyQt5.QtGui import QPixmap, QPainter, QFont
+
+import gui
 
 
 class MainWindow(QWidget):
@@ -53,27 +62,78 @@ class MainWindow(QWidget):
         painter.drawPixmap(self.rect(), pixmap)
 
     def create_new_project(self):
-        # Open dialog to enter new name
-        text, ok = QInputDialog.getText(
-            self, "Name of new project", "Please enter the name of the new project"
+        """Creates a new project
+
+        This method:
+        - gets parameters for new project
+        - uploads video path
+        - creates project
+        - forwards to next part of the program
+
+        Returns:
+            None
+        """
+        # create widget to enter new project properties
+        new_project_widget = gui.NewProjectWidget()
+
+        # connect signal between new_project_widget and this window
+        new_project_widget.new_project_status_signal.connect(
+            self.update_new_project_status
         )
-        if ok:
-            print(text)
-        # TODO: create new project with given name
-        # TODO: upload video
-        # TODO: Überleitung zu Programm
+
+        # start new project widget
+        new_project_widget.exec_()
+        (
+            self.name_input,
+            self.gridx,
+            self.gridy,
+        ) = new_project_widget.get_new_project_inputs()
+        # TODO: Umwandeln in Signale?
+
+        # check status of input from "new_project_widget" and continue
+        if self.status_new_project == "OK":
+            # upload video path
+            self.upload_new_video()
+            print(self.video_path)
+
+            # TODO: create new project with given name
+            # TODO: Überleitung zu Programm
+
+    def upload_new_video(self):
+        """Opens file manager to upload video
+
+        This method:
+        - opens file manager
+        - allows user to choose a video
+        - saves path of video
+
+        Returns:
+            None
+        """
+        current_dir = os.getcwd()
+        fd = QFileDialog()
+        self.video_path, _ = fd.getOpenFileName(
+            self,
+            "Upload video",
+            current_dir,
+            "Only video-files(*.mp4)",
+        )
+        # TODO: auch andere Dateitypen ?
+
+    def update_new_project_status(self, status):
+        # status from newProjectWidget
+        self.status_new_project = status
 
     def open_project(self):
         current_dir = os.getcwd()
 
         # open file manager to choose project
         fd = QFileDialog()
-        fname = fd.getOpenFileName(
+        file_path, _ = fd.getOpenFileName(
             self,
             "Open project",
             current_dir,
             "Only ToBeDetermined-files(*.mp4)",
         )
         # TODO: Enter right file types
-        print(fname)
         # TODO: Überleitung zu Programm
