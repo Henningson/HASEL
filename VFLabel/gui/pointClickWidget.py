@@ -1,10 +1,11 @@
 import VFLabel.gui.videoViewWidget as videoViewWidget
 import VFLabel.utils.enums as enums
+import VFLabel.gui.ellipseWithID as ellipseWithID
 import numpy as np
 
 from typing import List
 from PyQt5.QtCore import QPointF, pyqtSignal
-from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QImage
+from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QImage, QCursor
 from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem, QMessageBox
 import PyQt5.QtCore
 import PyQt5.Qt
@@ -46,21 +47,31 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
         self.y_index: int = None
         self.x_index: int = None
 
+        self._draw_mode = enums.DRAW_MODE.OFF
+        self._remove_mode = enums.REMOVE_MODE.OFF
+
     def keyPressEvent(self, event) -> None:
         if event.key() == PyQt5.QtCore.Qt.Key_E:
             self.toggle_draw_mode()
 
     def mousePressEvent(self, event) -> None:
-        super(PointClickWidget, self).mousePressEvent(event)
+        if (
+            self._draw_mode == enums.DRAW_MODE.OFF
+            and self._remove_mode == enums.REMOVE_MODE.OFF
+        ):
+            super(PointClickWidget, self).mousePressEvent(event)
+
         global_pos = event.pos()
         pos = self.mapToScene(global_pos)
 
         if self._draw_mode == enums.DRAW_MODE.ON:
             self.add_point(pos)
+            self.setCursor(QCursor(PyQt5.QtCore.Qt.CrossCursor))
             return
 
         if self._remove_mode == enums.REMOVE_MODE.ON:
             self.remove_point(pos)
+            self.setCursor(QCursor(PyQt5.QtCore.Qt.CrossCursor))
             return
 
     def contextMenuEvent(self, event) -> None:
@@ -79,6 +90,14 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
         menu.addAction("Remove Point          R", self.remove_last_point)
         menu.addAction("Reset View", self.zoomReset)
         menu.exec_(event.globalPos())
+
+    def enterEvent(self, event):
+        super(PointClickWidget, self).enterEvent(event)
+        self.setCursor(QCursor(PyQt5.QtCore.Qt.CrossCursor))
+
+    def mouseReleaseEvent(self, event):
+        super(PointClickWidget, self).mouseReleaseEvent(event)
+        self.setCursor(QCursor(PyQt5.QtCore.Qt.CrossCursor))
 
     def toggle_remove_mode(self) -> None:
         self._draw_mode = enums.DRAW_MODE.OFF
@@ -102,18 +121,22 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
 
     def DRAW_MODE_on(self) -> None:
         self.setDragMode(QGraphicsView.NoDrag)
+        self.setCursor(QCursor(PyQt5.QtCore.Qt.CrossCursor))
         self._draw_mode = enums.DRAW_MODE.ON
 
     def DRAW_MODE_off(self) -> None:
         self.setDragMode(QGraphicsView.ScrollHandDrag)
+        self.setCursor(QCursor(PyQt5.QtCore.Qt.ArrowCursor))
         self._draw_mode = enums.DRAW_MODE.OFF
 
     def REMOVE_MODE_on(self) -> None:
         self.setDragMode(QGraphicsView.NoDrag)
+        self.setCursor(QCursor(PyQt5.QtCore.Qt.CrossCursor))
         self._remove_mode = enums.REMOVE_MODE.ON
 
     def REMOVE_MODE_off(self) -> None:
         self.setDragMode(QGraphicsView.ScrollHandDrag)
+        self.setCursor(QCursor(PyQt5.QtCore.Qt.ArrowCursor))
         self._remove_mode = enums.REMOVE_MODE.OFF
 
     def get_draw_mode(self) -> enums.DRAW_MODE:
@@ -128,9 +151,10 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
         if clicked_item in self._point_items:
             self.scene().removeItem(clicked_item)
             self._point_items.remove(clicked_item)
+            self.point_positions[self._current_frame]
 
     def add_point(self, point: QPointF) -> None:
-        if not self.y_index or not self.x_index:
+        if self.y_index is None or self.x_index is None:
             msgWarning = QMessageBox()
             msgWarning.setText(
                 "Please select a laser beam that corresponds to the laser point you want to label from the grid."
@@ -152,14 +176,17 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
         ]
 
         # Transformed point, such that ellipse center is at mouse position
-        ellipse_item = self.scene().addEllipse(
+        ellipse_item = ellipseWithID.GraphicEllipseItemWithID(
             point.x() - self._pointsize / 2,
             point.y() - self._pointsize / 2,
             self._pointsize,
             self._pointsize,
             self._pointpen,
             self._pointbrush,
+            self.x_index,
+            self.y_index,
         )
+        self.scene().addItem(ellipse_item)
         self._point_items.append(ellipse_item)
         self.point_added.emit()
 
@@ -181,15 +208,20 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
         filtered_points = points_at_current_frame[
             ~np.isnan(points_at_current_frame).any(axis=1)
         ]
-        for point in filtered_points:
-            ellipse_item = self.scene().addEllipse(
+        ids = self.get_point_indices_at_current()
+        for point, point_id in zip(filtered_points, ids):
+            ellipse_item = ellipseWithID.GraphicEllipseItemWithID(
                 point[0] - self._pointsize / 2,
                 point[1] - self._pointsize / 2,
                 self._pointsize,
                 self._pointsize,
                 self._pointpen,
                 self._pointbrush,
+                point_id[0],
+                point_id[1],
             )
+            print(point_id[0], point_id[1])
+            self.scene().addItem(ellipse_item)
             self._point_items.append(ellipse_item)
 
     def get_point_indices(self, frame_index: int) -> np.array:
@@ -199,4 +231,4 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
         return np.argwhere(mask)
 
     def get_point_indices_at_current(self) -> np.array:
-        return self.get_ok_point_indices(self._current_frame)
+        return self.get_point_indices(self._current_frame)
