@@ -39,3 +39,8 @@ class DRAW_MODE(Enum):
 class REMOVE_MODE(Enum):
     OFF = 0
     ON = 1
+
+
+class NN_MODE(Enum):
+    EVAL = 0
+    TRAIN = 1

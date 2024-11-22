@@ -3,8 +3,14 @@ import torchvision
 import numpy as np
 import os
 import cv2
+import string
+import random
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+def random_ascii_string(
+    num_characters: int = 5, chars=string.ascii_uppercase + string.digits
+) -> str:
+    return "".join(random.choice(chars) for _ in range(num_characters))
 
 
 def save_checkpoint(state, filename="my_checkpoint.pth.tar"):
