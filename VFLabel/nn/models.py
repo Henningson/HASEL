@@ -70,6 +70,12 @@ class Encoder(nn.Module):
         return x
 
 
+class TwoLayeredClassificator:
+    # TODO: Implement me
+    def __init__(self, state_dict=None):
+        pass
+
+
 class UNet(nn.Module):
     def __init__(
         self, in_channels, out_channels, state_dict=None, features=[64, 128, 256, 512]
