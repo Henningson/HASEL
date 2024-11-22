@@ -16,6 +16,7 @@ import VFLabel.gui.vocalfoldSegmentationView
 import VFLabel.io
 import VFLabel.utils.utils
 from VFLabel.utils.defines import COLOR
+from VFLabel.utils.defines import TEST_PROJECT_PATH
 
 if __name__ == "__main__":
     video = VFLabel.io.data.read_images_from_folder(
@@ -42,7 +43,7 @@ if __name__ == "__main__":
             videodata = np.array(videodata)
 
             # Set up the zoomable view
-            view = VFLabel.gui.GlottisSegmentationView(videodata)
+            view = VFLabel.gui.GlottisSegmentationView(TEST_PROJECT_PATH, videodata)
             layout.addWidget(view)
 
             # Set up the main window^

@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
 
 from PyQt5 import QtCore
 import numpy as np
+import json
 
 from PyQt5.QtWidgets import (
     QApplication,
@@ -38,8 +39,11 @@ import VFLabel.gui.videoOverlayWidget
 import VFLabel.utils.transforms
 import VFLabel.io.data
 import VFLabel.utils.utils
+import VFLabel.cv.segmentation
+import cv2
 
 from VFLabel.utils.defines import COLOR
+from typing import List
 
 ############################### ^
 #         #         #         # |
@@ -54,20 +58,23 @@ from VFLabel.utils.defines import COLOR
 
 
 class GlottisSegmentationView(QWidget):
-    def __init__(self, video: np.array, parent=None):
+    def __init__(self, project_path: str, video: np.array, parent=None):
         super(GlottisSegmentationView, self).__init__(parent)
         vertical_layout = QVBoxLayout()
         horizontal_layout_top = QHBoxLayout()
         top_widget = QWidget()
         horizontal_layout_bot = QHBoxLayout()
         bot_widget = QWidget()
-
+        self.project_path = project_path
         qvideo = VFLabel.utils.transforms.vid_2_QImage(video)
         self.video_view = VFLabel.gui.videoViewWidget.VideoViewWidget(qvideo)
         self.segmentation_view = VFLabel.gui.videoViewWidget.VideoViewWidget()
         self.overlay_view = VFLabel.gui.videoOverlayWidget.VideoOverlayWidget(
             qvideo, None
         )
+        self.segmentations: List[np.array] = []
+
+        self.glottal_midlines: List[np.array] = []
 
         self.video_player = VFLabel.gui.videoPlayerWidget.VideoPlayerWidget(
             len(qvideo), 100
@@ -119,6 +126,12 @@ class GlottisSegmentationView(QWidget):
         images = VFLabel.io.data.read_images_from_folder(
             "assets/test_data/CF/glottal_mask", is_gray=1
         )
+
+        self.segmentations = images
+        self.glottal_midlines = [
+            VFLabel.cv.segmentation.compute_glottal_midline(image) for image in images
+        ]
+
         normalized = [image // 255 for image in images]
         colored = [
             VFLabel.utils.utils.class_to_color_np(
@@ -140,10 +153,25 @@ class GlottisSegmentationView(QWidget):
             self, "Save Frames to", "", QFileDialog.ShowDirsOnly
         )
 
-        for i in range(self.video_player.get_video_length()):
-            pixmap = self.interpolate_view.generate_segmentation_for_frame(i)
-            path = os.path.join(save_folder, f"{i:05d}.png")
-            pixmap.save(path)
+        segmentation_path = os.path.join(self.project_path, "glottis_segmentation")
+        glottal_midlines_path = os.path.join(self.project_path, "glottal_midlines.json")
+
+        glottal_midline_dict = {}
+        for frame_index, midline_points in enumerate(self.glottal_midlines):
+            upper = midline_points[0]
+            lower = midline_points[1]
+
+            glottal_midline_dict[f"Frame{frame_index}"] = {
+                "Upper": upper.tolist(),
+                "Lower": lower.tolist(),
+            }
+
+        with open(glottal_midlines_path, "w") as outfile:
+            json.dump(glottal_midline_dict, outfile)
+
+        for frame_index, seg in enumerate(self.segmentations):
+            image_save_path = os.path.join(segmentation_path, f"{frame_index:05d}.png")
+            cv2.imwrite(image_save_path, seg)
 
     def change_opacity(self) -> None:
         self.overlay_view.set_opacity(self.alpha_slider.value() / 100)
