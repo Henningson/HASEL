@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
             videodata = VFLabel.io.data.read_images_from_folder(
                 "assets/test_data/CF/png"
-            )
+            )[0:10]
             videodata = np.array(videodata)
 
             # Set up the zoomable view

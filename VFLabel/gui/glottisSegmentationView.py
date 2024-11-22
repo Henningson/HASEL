@@ -117,6 +117,7 @@ class GlottisSegmentationView(QWidget):
         self.alpha_slider.valueChanged.connect(self.change_opacity)
         self.video_player.slider.valueChanged.connect(self.change_frame)
 
+    # TODO: Implement me
     def generate_segmentations(self) -> None:
         # Load model from dropdown
 
@@ -125,7 +126,7 @@ class GlottisSegmentationView(QWidget):
         # Set the segmentation images
         images = VFLabel.io.data.read_images_from_folder(
             "assets/test_data/CF/glottal_mask", is_gray=1
-        )
+        )[0:10]
 
         self.segmentations = images
         self.glottal_midlines = [
