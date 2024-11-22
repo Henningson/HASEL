@@ -11,9 +11,9 @@ This tool enables to robustly and rapidly generate data of:
 Install requirements
 ```
 conda create --name VFLabel python=3.12
-pip install torch torchvision torchaudio kornia albumentations
+pip install torch torchvision torchaudio
 conda install pyqt qtpy
-pip install torchmetrics albumentations imageio
+pip install torchmetrics albumentations imageio kornia
 
 ```
 

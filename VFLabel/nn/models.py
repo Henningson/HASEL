@@ -70,16 +70,11 @@ class Encoder(nn.Module):
         return x
 
 
-class Model(nn.Module):
+class UNet(nn.Module):
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        state_dict=None,
-        features=[64, 128, 256, 512],
-        device="cuda",
+        self, in_channels, out_channels, state_dict=None, features=[64, 128, 256, 512]
     ):
-        super(Model, self).__init__()
+        super(UNet, self).__init__()
         self.bottleneck_size = features[-1] * 2
 
         self.encoder = Encoder(in_channels, features)
@@ -112,13 +107,8 @@ class Model(nn.Module):
         return self.final_conv(x)
 
 
-def test():
-
+if __name__ == "__main__":
     x = torch.randn((4, 3, 512, 256))
     y = torch.randn((4, 2, 100))
-    model = Model(in_channels=3, out_channels=3)
+    model = UNet(in_channels=3, out_channels=3)
     seg = model(x)
-
-
-if __name__ == "__main__":
-    test()
