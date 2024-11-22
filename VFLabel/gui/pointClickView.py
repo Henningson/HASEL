@@ -33,8 +33,10 @@ import VFLabel.gui.buttonGridWidget
 import VFLabel.utils.transforms
 import VFLabel.io.data
 import VFLabel.utils.utils
-import json
 
+import VFLabel.cv.segmentation
+import json
+import cv2
 
 from VFLabel.utils.defines import COLOR
 
@@ -56,6 +58,8 @@ class PointClickView(QWidget):
         self,
         grid_height: int,
         grid_width: int,
+        cycle_start: int,
+        cycle_end: int,
         video: np.array,
         project_path: str,
         parent=None,
@@ -63,7 +67,13 @@ class PointClickView(QWidget):
         super(PointClickView, self).__init__(parent)
         self.project_path: str = project_path
 
+        self.cycle_start = cycle_start
+        self.cycle_end = cycle_end
+
         qvideo: List[QImage] = VFLabel.utils.transforms.vid_2_QImage(video)
+        # TODO: REMOVE IN THE FINAL FRAMEWORK
+        qvideo = qvideo[self.cycle_start : self.cycle_end]
+
         self.point_clicker_view = VFLabel.gui.pointClickWidget.PointClickWidget(
             qvideo, grid_height=grid_height, grid_width=grid_width
         )
@@ -119,9 +129,7 @@ class PointClickView(QWidget):
     def save(self) -> None:
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Are you sure?")
-        dlg.setText(
-            f"You chose {self.cycle_start_index} and {self.cycle_end_index} as start and end frame. Is this ok?"
-        )
+        dlg.setText(f"Are you sure?")
         dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         dlg.setIcon(QMessageBox.Question)
         button = dlg.exec()
@@ -129,7 +137,42 @@ class PointClickView(QWidget):
         if button == QMessageBox.No:
             return
 
-        # TODO: Implement me
+        path = os.path.join(self.project_path, "laserpoint_segmentations")
+        json_path = os.path.join(self.project_path, "clicked_laserpoints.json")
+
+        laserpoints = self.point_clicker_view.point_positions
+
+        video_dict = {}
+        for frame_index, per_frame_points in enumerate(laserpoints):
+            point_list = []
+            point_coordinates = VFLabel.cv.get_points_from_tensor(per_frame_points)
+            point_ids = VFLabel.cv.get_point_indices_from_tensor(per_frame_points)
+
+            for point, id in zip(point_coordinates, point_ids):
+                point_dict = {
+                    "x_pos": point[0].item(),
+                    "y_pos": point[1].item(),
+                    "x_id": id[1].item(),
+                    "y_id": id[0].item(),
+                }
+                point_list.append(point_dict)
+
+            video_dict[f"Frame{self.cycle_start + frame_index}"] = point_list
+
+        with open(json_path, "w") as outfile:
+            json.dump(video_dict, outfile)
+
+        segmentations = VFLabel.cv.generate_laserpoint_segmentations(
+            self.point_clicker_view.point_positions,
+            self.point_clicker_view._image_height,
+            self.point_clicker_view._image_width,
+        )
+
+        for frame_index, segmentation in enumerate(segmentations):
+            cv2.imwrite(
+                os.path.join(path, f"{self.cycle_start + frame_index:05d}.png"),
+                segmentation,
+            )
 
     def set_draw_mode(self) -> None:
         self.setCursor(QCursor(QtCore.Qt.CrossCursor))

@@ -220,7 +220,6 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
                 point_id[0],
                 point_id[1],
             )
-            print(point_id[0], point_id[1])
             self.scene().addItem(ellipse_item)
             self._point_items.append(ellipse_item)
 

@@ -31,6 +31,8 @@ if __name__ == "__main__":
             view = VFLabel.gui.pointClickView.PointClickView(
                 grid_height,
                 grid_width,
+                10,
+                30,
                 videodata,
                 VFLabel.utils.defines.TEST_PROJECT_PATH,
             )
