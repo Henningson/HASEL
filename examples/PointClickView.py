@@ -5,7 +5,8 @@ from PyQt5.QtWidgets import (
     QGraphicsScene,
     QMainWindow,
     QVBoxLayout,
-    QWidget,
+    QWidget,  #
+    QMessageBox,
 )
 from PyQt5.QtGui import QImage
 

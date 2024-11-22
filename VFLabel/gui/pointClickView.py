@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 
-from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QPixmap, QImage
+from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QPixmap, QImage, QCursor
 import os
 
 import VFLabel.utils.transforms
@@ -112,8 +112,9 @@ class PointClickView(QWidget):
         self.button_remove.clicked.connect(self.set_remove_mode)
         self.button_disable_modes.clicked.connect(self.disable_modes)
         self.save_button.clicked.connect(self.save)
-        self.point_clicker_view.point_added.connect(self.video_player.increment_frame)
+        self.point_clicker_view.point_added.connect(self.increment_frame)
         self.button_grid.buttonSignal.connect(self.point_clicker_view.set_laser_index)
+        self.video_player.slider.valueChanged.connect(self.change_frame)
 
     def save(self) -> None:
         dlg = QMessageBox(self)
@@ -131,13 +132,23 @@ class PointClickView(QWidget):
         # TODO: Implement me
 
     def set_draw_mode(self) -> None:
+        self.setCursor(QCursor(QtCore.Qt.CrossCursor))
         self.point_clicker_view.DRAW_MODE_on()
         self.point_clicker_view.REMOVE_MODE_off()
 
     def set_remove_mode(self) -> None:
+        self.setCursor(QCursor(QtCore.Qt.ArrowCursor))
         self.point_clicker_view.REMOVE_MODE_on()
         self.point_clicker_view.DRAW_MODE_off()
 
     def disable_modes(self) -> None:
+        self.setCursor(QCursor(QtCore.Qt.ArrowCursor))
         self.point_clicker_view.REMOVE_MODE_off()
         self.point_clicker_view.DRAW_MODE_off()
+
+    def change_frame(self) -> None:
+        self.point_clicker_view.change_frame(self.video_player.slider.value())
+
+    def increment_frame(self) -> None:
+        self.video_player.increment_frame(force=True)
+        self.point_clicker_view.change_frame(self.video_player.slider.value())

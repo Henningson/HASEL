@@ -5,7 +5,7 @@ import numpy as np
 from typing import List
 from PyQt5.QtCore import QPointF, pyqtSignal
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QImage
-from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem
+from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem, QMessageBox
 import PyQt5.QtCore
 import PyQt5.Qt
 from typing import List
@@ -43,6 +43,8 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
         self.point_positions = (
             np.zeros([len(video), grid_height, grid_width, 2]) * np.nan
         )
+        self.y_index: int = None
+        self.x_index: int = None
 
     def keyPressEvent(self, event) -> None:
         if event.key() == PyQt5.QtCore.Qt.Key_E:
@@ -55,9 +57,11 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
 
         if self._draw_mode == enums.DRAW_MODE.ON:
             self.add_point(pos)
+            return
 
-        if self._remove_mode == enums.DRAW_MODE.ON:
+        if self._remove_mode == enums.REMOVE_MODE.ON:
             self.remove_point(pos)
+            return
 
     def contextMenuEvent(self, event) -> None:
         """
@@ -97,15 +101,19 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
             raise ValueError()
 
     def DRAW_MODE_on(self) -> None:
+        self.setDragMode(QGraphicsView.NoDrag)
         self._draw_mode = enums.DRAW_MODE.ON
 
     def DRAW_MODE_off(self) -> None:
+        self.setDragMode(QGraphicsView.ScrollHandDrag)
         self._draw_mode = enums.DRAW_MODE.OFF
 
     def REMOVE_MODE_on(self) -> None:
+        self.setDragMode(QGraphicsView.NoDrag)
         self._remove_mode = enums.REMOVE_MODE.ON
 
     def REMOVE_MODE_off(self) -> None:
+        self.setDragMode(QGraphicsView.ScrollHandDrag)
         self._remove_mode = enums.REMOVE_MODE.OFF
 
     def get_draw_mode(self) -> enums.DRAW_MODE:
@@ -115,13 +123,23 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
         return self._remove_mode
 
     def remove_point(self, point: QPointF) -> None:
-        clicked_item = self.scene.itemAt(point)
+        clicked_item = self.scene().itemAt(point, self.transform())
 
         if clicked_item in self._point_items:
-            self.scene.removeItem(point)
+            self.scene().removeItem(clicked_item)
             self._point_items.remove(clicked_item)
 
     def add_point(self, point: QPointF) -> None:
+        if not self.y_index or not self.x_index:
+            msgWarning = QMessageBox()
+            msgWarning.setText(
+                "Please select a laser beam that corresponds to the laser point you want to label from the grid."
+            )
+            msgWarning.setIcon(QMessageBox.Warning)
+            msgWarning.setWindowTitle("Caution")
+            msgWarning.exec()
+            return
+
         if point.x() < 0 or point.x() >= self._image_width:
             return
 
@@ -154,7 +172,8 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
             self.set_image(self.images[self._current_frame])
 
         for point_item in self._point_items:
-            self.scene.removeItem(point_item)
+            self.scene().removeItem(point_item)
+        self._point_items = []
 
         # Get current frame indices:
         points_at_current_frame = self.point_positions[self._current_frame]
@@ -163,10 +182,9 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
             ~np.isnan(points_at_current_frame).any(axis=1)
         ]
         for point in filtered_points:
-            # Transformed point, such that ellipse center is at mouse position
             ellipse_item = self.scene().addEllipse(
-                point.x() - self._pointsize / 2,
-                point.y() - self._pointsize / 2,
+                point[0] - self._pointsize / 2,
+                point[1] - self._pointsize / 2,
                 self._pointsize,
                 self._pointsize,
                 self._pointpen,
@@ -174,11 +192,11 @@ class PointClickWidget(videoViewWidget.VideoViewWidget):
             )
             self._point_items.append(ellipse_item)
 
-    def get_ok_point_indices(self, frame_index: int) -> np.array:
+    def get_point_indices(self, frame_index: int) -> np.array:
         mask = ~np.isnan(self.point_positions[frame_index]).any(axis=-1)
 
         # Get x, y indices of valid points
         return np.argwhere(mask)
 
-    def get_ok_point_indices_at_current(self) -> np.array:
+    def get_point_indices_at_current(self) -> np.array:
         return self.get_ok_point_indices(self._current_frame)
