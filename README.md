@@ -13,7 +13,7 @@ Install requirements
 conda create --name VFLabel python=3.12
 pip install torch torchvision torchaudio
 conda install pyqt qtpy
-pip install torchmetrics albumentations imageio kornia
+pip install torchmetrics albumentations imageio kornia segmentation-models-pytorch
 
 ```
 
