@@ -1,4 +1,5 @@
 import os
+import torch
 from torch.utils.data import Dataset
 import numpy as np
 import cv2
@@ -9,6 +10,16 @@ from VFLabel.utils.defines import NN_MODE
 from albumentations.pytorch import ToTensorV2
 
 from typing import List
+
+
+import cv2
+
+from dataclasses import dataclass
+from enum import Enum
+import numpy as np
+
+import json
+from collections import Counter
 
 
 class HaselDataset(Dataset):
@@ -91,3 +102,65 @@ class HaselDataset(Dataset):
             segmentation = augmentations["masks"][0]
 
         return image, segmentation
+
+
+class Specularity(Dataset):
+    def __init__(self, base_path: str, mode: MODE, transform=None):
+        path = None
+        json_path = None
+
+        if mode == MODE.train:
+            json_path = os.path.join(base_path, "train_labels.json")
+        elif mode == MODE.eval:
+            json_path = os.path.join(base_path, "val_labels.json")
+        elif mode == MODE.test:
+            json_path = os.path.join(base_path, "test_labels.json")
+
+        self.transform = transform
+
+        f = open(json_path)
+        data = json.load(f)
+
+        self.images = []
+        self.labels = []
+
+        for _, value in data.items():
+            label = value["label"]
+            rel_path = value["path"]
+            image = cv2.imread(os.path.join(base_path, rel_path), 0)
+
+            image_copy = image.astype(float) / 255
+            image_copy = (image_copy - image_copy.min()) / (
+                image_copy.max() - image_copy.min()
+            )
+            image_copy *= 255
+            image_copy = image.astype(np.uint8)
+
+            self.images.append(image_copy)
+            self.labels.append(label)
+
+    def printStatistics(self):
+        counter = Counter(self.labels)
+
+        for key, value in counter.items():
+            print(
+                "Label: {0}, Occurences: {1}, Percent: {2:0.3f}".format(
+                    PointLabel(key), value, value / len(self.images) * 100
+                )
+            )
+
+    def __len__(self):
+        return len(self.images)
+
+    def trimLength(self, amount):
+        assert amount < len(self.images)
+
+        self.images = self.images[0:-amount]
+
+    def __getitem__(self, index):
+        image = self.images[index]
+        label = self.labels[index]
+
+        image = self.transform(image=image)
+
+        return image["image"].to(DEVICE), torch.tensor([label], device=DEVICE)
