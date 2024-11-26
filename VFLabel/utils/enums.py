@@ -1,12 +1,22 @@
 from enum import Enum
+from dataclasses import dataclass
+import numpy as np
 
 
-class Specularity(Enum):
-    """For classification if a point is visible or not"""
-
-    UNIDENTIFIABLE = 0
+class PointLabel(Enum):
+    UNLABELED = -1
+    LASERPOINT = 0
     SPECULARITY = 1
-    VISIBLE = 2
+    OTHER = 2
+
+
+@dataclass
+class SpecularHightlightDatum:
+    """Class for saving Specular Highlight Data"""
+
+    image: np.array
+    image_id: int
+    label: PointLabel
 
 
 class FullSegmentation(Enum):
@@ -42,5 +52,6 @@ class REMOVE_MODE(Enum):
 
 
 class NN_MODE(Enum):
-    EVAL = 0
-    TRAIN = 1
+    TRAIN = 0
+    EVAL = 1
+    TEST = 2

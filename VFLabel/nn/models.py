@@ -70,10 +70,82 @@ class Encoder(nn.Module):
         return x
 
 
-class TwoLayeredClassificator:
-    # TODO: Implement me
-    def __init__(self, state_dict=None):
-        pass
+class DownConv(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=3, last_layer=False):
+        super(DownConv, self).__init__()
+
+        if not last_layer:
+            self.conv = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size, 1, kernel_size // 2),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(out_channels, out_channels, kernel_size, 1, 0),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(inplace=True),
+            )
+        else:
+            self.conv = nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, kernel_size, 1, kernel_size // 2),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(out_channels, out_channels, kernel_size, 1, 0),
+            )
+
+    def forward(self, x):
+        return self.conv(x)
+
+
+class Kernel3Classificator(nn.Module):
+    def __init__(self):
+        super(Kernel3Classificator, self).__init__()
+
+        self.a = DownConv(1, 128, kernel_size=3)
+        self.b = DownConv(128, 64, kernel_size=3)
+        self.c = DownConv(64, 3, kernel_size=3, last_layer=True)
+
+    def forward(self, x):
+        x = self.a(x)
+        x = self.b(x)
+        x = self.c(x)
+
+        return torch.softmax(x.squeeze(), dim=1)
+
+
+class Kernel5Classificator(nn.Module):
+    def __init__(self):
+        super(Kernel5Classificator, self).__init__()
+
+        self.a = DownConv(1, 64, kernel_size=5)
+        self.b = DownConv(64, 3, kernel_size=3, last_layer=True)
+
+    def forward(self, x):
+        x = self.a(x)
+        x = self.b(x)
+
+        return torch.softmax(x.squeeze(), dim=1)
+
+
+class FullyConnected(nn.Module):
+    def __init__(self):
+        super(FullyConnected, self).__init__()
+
+        self.a = nn.Sequential(
+            nn.Linear(7 * 7, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(inplace=True),
+            nn.Linear(128, 64),
+            nn.BatchNorm1d(64),
+            nn.ReLU(inplace=True),
+            nn.Linear(64, 32),
+            nn.BatchNorm1d(32),
+            nn.ReLU(inplace=True),
+            nn.Linear(32, 3),
+        )
+
+    def forward(self, x):
+        x = self.a(x.squeeze().reshape(x.shape[0], -1))
+
+        return torch.softmax(x.squeeze(), dim=1)
 
 
 class UNet(nn.Module):
