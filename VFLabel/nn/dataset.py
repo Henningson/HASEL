@@ -6,7 +6,7 @@ import cv2
 
 import albumentations as A
 
-from VFLabel.utils.defines import NN_MODE
+from VFLabel.utils.enums import NN_MODE
 from albumentations.pytorch import ToTensorV2
 
 from typing import List
@@ -14,17 +14,24 @@ from typing import List
 
 import cv2
 
-from dataclasses import dataclass
-from enum import Enum
+import VFLabel.utils.enums
 import numpy as np
+import re
 
 import json
 from collections import Counter
 
 
 class HaselDataset(Dataset):
-    def __init__(self, path, train: NN_MODE = NN_MODE.TRAIN, split_factor: float = 0.9):
+    def __init__(
+        self,
+        path,
+        train: NN_MODE = NN_MODE.TRAIN,
+        preprocess_func=None,
+        split_factor: float = 0.9,
+    ):
         self.base_path = path
+        self.preprocess_func = preprocess_func
 
         train_transform = A.Compose(
             [
@@ -101,19 +108,22 @@ class HaselDataset(Dataset):
             image = augmentations["image"]
             segmentation = augmentations["masks"][0]
 
+        if self.preprocess_func:
+            image = self.preprocess_func(image)
+
         return image, segmentation
 
 
 class Specularity(Dataset):
-    def __init__(self, base_path: str, mode: MODE, transform=None):
+    def __init__(self, base_path: str, mode: NN_MODE, transform=None):
         path = None
         json_path = None
 
-        if mode == MODE.train:
+        if mode == NN_MODE.TRAIN:
             json_path = os.path.join(base_path, "train_labels.json")
-        elif mode == MODE.eval:
+        elif mode == NN_MODE.EVAL:
             json_path = os.path.join(base_path, "val_labels.json")
-        elif mode == MODE.test:
+        elif mode == NN_MODE.TEST:
             json_path = os.path.join(base_path, "test_labels.json")
 
         self.transform = transform
@@ -145,7 +155,9 @@ class Specularity(Dataset):
         for key, value in counter.items():
             print(
                 "Label: {0}, Occurences: {1}, Percent: {2:0.3f}".format(
-                    PointLabel(key), value, value / len(self.images) * 100
+                    VFLabel.utils.enums.PointLabel(key),
+                    value,
+                    value / len(self.images) * 100,
                 )
             )
 
@@ -163,4 +175,180 @@ class Specularity(Dataset):
 
         image = self.transform(image=image)
 
-        return image["image"].to(DEVICE), torch.tensor([label], device=DEVICE)
+        return image["image"], torch.tensor([label])
+
+
+class HLE_BAGLS_Fireflies_Dataset(Dataset):
+    def __init__(self, datasets_path: str, mode: NN_MODE, split_at: float = 0.9):
+        self.base_path = datasets_path
+
+        train_transform = A.Compose(
+            [
+                A.Resize(height=512, width=256),
+                A.HorizontalFlip(p=0.5),
+                A.VerticalFlip(p=0.5),
+                A.Rotate(limit=(-40, 40), p=0.5),
+                A.Affine(translate_percent=0.15, p=0.5),
+                A.RandomGamma(),
+                A.RandomBrightnessContrast(),
+                A.Perspective(scale=(0.05, 0.2), p=0.5),
+                A.Normalize(),
+                ToTensorV2(),
+            ]
+        )
+
+        eval_transform = A.Compose(
+            [
+                A.Resize(height=512, width=256),
+                A.Normalize(),
+                ToTensorV2(),
+            ]
+        )
+
+        self.transform = train_transform if mode == NN_MODE.TRAIN else eval_transform
+        self.segmentations = None
+
+        ff_images, ff_segmentations = self.load_fireflies(
+            os.path.join(self.base_path, "fireflies_dataset_v5"), mode
+        )
+
+        bagls_images, bagls_segmentations = self.load_bagls(
+            os.path.join(self.base_path, "BAGLS"), mode
+        )
+
+        hle_images, hle_segmentations = self.load_hle(
+            os.path.join(self.base_path, "HLEDataset", "dataset"), mode
+        )
+
+        if mode != NN_MODE.TEST:
+            ff_images = self.split(ff_images, split_at, mode)
+            ff_segmentations = self.split(ff_segmentations, split_at, mode)
+
+            bagls_images = self.split(bagls_images, split_at, mode)
+            bagls_segmentations = self.split(bagls_segmentations, split_at, mode)
+
+        self._segmentations = ff_segmentations + bagls_segmentations + hle_segmentations
+        self._images = ff_images + bagls_images + hle_images
+
+    def split(self, images, split_factor, mode: NN_MODE):
+        split_at = int(len(images) * split_factor)
+        if mode == NN_MODE.TRAIN:
+            images = images[0:split_at]
+        elif mode == NN_MODE.EVAL:
+            images = images[split_at:-1]
+
+        return images
+
+    def load_fireflies(self, fireflies_path: str, mode: NN_MODE):
+
+        if mode == NN_MODE.TRAIN or mode == NN_MODE.EVAL:
+            fireflies_path = os.path.join(fireflies_path, "train")
+        else:
+            fireflies_path = os.path.join(fireflies_path, "test")
+
+        images = self.load_image_paths(os.path.join(fireflies_path, "images"))
+        segmentations = self.load_image_paths(
+            os.path.join(fireflies_path, "segmentation")
+        )
+
+        return images, segmentations
+
+    def load_bagls(self, bagls_path: str, mode: NN_MODE):
+        if mode == NN_MODE.TRAIN or mode == NN_MODE.EVAL:
+            bagls_path = os.path.join(bagls_path, "training")
+        else:
+            bagls_path = os.path.join(bagls_path, "test")
+
+        images = self.load_bagls_image_paths(bagls_path)
+        segmentations = self.load_bagls_segmentation_paths(bagls_path)
+
+        return images, segmentations
+
+    def load_hle(self, hle_path: str, mode: NN_MODE):
+        keys = None
+        if mode == NN_MODE.TRAIN:
+            keys = ["CF", "CM", "DD", "FH"]
+        elif mode == NN_MODE.EVAL:
+            keys = ["LS"]
+        elif mode == NN_MODE.TEST:
+            keys = ["MK", "MS", "RH", "SS", "TM"]
+
+        images = self.load_hle_image_paths(hle_path, keys)
+        segmentations = self.load_hle_segmentation_paths(hle_path, keys)
+
+        return images, segmentations
+
+    def load_hle_image_paths(self, hle_path, keys) -> List[str]:
+        image_data = []
+        for dir in keys:
+            image_data += self.load_image_paths(os.path.join(hle_path, dir, "png"))
+
+        return image_data
+
+    def load_hle_segmentation_paths(self, hle_path, keys) -> List[str]:
+        image_data = []
+        for dir in keys:
+            image_data += self.load_image_paths(
+                os.path.join(hle_path, dir, "glottal_mask")
+            )
+
+        return image_data
+
+    def preprocess_fireflies_segmentations(self, segmentation: np.array):
+        segmentation[segmentation == 3] = 2
+        segmentation[segmentation == 2] = 0
+        return segmentation
+
+    def load_bagls_image_paths(self, path) -> List[str]:
+        image_paths = []
+        files = os.listdir(path)
+
+        # Why are these files not 0-indexed? :(
+        # Need to sort them by regexing first.
+        sorted_files = sorted(files, key=lambda x: int(re.search(r"\d+", x).group()))
+        for file in sorted_files:
+            if file.endswith(".png") and not "_" in file:
+                image_paths.append(os.path.join(path, file))
+
+        return image_paths
+
+    def load_bagls_segmentation_paths(self, path) -> List[str]:
+        image_paths = []
+        files = os.listdir(path)
+
+        # Why are these files not 0-indexed? :(
+        # Need to sort them by regexing first.
+        sorted_files = sorted(files, key=lambda x: int(re.search(r"\d+", x).group()))
+        for file in sorted_files:
+            if file.endswith(".png") and "_seg" in file:
+                image_paths.append(os.path.join(path, file))
+
+        return image_paths
+
+    def load_image_paths(self, path) -> List[str]:
+        image_paths = []
+        for file in sorted(os.listdir(path)):
+            if file.endswith(".png"):
+                image_paths.append(os.path.join(path, file))
+
+        return image_paths
+
+    def __len__(self):
+        return len(self._images)
+
+    def __getitem__(self, index):
+        image = cv2.imread(self._images[index], 1)
+        segmentation = cv2.imread(self._segmentations[index], 0)
+
+        if "fireflies" in self._segmentations[index]:
+            segmentation = self.preprocess_fireflies_segmentations(segmentation)
+        else:
+            segmentation[segmentation > 0] = 1
+
+        if self.transform is not None:
+            augmentations = self.transform(image=image, masks=[segmentation])
+
+            image = augmentations["image"]
+            segmentation = augmentations["masks"][0]
+
+        return image, segmentation

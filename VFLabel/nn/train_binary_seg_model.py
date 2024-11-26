@@ -4,22 +4,25 @@ from torch.utils.data import DataLoader
 
 import os
 import torch.nn as nn
-import dataset
-import lr_scheduler
+import VFLabel.nn.dataset as dataset
+import VFLabel.nn.lr_scheduler as lr_scheduler
 
 import torchmetrics
 import torchmetrics.detection
 
-from VFLabel.utils.defines import NN_MODE
+from VFLabel.utils.enums import NN_MODE
 import torch
 
 import segmentation_models_pytorch as smp
+from segmentation_models_pytorch.encoders import get_preprocessing_fn
+
+from tqdm import tqdm
 
 # TODO: Pass device along in functions instead of defining it globally
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-def train_point_predictor_network(
+def train_binary_segmentation_network(
     project_path: str, encoder: str = "mobilenet_v2"
 ) -> nn.Module:
     checkpoint_path = os.path.join(project_path, "unet_point_predictor.pth.tar")
@@ -32,6 +35,8 @@ def train_point_predictor_network(
 
     train_ds = dataset.HaselDataset(project_path, NN_MODE.TRAIN)
     eval_ds = dataset.HaselDataset(project_path, NN_MODE.EVAL)
+
+    preprocess_func = get_preprocessing_fn(encoder, pretrained="imagenet")
 
     train_loader = DataLoader(
         train_ds,
@@ -65,7 +70,7 @@ def train_point_predictor_network(
 
     best_iou = 0.0
     scheduler = lr_scheduler.PolynomialLR(optimizer, num_epochs, power=0.99)
-    for epoch in range(num_epochs):
+    for epoch in tqdm(range(num_epochs), leave=False):
         scheduler.update_lr()
 
         # Train the network
@@ -85,7 +90,7 @@ def train_point_predictor_network(
     best_model = smp.Unet(
         encoder_name=encoder,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
         encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
-        in_channels=1,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
+        in_channels=3,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
         classes=1,
     ).cpu()
     best_model = model.load_state_dict(state_dict)
@@ -96,14 +101,12 @@ def train(train_loader, loss_func, model, scheduler):
     model.train()
     running_average = 0.0
     count = 0
-    for images, gt_seg in train_loader:
-        if images.shape[0] != 8:
-            continue
+    for images, gt_seg in (pbar := tqdm(train_loader, leave=False)):
+        images = images.to(device=DEVICE)
+
+        gt_seg = gt_seg.to(device=DEVICE)
 
         scheduler.zero_grad()
-
-        images = images.to(device=DEVICE)
-        gt_seg = gt_seg.to(device=DEVICE)
 
         # forward
         pred_seg = model(images).squeeze()
@@ -114,6 +117,8 @@ def train(train_loader, loss_func, model, scheduler):
 
         running_average += loss.item()
         count += images.shape[0]
+
+        pbar.set_description(f"{loss.item():05f}")
 
     return running_average / count
 
@@ -127,10 +132,7 @@ def evaluate(val_loader, model, loss_func):
     dice = torchmetrics.F1Score(task="binary")
     iou = torchmetrics.JaccardIndex(task="binary")
 
-    for images, gt_seg in val_loader:
-        if images.shape[0] != 8:
-            continue
-
+    for images, gt_seg in tqdm(val_loader, leave=False):
         images = images.to(device=DEVICE)
         gt_seg = gt_seg.long().to(device=DEVICE)
 
@@ -145,7 +147,5 @@ def evaluate(val_loader, model, loss_func):
 
     dice_score = dice.compute()
     iou_score = iou.compute()
-
-    print("DICE: {0:03f}, IoU: {1:03f}".format(dice_score, iou_score))
 
     return dice_score, iou_score, running_average / count
