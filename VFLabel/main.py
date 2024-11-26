@@ -4,5 +4,5 @@ import gui
 from PyQt5.QtWidgets import QApplication
 
 app = QApplication(sys.argv)
-w = gui.MainWindow()
+w = gui.StartWindowView()
 sys.exit(app.exec_())
