@@ -10,7 +10,7 @@ import VFLabel.nn.train_binary_seg_model
 
 from VFLabel.utils.enums import NN_MODE
 import torch
-
+import csv
 import segmentation_models_pytorch as smp
 from segmentation_models_pytorch.encoders import get_preprocessing_fn
 from tqdm import tqdm
@@ -22,14 +22,16 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 def train_glottis_segmentation_network(
     save_checkpoint_path: str, dataset_path: str, encoder: str = "mobilenet_v2"
 ) -> nn.Module:
-    checkpoint_path = os.path.join(save_checkpoint_path, "glottis_mobilenet.pth.tar")
+    checkpoint_path = os.path.join(save_checkpoint_path, "glottis_" + encoder + ".pth.tar")
 
     # TODO: Decide if we should load this from a JSON file.
     # Up until then, i'll hardcode stuff that has worked good for me in the past.
     batch_size: int = 16
     num_epochs: int = 25
-    learning_rate: float = 0.001
+    learning_rate: float = 0.0005
     in_channels: int = 3
+    csv_eval_filename: str = "glottis_" + encoder + "_eval.csv"
+    csv_train_filename: str = "glottis_" + encoder + "_train.csv"
 
     train_ds = dataset.HLE_BAGLS_Fireflies_Dataset(dataset_path, NN_MODE.TRAIN)
     eval_ds = dataset.HLE_BAGLS_Fireflies_Dataset(dataset_path, NN_MODE.EVAL)
@@ -74,7 +76,12 @@ def train_glottis_segmentation_network(
     )
 
     best_iou = 0.0
-    scheduler = lr_scheduler.PolynomialLR(optimizer, num_epochs, power=0.99)
+    scheduler = lr_scheduler.PolynomialLR(optimizer, num_epochs, power=2.0)
+
+    csvfile =  open(os.path.join(checkpoint_path, csv_eval_filename), "a+", newline="")
+    writer = csv.writer(csvfile)
+    writer.writerow(["Dice","IoU","Eval Loss","Train Loss"])
+
     for epoch in tqdm(range(num_epochs)):
         scheduler.update_lr()
 
@@ -98,7 +105,8 @@ def train_glottis_segmentation_network(
             torch.save(checkpoint, checkpoint_path)
             best_iou = eval_iou
 
-    # del model
+        writer.writerow([eval_dice.item(), eval_iou.item(), eval_loss, train_loss])
+    csvfile.close()
 
     best_model = smp.Unet(
         encoder_name=encoder,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
@@ -111,12 +119,16 @@ def train_glottis_segmentation_network(
     eval_dice, eval_iou, eval_loss = VFLabel.nn.train_binary_seg_model.evaluate(
         test_loader, model, loss_func
     )
-    print(f"Test IOU: {eval_iou.item()}, Test loss: {eval_loss}")
+
+    with open(os.path.join(checkpoint_path, csv_train_filename), "a+", newline="") as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(["Dice","IoU"])
+        writer.writerow([eval_dice.item(), eval_iou.item()])
 
     return best_model
 
 
 if __name__ == "__main__":
     train_glottis_segmentation_network(
-        "assets/models", "/media/nu94waro/Windows_C/save/datasets"
+        "assets/models", "/media/nu94waro/Windows_C/save/datasets", "mobilenet_v2"
     )

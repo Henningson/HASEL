@@ -41,7 +41,7 @@ class HaselDataset(Dataset):
                 A.Affine(translate_percent=0.15, p=0.5),
                 A.RandomGamma(),
                 A.RandomBrightnessContrast(),
-                A.Perspective(scale=(0.05, 0.2), p=0.5),
+                # A.Perspective(scale=(0.05, 0.2), p=0.5),
                 A.Normalize(
                     mean=[0.0],
                     std=[1.0],
@@ -189,9 +189,8 @@ class HLE_BAGLS_Fireflies_Dataset(Dataset):
                 A.VerticalFlip(p=0.5),
                 A.Rotate(limit=(-40, 40), p=0.5),
                 A.Affine(translate_percent=0.15, p=0.5),
-                A.RandomGamma(),
-                A.RandomBrightnessContrast(),
-                A.Perspective(scale=(0.05, 0.2), p=0.5),
+                # A.RandomGamma(),
+                # A.RandomBrightnessContrast(),
                 A.Normalize(),
                 ToTensorV2(),
             ]
