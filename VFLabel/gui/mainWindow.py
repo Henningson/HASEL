@@ -4,11 +4,14 @@ from PyQt5.QtWidgets import (
     QWidget,
     QPushButton,
     QHBoxLayout,
+    QVBoxLayout,
     QFileDialog,
     QInputDialog,
     QLineEdit,
+    QTextEdit,
 )
-from PyQt5.QtGui import QPixmap, QPainter, QFont
+from PyQt5.QtGui import QPixmap, QPainter, QFont, QTextCursor, QTextBlockFormat
+from PyQt5.QtCore import Qt
 
 import VFLabel.gui.newProjectWidget
 
@@ -18,122 +21,162 @@ class MainWindow(QWidget):
         super().__init__()
         self.init_window()
 
-    def init_window(self):
+    def init_window(self) -> None:
         # general setup of window
         self.setGeometry(100, 100, 1000, 1000)
         self.setWindowTitle("HASEL - Main menu")
 
         # create layout
-        box_layout = QHBoxLayout()
+        boxh_btn_layout = QHBoxLayout()
+        boxh_txt_layout = QHBoxLayout()
+        boxh_save_layout = QHBoxLayout()
+        boxh_num_layout = QHBoxLayout()
+        boxv_layout = QVBoxLayout()
 
-        # create buttons
+        # create different options buttons
         font = QFont("Arial", 20, QFont.Bold)
-        btn_new = QPushButton("New Project", self)
-        btn_new.setToolTip("This <b>button</b> creates a new project.")
-        btn_new.setFont(font)
-        btn_open = QPushButton("Open Project", self)
-        btn_open.setToolTip("This <b>button</b> opens an existing project.")
-        btn_open.setFont(font)
+
+        btn_gl_seg = QPushButton("Glotted \nsegmentation", self)
+        btn_gl_seg.setToolTip("This <b>button</b> ...")
+        btn_gl_seg.setFont(font)
+        btn_gl_seg.setFixedSize(200, 100)
+
+        btn_vf_seg = QPushButton("Vocal Fold \n segmentation", self)
+        btn_vf_seg.setToolTip("This <b>button</b> ...")
+        btn_vf_seg.setFont(font)
+        btn_vf_seg.setFixedSize(200, 100)
+
+        btn_pt_label = QPushButton("Point \nLabeling", self)
+        btn_pt_label.setToolTip("This <b>button</b> ...")
+        btn_pt_label.setFont(font)
+        btn_pt_label.setFixedSize(200, 100)
+
+        btn_auto_pt_label = QPushButton("Auto Point \n Labeling", self)
+        btn_auto_pt_label.setToolTip("This <b>button</b> ...")
+        btn_auto_pt_label.setFont(font)
+        btn_auto_pt_label.setFixedSize(200, 100)
+
+        # create save button
+        font = QFont("Arial", 15, QFont.Bold)
+        btn_save = QPushButton("Save", self)
+        btn_save.setToolTip("This <b>button</b> ...")
+        btn_save.setFont(font)
+        btn_save.setFixedSize(100, 30)
+
+        # create progress text bars
+        self.progress_gl_seg = QTextEdit("not started", readOnly=True)
+        self.progress_gl_seg.setFixedSize(200, 30)
+        self.progress_vf_seg = QTextEdit("not started", readOnly=True)
+        self.progress_vf_seg.setFixedSize(200, 30)
+        self.progress_pt_label = QTextEdit("not started", readOnly=True)
+        self.progress_pt_label.setFixedSize(200, 30)
+        self.progress_auto_pt_label = QTextEdit("not started", readOnly=True)
+        self.progress_auto_pt_label.setFixedSize(200, 30)
+        # TODO: wenn geöffnet wird, text anders initialisieren
+
+        # centralize text of progress text bars
+        self.centralize_text(self.progress_gl_seg)
+        self.centralize_text(self.progress_vf_seg)
+        self.centralize_text(self.progress_pt_label)
+        self.centralize_text(self.progress_auto_pt_label)
+
+        # create number text bars
+        num_gl_seg = QTextEdit("1.", readOnly=True)
+        num_gl_seg.setFixedSize(200, 30)
+        num_vf_seg = QTextEdit("2.", readOnly=True)
+        num_vf_seg.setFixedSize(200, 30)
+        num_pt_label = QTextEdit("3.", readOnly=True)
+        num_pt_label.setFixedSize(200, 30)
+        num_auto_pt_label = QTextEdit("4.", readOnly=True)
+        num_auto_pt_label.setFixedSize(200, 30)
+
+        # centralize text of progress text bars
+        self.centralize_text(num_gl_seg)
+        self.centralize_text(num_vf_seg)
+        self.centralize_text(num_pt_label)
+        self.centralize_text(num_auto_pt_label)
 
         # insert buttons in window
-        box_layout.addStretch(1)
-        box_layout.addWidget(btn_new)
-        box_layout.addStretch(1)
-        box_layout.addWidget(btn_open)
-        box_layout.addStretch(1)
+        boxh_btn_layout.addStretch(1)
+        boxh_btn_layout.addWidget(btn_gl_seg)
+        boxh_btn_layout.addStretch(1)
+        boxh_btn_layout.addWidget(btn_vf_seg)
+        boxh_btn_layout.addStretch(1)
+        boxh_btn_layout.addWidget(btn_pt_label)
+        boxh_btn_layout.addStretch(1)
+        boxh_btn_layout.addWidget(btn_auto_pt_label)
+        boxh_btn_layout.addStretch(1)
+
+        # insert progress text in window
+        boxh_txt_layout.addStretch(1)
+        boxh_txt_layout.addWidget(self.progress_gl_seg)
+        boxh_txt_layout.addStretch(1)
+        boxh_txt_layout.addWidget(self.progress_vf_seg)
+        boxh_txt_layout.addStretch(1)
+        boxh_txt_layout.addWidget(self.progress_pt_label)
+        boxh_txt_layout.addStretch(1)
+        boxh_txt_layout.addWidget(self.progress_auto_pt_label)
+        boxh_txt_layout.addStretch(1)
+
+        # insert number text in window
+        boxh_num_layout.addStretch(1)
+        boxh_num_layout.addWidget(num_gl_seg)
+        boxh_num_layout.addStretch(1)
+        boxh_num_layout.addWidget(num_vf_seg)
+        boxh_num_layout.addStretch(1)
+        boxh_num_layout.addWidget(num_pt_label)
+        boxh_num_layout.addStretch(1)
+        boxh_num_layout.addWidget(num_auto_pt_label)
+        boxh_num_layout.addStretch(1)
+
+        # insert save button in window
+        boxh_save_layout.addStretch(1)
+        boxh_save_layout.addWidget(btn_save)
+
+        # combine layouts
+        boxv_layout.setContentsMargins(50, 50, 50, 50)
+        boxv_layout.addStretch(1)
+        boxv_layout.addLayout(boxh_num_layout)
+        boxv_layout.addLayout(boxh_btn_layout)
+        boxv_layout.addLayout(boxh_txt_layout)
+        boxv_layout.addStretch(1)
+        boxv_layout.addLayout(boxh_save_layout)
 
         # adding functionality to buttons
-        btn_new.clicked.connect(self.create_new_project)
-        btn_open.clicked.connect(self.open_project)
+        btn_gl_seg.clicked.connect(self.open_glotted_segmentation)
+        btn_vf_seg.clicked.connect(self.open_vf_segmentation)
+        btn_pt_label.clicked.connect(self.open_pt_labeling)
+        btn_auto_pt_label.clicked.connect(self.open_auto_pt_labeling)
 
         # set layout
-        self.setLayout(box_layout)
+        self.setLayout(boxv_layout)
 
         # show window
         self.show()
 
-    def paintEvent(self, event):
-        """Paint background of Main Menu"""
-        painter = QPainter(self)
-        current_dir = os.getcwd()
-        image_path = os.path.join(current_dir, "assets", "logo.png")
-        # TODO: Pfad so aussuchen, dass er immer funktioniert
-        pixmap = QPixmap(image_path)
-        painter.drawPixmap(self.rect(), pixmap)
+    def open_glotted_segmentation(self) -> None:
+        self.progress_gl_seg.setText("in progress")
+        # TODO add background color according to state
+        self.centralize_text(self.progress_gl_seg)
+        pass
+        # TODO open glotted segmentation window
 
-    def create_new_project(self):
-        """Creates a new project
+    def open_vf_segmentation(self) -> None:
+        pass
+        # TODO open vocal fold segmentation window
 
-        This method:
-        - gets parameters for new project
-        - uploads video path
-        - creates project
-        - forwards to next part of the program
+    def open_pt_labeling(self) -> None:
+        pass
+        # TODO open point labeling window
 
-        Returns:
-            None
-        """
-        # create widget to enter new project properties
-        new_project_widget = VFLabel.gui.newProjectWidget.NewProjectWidget()
+    def open_auto_pt_labeling(self) -> None:
+        # TODO: in betweenWindow : DO you have already finished point labeling? If not, please finish it first ...
+        pass
+        # TODO open point labeling window
 
-        # connect signal between new_project_widget and this window
-        new_project_widget.new_project_status_signal.connect(
-            self.update_new_project_status
-        )
-
-        # start new project widget
-        new_project_widget.exec_()
-        (
-            self.name_input,
-            self.gridx,
-            self.gridy,
-        ) = new_project_widget.get_new_project_inputs()
-        # TODO: Umwandeln in Signale?
-
-        # check status of input from "new_project_widget" and continue
-        if self.status_new_project == "OK":
-            # upload video path
-            self.upload_new_video()
-            print(self.video_path)
-
-            # TODO: create new project with given name
-            # TODO: Überleitung zu Programm
-
-    def upload_new_video(self):
-        """Opens file manager to upload video
-
-        This method:
-        - opens file manager
-        - allows user to choose a video
-        - saves path of video
-
-        Returns:
-            None
-        """
-        current_dir = os.getcwd()
-        fd = QFileDialog()
-        self.video_path, _ = fd.getOpenFileName(
-            self,
-            "Upload video",
-            current_dir,
-            "Only video-files(*.mp4)",
-        )
-        # TODO: auch andere Dateitypen ?
-
-    def update_new_project_status(self, status):
-        # status from newProjectWidget
-        self.status_new_project = status
-
-    def open_project(self):
-        current_dir = os.getcwd()
-
-        # open file manager to choose project
-        fd = QFileDialog()
-        file_path, _ = fd.getOpenFileName(
-            self,
-            "Open project",
-            current_dir,
-            "Only ToBeDetermined-files(*.mp4)",
-        )
-        # TODO: Enter right file types
-        # TODO: Überleitung zu Programm
+    def centralize_text(self, widget) -> None:
+        cursor = widget.textCursor()
+        cursor.select(QTextCursor.Document)
+        block_format = QTextBlockFormat()
+        block_format.setAlignment(Qt.AlignCenter)
+        cursor.mergeBlockFormat(block_format)

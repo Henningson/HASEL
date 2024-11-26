@@ -13,5 +13,6 @@ from .glottisSegmentationView import GlottisSegmentationView
 from .vocalfoldSegmentationView import VocalfoldSegmentationView
 from .selectCycleView import SelectCycleView
 
-from .mainWindow import MainWindow
+from .startWindowView import StartWindowView
 from .newProjectWidget import NewProjectWidget
+from .mainWindow import MainWindow
