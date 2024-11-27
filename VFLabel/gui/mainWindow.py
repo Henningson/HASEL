@@ -173,10 +173,6 @@ class MainWindow(QWidget):
             json.dump(file, prgrss_file, indent=4)
 
     def open_glotted_segmentation(self) -> None:
-        self.gl_window = gui.GlottisSegmentationView(
-            self.project_path,
-        )
-        self.gl_window.show()
         new_state = "in progress"
         self.progress_gl_seg.setText(new_state)
         self.save_new_progress_state("progress_gl_seg", new_state)
