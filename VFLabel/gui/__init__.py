@@ -9,7 +9,7 @@ from .interpolateSegmentationWidget import InterpolateSegmentationWidget
 from .videoViewWidget import VideoViewWidget
 from .videoOverlayWidget import VideoOverlayWidget
 
-from .glottisSegmentationView import GlottisSegmentationView
+from .glottisSegmentationWidget import GlottisSegmentationWidget
 from .vocalfoldSegmentationView import VocalfoldSegmentationView
 from .selectCycleView import SelectCycleView
 

@@ -57,9 +57,9 @@ from typing import List
 ############################### v
 
 
-class GlottisSegmentationView(QWidget):
+class GlottisSegmentationWidget(QWidget):
     def __init__(self, project_path: str, video: np.array, parent=None):
-        super(GlottisSegmentationView, self).__init__(parent)
+        super(GlottisSegmentationWidget, self).__init__(parent)
         vertical_layout = QVBoxLayout()
         horizontal_layout_top = QHBoxLayout()
         top_widget = QWidget()

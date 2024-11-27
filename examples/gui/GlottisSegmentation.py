@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
 )
 
 import VFLabel.gui
-import VFLabel.gui.glottisSegmentationView
+import VFLabel.gui.glottisSegmentationWidget
 import VFLabel.gui.vocalfoldSegmentationView
 
 
@@ -43,7 +43,7 @@ if __name__ == "__main__":
             videodata = np.array(videodata)
 
             # Set up the zoomable view
-            view = VFLabel.gui.GlottisSegmentationView(TEST_PROJECT_PATH, videodata)
+            view = VFLabel.gui.GlottisSegmentationWidget(TEST_PROJECT_PATH, videodata)
             layout.addWidget(view)
 
             # Set up the main window^
