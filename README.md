@@ -31,7 +31,7 @@ cd VFLabel
 pip install .
 ```
   
-Next, download the glottis segmentation networks from [my google drive](https://drive.google.com/drive/folders/1U525TcxZ1nhIp5yNJiyW-avK6qZG4rVV?usp=sharing) and move them to ```assets/test_data/```.
+Next, download the glottis segmentation networks from [here](https://drive.google.com/drive/folders/1U525TcxZ1nhIp5yNJiyW-avK6qZG4rVV?usp=sharing) and move them to ```assets/test_data/```.
 
 # How to use VFLabel (TODO)
 Hier könnte ihre Werbung stehen.
