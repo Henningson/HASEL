@@ -30,6 +30,8 @@ git clone https://github.com/Henningson/VFLabel.git
 cd VFLabel
 pip install .
 ```
+  
+Next, download the glottis segmentation networks from [my google drive](https://drive.google.com/drive/folders/1U525TcxZ1nhIp5yNJiyW-avK6qZG4rVV?usp=sharing) and move them to ```assets/test_data/```.
 
 # How to use VFLabel (TODO)
 Hier könnte ihre Werbung stehen.
@@ -43,12 +45,14 @@ python examples/scripts/segment_glottis --encoder mobilenet_v2 --image_folder PA
 ```
 
 ##  Available CNNs
-We supply five U-Nets with different backbones in this repository.
+We supply four(*) U-Nets with different backbones in this repository.
 They can be downloaded here. Make sure to extract the files into ```assets/models```.
 Here is the evaluation of the models.
 Generally the resnet based backbones are the best performing, but the other backbones are generally better to use on cpu only systems.
 You should generally test out which ones work best for you.
 You can find how to use the supplied networks in ```examples/scripts```.
+*: There's also a efficientnet available, but it generally performs worse than the rest. However, I'd advise you to also test it out on some data.
+
 
 ## Evaluation of available U-Nets
 We evaluated the Networks on a combined test-set of the [BAGLS](https://www.bagls.org/) and [HLE](https://github.com/Henningson/HLEDataset) datasets, as well as synthetically created vocal folds using [Fireflies](https://github.com/Henningson/Fireflies).
