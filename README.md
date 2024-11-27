@@ -34,7 +34,6 @@ pip install .
 Next, download the glottis segmentation networks from [here](https://drive.google.com/drive/folders/1U525TcxZ1nhIp5yNJiyW-avK6qZG4rVV?usp=sharing) and move them to ```assets/test_data/```.
 
 # How to use VFLabel (TODO)
-Hier könnte ihre Werbung stehen.
 
 
 
@@ -57,7 +56,7 @@ You can find how to use the supplied networks in ```examples/scripts```.
 ## Evaluation of available U-Nets
 We evaluated the Networks on a combined test-set of the [BAGLS](https://www.bagls.org/) and [HLE](https://github.com/Henningson/HLEDataset) datasets, as well as synthetically created vocal folds using [Fireflies](https://github.com/Henningson/Fireflies).
 
-| Backbone | Eval IoU | Eval DICE | Test IoU | Test Dice |
+| Backbone | Eval IoU | Eval DICE | Test Dice | Test IoU |
 |----------|----------|----------|----------|----------|
 | mobilenet-v2             | 0.864   | 0.927   | 0.893  | 0.807   |
 | mobilenetv3_large_100    | 0.845   | 0.916  | 0.789  | 0.65  |
