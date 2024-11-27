@@ -1,27 +1,31 @@
 import os
-
+import json
 from PyQt5.QtWidgets import (
     QWidget,
     QPushButton,
     QHBoxLayout,
     QVBoxLayout,
-    QFileDialog,
-    QInputDialog,
-    QLineEdit,
     QTextEdit,
 )
-from PyQt5.QtGui import QPixmap, QPainter, QFont, QTextCursor, QTextBlockFormat
+from PyQt5.QtGui import QFont, QTextCursor, QTextBlockFormat
 from PyQt5.QtCore import Qt
 
-import VFLabel.gui.newProjectWidget
+import VFLabel.gui as gui
+import VFLabel.gui.glottisSegmentationView as glottisSegmentationView
 
 
 class MainWindow(QWidget):
-    def __init__(self):
+    def __init__(self, project_path):
         super().__init__()
+        self.project_path = project_path
+        self.progress_state_path = os.path.join(
+            self.project_path, "progress_status.json"
+        )
         self.init_window()
 
     def init_window(self) -> None:
+        print(self.project_path)
+
         # general setup of window
         self.setGeometry(100, 100, 1000, 1000)
         self.setWindowTitle("HASEL - Main menu")
@@ -64,14 +68,7 @@ class MainWindow(QWidget):
         btn_save.setFixedSize(100, 30)
 
         # create progress text bars
-        self.progress_gl_seg = QTextEdit("not started", readOnly=True)
-        self.progress_gl_seg.setFixedSize(200, 30)
-        self.progress_vf_seg = QTextEdit("not started", readOnly=True)
-        self.progress_vf_seg.setFixedSize(200, 30)
-        self.progress_pt_label = QTextEdit("not started", readOnly=True)
-        self.progress_pt_label.setFixedSize(200, 30)
-        self.progress_auto_pt_label = QTextEdit("not started", readOnly=True)
-        self.progress_auto_pt_label.setFixedSize(200, 30)
+        self.read_write_progress_state()
         # TODO: wenn geöffnet wird, text anders initialisieren
 
         # centralize text of progress text bars
@@ -150,12 +147,39 @@ class MainWindow(QWidget):
 
         # set layout
         self.setLayout(boxv_layout)
+        # print(self.path)
 
         # show window
         self.show()
 
+    def read_write_progress_state(self):
+        with open(self.progress_state_path, "r+") as prgrss_file:
+            file = json.load(prgrss_file)
+            self.progress_gl_seg = QTextEdit(file["progress_gl_seg"], readOnly=True)
+            self.progress_gl_seg.setFixedSize(200, 30)
+            self.progress_vf_seg = QTextEdit(file["progress_vf_seg"], readOnly=True)
+            self.progress_vf_seg.setFixedSize(200, 30)
+            self.progress_pt_label = QTextEdit(file["progress_pt_label"], readOnly=True)
+            self.progress_pt_label.setFixedSize(200, 30)
+            self.progress_auto_pt_label = QTextEdit(
+                file["progress_auto_pt_label"], readOnly=True
+            )
+            self.progress_auto_pt_label.setFixedSize(200, 30)
+
+    def save_new_progress_state(self, variable, new_state):
+        with open(self.progress_state_path, "r+") as prgrss_file:
+            file = json.load(prgrss_file)
+            file[variable] = new_state
+            prgrss_file.seek(0)
+            json.dump(file, prgrss_file, indent=4)
+
     def open_glotted_segmentation(self) -> None:
-        self.progress_gl_seg.setText("in progress")
+        new_state = "in progress"
+        self.glottis_window = glottisSegmentationView.GlottisSegmentationView(
+            self.project_path
+        )
+        self.progress_gl_seg.setText(new_state)
+        self.save_new_progress_state("progress_gl_seg", new_state)
         # TODO add background color according to state
         self.centralize_text(self.progress_gl_seg)
         pass

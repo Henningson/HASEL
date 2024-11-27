@@ -7,19 +7,17 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QApplication,
 )
-from PyQt5.QtCore import pyqtSignal
 
 
 class NewProjectWidget(QDialog):
 
-    def __init__(self):
+    def __init__(self, video_name):
         super().__init__()
-        self.init_window()
+        self.init_window(video_name)
 
-    def init_window(self):
+    def init_window(self, video_name):
         # TODO: incorporate video name as proposed project name
         # TODO: Abfangen wenn Name schon existiert
-        # TODO: Erlauben wir individuelle Festlegung zum Speicherort des Projekts?
         # Basic setup
         self.setGeometry(300, 300, 500, 100)
         self.setWindowTitle("New project")
@@ -28,16 +26,16 @@ class NewProjectWidget(QDialog):
 
         # create input areas
         self.name_input = QLineEdit()
-        self.name_input.setText("place holder")
+        self.name_input.setText(video_name)
         self.gridx_input = QLineEdit()
-        self.gridx_input.setInputMask("9999")
+        # self.gridx_input.setInputMask("9999")
         self.gridy_input = QLineEdit()
 
         # add input areas to layout
         layout.addRow("Project Name: ", self.name_input)
         layout.addRow("LaserGrid width: ", self.gridx_input)
         layout.addRow("LaserGrid height: ", self.gridy_input)
-        # TODO: allow only integers
+        # TODO: allow only integers, Pflicht, dass Felder gefüllt werden müssen
         # TODO: descriptions?
 
         # create buttons
