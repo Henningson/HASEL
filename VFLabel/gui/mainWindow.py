@@ -11,6 +11,7 @@ from PyQt5.QtGui import QFont, QTextCursor, QTextBlockFormat
 from PyQt5.QtCore import Qt
 
 import VFLabel.gui as gui
+import VFLabel.gui.glottisSegmentationView as glottisSegmentationView
 
 
 class MainWindow(QWidget):
@@ -174,6 +175,9 @@ class MainWindow(QWidget):
 
     def open_glotted_segmentation(self) -> None:
         new_state = "in progress"
+        self.glottis_window = glottisSegmentationView.GlottisSegmentationView(
+            self.project_path
+        )
         self.progress_gl_seg.setText(new_state)
         self.save_new_progress_state("progress_gl_seg", new_state)
         # TODO add background color according to state
