@@ -141,3 +141,4 @@ projects/*
 Dataset*
 data/*
 *.zip
+*.csv

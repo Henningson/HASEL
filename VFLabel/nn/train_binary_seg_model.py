@@ -80,9 +80,8 @@ def train_binary_segmentation_network(
         eval_dice, eval_iou, eval_loss = evaluate(val_loader, model, loss_func)
 
         if eval_iou.item() > best_iou:
-            state_dict = model.state_dict().cpu()
-            checkpoint = {"optimizer": optimizer.state_dict()} | state_dict
-            torch.save(checkpoint, checkpoint_path)
+            state_dict = model.state_dict()
+            torch.save(state_dict, checkpoint_path)
             best_iou = eval_iou
 
     del model
