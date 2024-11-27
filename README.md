@@ -51,6 +51,8 @@ You should generally test out which ones work best for you.
 You can find how to use the supplied networks in ```examples/scripts```.
 
 ## Evaluation of available U-Nets
+We evaluated the Networks on a combined test-set of the [BAGLS](https://www.bagls.org/) and [HLE](https://github.com/Henningson/HLEDataset) datasets, as well as synthetically created vocal folds using [Fireflies](https://github.com/Henningson/Fireflies).
+
 | Backbone | Eval IoU | Eval DICE | Test IoU | Test Dice |
 |----------|----------|----------|----------|----------|
 | mobilenet-v2             | 0.864   | 0.927   | 0.893  | 0.807   |
