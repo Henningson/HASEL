@@ -37,7 +37,9 @@ def train_glottis_segmentation_network(
     csv_eval_filename: str = os.path.join(
         save_checkpoint_path, "glottis_" + encoder + "_eval.csv"
     )
-    csv_train_filename: str = os.path.join("glottis_" + encoder + "_train.csv")
+    csv_train_filename: str = os.path.join(
+        save_checkpoint_path, "glottis_" + encoder + "_train.csv"
+    )
 
     train_ds = dataset.HLE_BAGLS_Fireflies_Dataset(dataset_path, NN_MODE.TRAIN)
     eval_ds = dataset.HLE_BAGLS_Fireflies_Dataset(dataset_path, NN_MODE.EVAL)

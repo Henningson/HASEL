@@ -90,7 +90,7 @@ dataset/
 └── fireflies_dataset_v5/
 ```
 For training, please follow the code in the example script ```examples/scripts/train_glottis_segmentation_network.py```.
-There, you can fine-tune the decoder of common segmentation model architectures, that were pretrained on imagenet.
+There, you will fine-tune the decoder of common segmentation model architectures that were pretrained on imagenet.
 
 
 ## Data preparation
