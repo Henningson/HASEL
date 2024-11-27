@@ -136,30 +136,30 @@ def train_glottis_segmentation_network(
 
 
 if __name__ == "__main__":
-    train_glottis_segmentation_network(
-        "assets/models", "/media/nu94waro/Windows_C/save/datasets", "mobilenet_v2"
-    )
+    dataset_path = ""
+
+    train_glottis_segmentation_network("assets/models", dataset_path, "mobilenet_v2")
     train_glottis_segmentation_network(
         "assets/models",
-        "/media/nu94waro/Windows_C/save/datasets",
+        dataset_path,
         "efficientnet-b0",
         batch_size=8,
     )
     train_glottis_segmentation_network(
         "assets/models",
-        "/media/nu94waro/Windows_C/save/datasets",
+        dataset_path,
         "timm-mobilenetv3_large_100",
         batch_size=8,
     )
     train_glottis_segmentation_network(
         "assets/models",
-        "/media/nu94waro/Windows_C/save/datasets",
+        dataset_path,
         "resnet18",
         batch_size=8,
     )
     train_glottis_segmentation_network(
         "assets/models",
-        "/media/nu94waro/Windows_C/save/datasets",
+        dataset_path,
         "resnet34",
         batch_size=8,
     )
