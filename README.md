@@ -6,7 +6,7 @@ This tool enables to robustly and rapidly generate data of:
 * Vocal fold segmentation via frame-wise interpolation
 * Semi-automatic and Deep Learning enhanced generation of laserpoint data.
 
-# Installation (TODO)
+# Installation
 
 Install requirements
 ```

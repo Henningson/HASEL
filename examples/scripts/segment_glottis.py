@@ -20,30 +20,32 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def train_glottis_segmentation_network(
-    save_checkpoint_path: str, dataset_path: str, encoder: str = "mobilenet_v2"
+    save_checkpoint_path: str,
+    dataset_path: str,
+    encoder: str = "mobilenet_v2",
+    batch_size: int = 16,
 ) -> nn.Module:
-    checkpoint_path = os.path.join(save_checkpoint_path, "glottis_" + encoder + ".pth.tar")
+    checkpoint_path = os.path.join(
+        save_checkpoint_path, "glottis_" + encoder + ".pth.tar"
+    )
 
     # TODO: Decide if we should load this from a JSON file.
-    # Up until then, i'll hardcode stuff that has worked good for me in the past.
-    batch_size: int = 16
+    # Until then, i'll hardcode stuff that has worked good for me in the past.
     num_epochs: int = 25
     learning_rate: float = 0.0005
     in_channels: int = 3
-    csv_eval_filename: str = "glottis_" + encoder + "_eval.csv"
-    csv_train_filename: str = "glottis_" + encoder + "_train.csv"
+    csv_eval_filename: str = os.path.join(
+        save_checkpoint_path, "glottis_" + encoder + "_eval.csv"
+    )
+    csv_train_filename: str = os.path.join("glottis_" + encoder + "_train.csv")
 
-    train_ds = dataset.HLE_BAGLS_Fireflies_Dataset(dataset_path, NN_MODE.TRAIN)
-    eval_ds = dataset.HLE_BAGLS_Fireflies_Dataset(dataset_path, NN_MODE.EVAL)
-    test_ds = dataset.HLE_BAGLS_Fireflies_Dataset(dataset_path, NN_MODE.TEST)
-
-    train_loader = DataLoader(
-        train_ds,
+    inference_ds = dataset.HaselDataset(dataset_path, NN_MODE.TEST)
+    dataloader = DataLoader(
+        inference_ds,
         batch_size=batch_size,
         num_workers=8,
         pin_memory=True,
         shuffle=True,
-        drop_last=True,
     )
     val_loader = DataLoader(
         eval_ds,
@@ -78,9 +80,9 @@ def train_glottis_segmentation_network(
     best_iou = 0.0
     scheduler = lr_scheduler.PolynomialLR(optimizer, num_epochs, power=2.0)
 
-    csvfile =  open(os.path.join(checkpoint_path, csv_eval_filename), "a+", newline="")
+    csvfile = open(csv_eval_filename, "a", newline="")
     writer = csv.writer(csvfile)
-    writer.writerow(["Dice","IoU","Eval Loss","Train Loss"])
+    writer.writerow(["Dice", "IoU", "Eval Loss", "Train Loss"])
 
     for epoch in tqdm(range(num_epochs)):
         scheduler.update_lr()
@@ -120,9 +122,9 @@ def train_glottis_segmentation_network(
         test_loader, model, loss_func
     )
 
-    with open(os.path.join(checkpoint_path, csv_train_filename), "a+", newline="") as csvfile:
+    with open(csv_train_filename, "a", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["Dice","IoU"])
+        writer.writerow(["Dice", "IoU"])
         writer.writerow([eval_dice.item(), eval_iou.item()])
 
     return best_model
@@ -131,4 +133,28 @@ def train_glottis_segmentation_network(
 if __name__ == "__main__":
     train_glottis_segmentation_network(
         "assets/models", "/media/nu94waro/Windows_C/save/datasets", "mobilenet_v2"
+    )
+    train_glottis_segmentation_network(
+        "assets/models",
+        "/media/nu94waro/Windows_C/save/datasets",
+        "efficientnet-b0",
+        batch_size=8,
+    )
+    train_glottis_segmentation_network(
+        "assets/models",
+        "/media/nu94waro/Windows_C/save/datasets",
+        "timm-mobilenetv3_large_100",
+        batch_size=8,
+    )
+    train_glottis_segmentation_network(
+        "assets/models",
+        "/media/nu94waro/Windows_C/save/datasets",
+        "resnet18",
+        batch_size=8,
+    )
+    train_glottis_segmentation_network(
+        "assets/models",
+        "/media/nu94waro/Windows_C/save/datasets",
+        "resnet34",
+        batch_size=8,
     )
