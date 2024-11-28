@@ -74,7 +74,7 @@ We evaluated the Networks on a combined test-set of the [BAGLS](https://www.bagl
 | mobilenet-v2             | 0.864   | 0.927   | 0.893  | 0.807   |
 | mobilenetv3_large_100    | 0.845   | 0.916  | 0.789  | 0.65  |
 | resnet18                 | 0.856 | 0.922  | 0.882  | 0.789  |
-| resnet34                 | TODO  | Data 18  | Data 19  | Data 20  |
+| resnet34                 | 0.846  | 0.917  | 0.883 | 0.791  |
 
 
 
