@@ -18,8 +18,6 @@ class PointViewWidget(videoViewWidget.VideoViewWidget):
     def __init__(
         self,
         video: List[QImage],
-        grid_width: int = 18,
-        grid_height: int = 18,
         parent=None,
     ):
         super(PointViewWidget, self).__init__(video, parent)
@@ -59,30 +57,6 @@ class PointViewWidget(videoViewWidget.VideoViewWidget):
     def add_point_visibilities(self, visibility_per_point: np.array) -> None:
         self.point_visibilities = visibility_per_point
 
-    def keyPressEvent(self, event) -> None:
-        if event.key() == PyQt5.QtCore.Qt.Key_E:
-            self.toggle_draw_mode()
-
-    def mousePressEvent(self, event) -> None:
-        if (
-            self._draw_mode == enums.DRAW_MODE.OFF
-            and self._remove_mode == enums.REMOVE_MODE.OFF
-        ):
-            super(PointViewWidget, self).mousePressEvent(event)
-
-        global_pos = event.pos()
-        pos = self.mapToScene(global_pos)
-
-        if self._draw_mode == enums.DRAW_MODE.ON:
-            self.add_point(pos)
-            self.setCursor(QCursor(PyQt5.QtCore.Qt.CrossCursor))
-            return
-
-        if self._remove_mode == enums.REMOVE_MODE.ON:
-            self.remove_point(pos)
-            self.setCursor(QCursor(PyQt5.QtCore.Qt.CrossCursor))
-            return
-
     def contextMenuEvent(self, event) -> None:
         """
         Opens a context menu with options for zooming in and out.
@@ -118,32 +92,14 @@ class PointViewWidget(videoViewWidget.VideoViewWidget):
 
         # Get current frame indices:
         points_at_current_frame = self.point_positions[self._current_frame]
-        points_at_current_frame = points_at_current_frame.reshape(-1, 2)
-
-        filtered_points = points_at_current_frame[
-            ~np.isnan(points_at_current_frame).any(axis=1)
-        ]
-        ids = self.get_point_indices_at_current()
-
-        for point, point_id in zip(filtered_points, ids):
-            ellipse_item = ellipseWithID.GraphicEllipseItemWithID(
+        visibilities_at_current_frame = self.point_positions[self._current_frame]
+        for point in points_at_current_frame:
+            ellipse_item = self.scene().addElipse(
                 point[0] - self._pointsize / 2,
                 point[1] - self._pointsize / 2,
                 self._pointsize,
                 self._pointsize,
                 self._pointpen,
                 self._pointbrush,
-                point_id[0],
-                point_id[1],
             )
-            self.scene().addItem(ellipse_item)
             self._point_items.append(ellipse_item)
-
-    def get_point_indices(self, frame_index: int) -> np.array:
-        mask = ~np.isnan(self.point_positions[frame_index]).any(axis=-1)
-
-        # Get x, y indices of valid points
-        return np.argwhere(mask)
-
-    def get_point_indices_at_current(self) -> np.array:
-        return self.get_point_indices(self._current_frame)
