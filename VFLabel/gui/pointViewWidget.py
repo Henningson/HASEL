@@ -27,7 +27,7 @@ class PointViewWidget(videoViewWidget.VideoViewWidget):
         self._pointpen = QPen(QColor(128, 255, 128, 255))
         self._pointbrush = QBrush(QColor(128, 255, 128, 128))
 
-        self._pointsize: int = 10
+        self._pointsize: int = 5
 
         self._point_items: List[QGraphicsEllipseItem] = []
 
@@ -53,6 +53,7 @@ class PointViewWidget(videoViewWidget.VideoViewWidget):
 
     def add_points(self, points_per_frame: np.array) -> None:
         self.point_positions = points_per_frame
+        self.redraw()
 
     def add_point_visibilities(self, visibility_per_point: np.array) -> None:
         self.point_visibilities = visibility_per_point
@@ -92,9 +93,9 @@ class PointViewWidget(videoViewWidget.VideoViewWidget):
 
         # Get current frame indices:
         points_at_current_frame = self.point_positions[self._current_frame]
-        visibilities_at_current_frame = self.point_positions[self._current_frame]
+        # visibilities_at_current_frame = self.point_positions[self._current_frame]
         for point in points_at_current_frame:
-            ellipse_item = self.scene().addElipse(
+            ellipse_item = self.scene().addEllipse(
                 point[0] - self._pointsize / 2,
                 point[1] - self._pointsize / 2,
                 self._pointsize,
