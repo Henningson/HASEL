@@ -1,5 +1,9 @@
 # In this document, we should implement the point implementation schemes.
+import subpixel_point_estimation
+import VFLabel.nn.models
+
 import numpy as np
+import torch
 from typing import List
 
 
@@ -15,13 +19,24 @@ def filter_points_on_vocalfold(
 
 def classify_points(point_predictions_over_time, video_images: List[np.array]):
     # Crop from each point over time
+    video = torch.from_numpy(np.array(video_images))
+    points = torch.from_numpy(point_predictions_over_time)
+    crops, y_windows, x_windows = subpixel_point_estimation.extractWindow(video, points)
 
-    # Normalize points to [0, 1] ([-1, 1] for Sigmoids?)
+    # Normalize points to [0, 1]
+    model = VFLabel.nn.models.Kernel3Classificator()
+    model.load_state_dict(torch.load("assets/models/specularity_classificator.pth.tar"))
+
+    per_crop_max = crops.max(dim=(-2, -1), keepdim=True)
+    per_crop_min = crops.max(dim=(-2, -1), keepdim=True)
+
+    normalized_crops = (crops - per_crop_min) / (per_crop_max - per_crop_min)
 
     # Use 2-layered CNN to classify points
+    classifications = model(normalized_crops)
 
     # Return per point classes in the same format as points over time
-    return None
+    return classifications
 
 
 def compute_subpixel_points(points_over_time, classes_over_time, video):
