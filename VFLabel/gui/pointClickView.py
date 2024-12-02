@@ -190,8 +190,10 @@ class PointClickView(QWidget):
         self.point_clicker_view.DRAW_MODE_off()
 
     def change_frame(self) -> None:
-        self.point_clicker_view.change_frame(self.video_player.slider.value())
+        # self.point_clicker_view.change_frame(self.video_player.slider.value())
+        pass
 
     def increment_frame(self) -> None:
-        self.video_player.increment_frame(force=True)
-        self.point_clicker_view.change_frame(self.video_player.slider.value())
+        # self.video_player.increment_frame(force=True)
+        # self.point_clicker_view.change_frame(self.video_player.slider.value())
+        pass
