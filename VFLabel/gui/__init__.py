@@ -10,7 +10,7 @@ from .videoViewWidget import VideoViewWidget
 from .videoOverlayWidget import VideoOverlayWidget
 
 from .glottisSegmentationWidget import GlottisSegmentationWidget
-from .vocalfoldSegmentationView import VocalfoldSegmentationView
+from .vocalfoldSegmentationWidget import VocalfoldSegmentationWidget
 from .selectCycleView import SelectCycleView
 
 from .startWindowView import StartWindowView

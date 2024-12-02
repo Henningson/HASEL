@@ -6,12 +6,15 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout,
     QTextEdit,
+    QLabel,
 )
 from PyQt5.QtGui import QFont, QTextCursor, QTextBlockFormat
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QEventLoop
 
 import VFLabel.gui as gui
 import VFLabel.gui.glottisSegmentationView as glottisSegmentationView
+import VFLabel.gui.pointLabelingView as pointLabelingView
+import VFLabel.gui.vocalfoldSegmentationView as vocalfoldSegmentationView
 
 
 class MainWindow(QWidget):
@@ -55,11 +58,6 @@ class MainWindow(QWidget):
         btn_pt_label.setFont(font)
         btn_pt_label.setFixedSize(200, 100)
 
-        btn_auto_pt_label = QPushButton("Auto Point \n Labeling", self)
-        btn_auto_pt_label.setToolTip("This <b>button</b> ...")
-        btn_auto_pt_label.setFont(font)
-        btn_auto_pt_label.setFixedSize(200, 100)
-
         # create save button
         font = QFont("Arial", 15, QFont.Bold)
         btn_save = QPushButton("Save", self)
@@ -75,23 +73,19 @@ class MainWindow(QWidget):
         self.centralize_text(self.progress_gl_seg)
         self.centralize_text(self.progress_vf_seg)
         self.centralize_text(self.progress_pt_label)
-        self.centralize_text(self.progress_auto_pt_label)
 
         # create number text bars
-        num_gl_seg = QTextEdit("1.", readOnly=True)
+        num_gl_seg = QLabel("1.")
         num_gl_seg.setFixedSize(200, 30)
-        num_vf_seg = QTextEdit("2.", readOnly=True)
+        num_vf_seg = QLabel("2.")
         num_vf_seg.setFixedSize(200, 30)
-        num_pt_label = QTextEdit("3.", readOnly=True)
+        num_pt_label = QLabel("3.")
         num_pt_label.setFixedSize(200, 30)
-        num_auto_pt_label = QTextEdit("4.", readOnly=True)
-        num_auto_pt_label.setFixedSize(200, 30)
 
         # centralize text of progress text bars
-        self.centralize_text(num_gl_seg)
-        self.centralize_text(num_vf_seg)
-        self.centralize_text(num_pt_label)
-        self.centralize_text(num_auto_pt_label)
+        num_gl_seg.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        num_vf_seg.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        num_pt_label.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 
         # insert buttons in window
         boxh_btn_layout.addStretch(1)
@@ -100,8 +94,6 @@ class MainWindow(QWidget):
         boxh_btn_layout.addWidget(btn_vf_seg)
         boxh_btn_layout.addStretch(1)
         boxh_btn_layout.addWidget(btn_pt_label)
-        boxh_btn_layout.addStretch(1)
-        boxh_btn_layout.addWidget(btn_auto_pt_label)
         boxh_btn_layout.addStretch(1)
 
         # insert progress text in window
@@ -112,8 +104,6 @@ class MainWindow(QWidget):
         boxh_txt_layout.addStretch(1)
         boxh_txt_layout.addWidget(self.progress_pt_label)
         boxh_txt_layout.addStretch(1)
-        boxh_txt_layout.addWidget(self.progress_auto_pt_label)
-        boxh_txt_layout.addStretch(1)
 
         # insert number text in window
         boxh_num_layout.addStretch(1)
@@ -122,8 +112,6 @@ class MainWindow(QWidget):
         boxh_num_layout.addWidget(num_vf_seg)
         boxh_num_layout.addStretch(1)
         boxh_num_layout.addWidget(num_pt_label)
-        boxh_num_layout.addStretch(1)
-        boxh_num_layout.addWidget(num_auto_pt_label)
         boxh_num_layout.addStretch(1)
 
         # insert save button in window
@@ -143,11 +131,10 @@ class MainWindow(QWidget):
         btn_gl_seg.clicked.connect(self.open_glotted_segmentation)
         btn_vf_seg.clicked.connect(self.open_vf_segmentation)
         btn_pt_label.clicked.connect(self.open_pt_labeling)
-        btn_auto_pt_label.clicked.connect(self.open_auto_pt_labeling)
 
         # set layout
         self.setLayout(boxv_layout)
-        # print(self.path)
+        self.setStyleSheet("background-color: rgb(240, 248, 255);")
 
         # show window
         self.show()
@@ -157,46 +144,114 @@ class MainWindow(QWidget):
             file = json.load(prgrss_file)
             self.progress_gl_seg = QTextEdit(file["progress_gl_seg"], readOnly=True)
             self.progress_gl_seg.setFixedSize(200, 30)
+            self.color_progress_state(self.progress_gl_seg, file["progress_gl_seg"])
             self.progress_vf_seg = QTextEdit(file["progress_vf_seg"], readOnly=True)
             self.progress_vf_seg.setFixedSize(200, 30)
+            self.color_progress_state(self.progress_vf_seg, file["progress_vf_seg"])
             self.progress_pt_label = QTextEdit(file["progress_pt_label"], readOnly=True)
             self.progress_pt_label.setFixedSize(200, 30)
-            self.progress_auto_pt_label = QTextEdit(
-                file["progress_auto_pt_label"], readOnly=True
-            )
-            self.progress_auto_pt_label.setFixedSize(200, 30)
+            self.color_progress_state(self.progress_pt_label, file["progress_pt_label"])
 
-    def save_new_progress_state(self, variable, new_state):
+    def color_progress_state(self, state_variable, state):
+        if state == "finished":
+            state_variable.setStyleSheet("background-color: rgb(144, 238, 144);")
+        elif state == "in progress":
+            state_variable.setStyleSheet("background-color: rgb(173, 216, 230);")
+        elif state == "not started":
+            state_variable.setStyleSheet("background-color: rgb(211, 211, 211);")
+        else:
+            pass
+
+    def save_new_progress_state(self, variable, new_state) -> None:
+
         with open(self.progress_state_path, "r+") as prgrss_file:
             file = json.load(prgrss_file)
             file[variable] = new_state
             prgrss_file.seek(0)
+            prgrss_file.truncate()
             json.dump(file, prgrss_file, indent=4)
 
     def open_glotted_segmentation(self) -> None:
-        new_state = "in progress"
+        # create and open glottisSegmentation video
         self.glottis_window = glottisSegmentationView.GlottisSegmentationView(
             self.project_path
         )
-        self.progress_gl_seg.setText(new_state)
-        self.save_new_progress_state("progress_gl_seg", new_state)
-        # TODO add background color according to state
+
+        # connect progress state signal
+        self.glottis_window.progress_signal.connect(self.update_signal_progress_gl_seg)
+
+        # wait for glottis window to be closed
+        self.setEnabled(False)
+        loop = QEventLoop()
+        self.glottis_window.destroyed.connect(loop.quit)
+        loop.exec_()
+        self.setEnabled(True)
+
+        # save new progress state
+        self.save_new_progress_state("progress_gl_seg", self.progress_state_gl_seg)
+
+        # change progress state in window
+        self.progress_gl_seg.setText(self.progress_state_gl_seg)
         self.centralize_text(self.progress_gl_seg)
-        pass
-        # TODO open glotted segmentation window
+        self.color_progress_state(self.progress_gl_seg, self.progress_state_gl_seg)
+        # TODO add background color according to state
+
+    def update_signal_progress_gl_seg(self, progress) -> None:
+        self.progress_state_gl_seg = progress
 
     def open_vf_segmentation(self) -> None:
-        pass
-        # TODO open vocal fold segmentation window
+        # create and open glottisSegmentation video
+        self.vf_seg_window = vocalfoldSegmentationView.VocalfoldSegmentationView(
+            self.project_path
+        )
+
+        # connect progress state signal
+        self.vf_seg_window.progress_signal.connect(self.update_signal_progress_vf_seg)
+
+        # wait for point_label window to be closed
+        loop = QEventLoop()
+        self.vf_seg_window.destroyed.connect(loop.quit)
+        loop.exec_()
+
+        # save new progress state
+        self.save_new_progress_state("progress_vf_seg", self.progress_state_vf_seg)
+
+        # change progress state in window
+        self.progress_vf_seg.setText(self.progress_state_vf_seg)
+        self.centralize_text(self.progress_vf_seg)
+        self.color_progress_state(self.progress_vf_seg, self.progress_state_vf_seg)
+
+        # TODO add background color according to state
+
+    def update_signal_progress_vf_seg(self, progress) -> None:
+        self.progress_state_vf_seg = progress
 
     def open_pt_labeling(self) -> None:
-        pass
-        # TODO open point labeling window
+        # create and open glottisSegmentation video
+        self.point_label_window = pointLabelingView.PointLabelingView(self.project_path)
 
-    def open_auto_pt_labeling(self) -> None:
-        # TODO: in betweenWindow : DO you have already finished point labeling? If not, please finish it first ...
-        pass
-        # TODO open point labeling window
+        # connect progress state signal
+        self.point_label_window.progress_signal.connect(
+            self.update_signal_progress_pt_labeling
+        )
+
+        # wait for point_label window to be closed
+        loop = QEventLoop()
+        self.point_label_window.destroyed.connect(loop.quit)
+        loop.exec_()
+
+        # save new progress state
+        self.save_new_progress_state("progress_pt_label", self.progress_state_pt_label)
+
+        # change progress state in window
+        self.progress_pt_label.setText(self.progress_state_pt_label)
+        self.centralize_text(self.progress_pt_label)
+        self.color_progress_state(self.progress_pt_label, self.progress_state_pt_label)
+
+        # TODO add background color according to state
+
+    def update_signal_progress_pt_labeling(self, progress) -> None:
+        self.progress_state_pt_label = progress
 
     def centralize_text(self, widget) -> None:
         cursor = widget.textCursor()
@@ -204,3 +259,6 @@ class MainWindow(QWidget):
         block_format = QTextBlockFormat()
         block_format.setAlignment(Qt.AlignCenter)
         cursor.mergeBlockFormat(block_format)
+
+    def closeEvent(self, event):
+        self.deleteLater()
