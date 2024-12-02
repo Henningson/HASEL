@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
     QLineEdit,
 )
 from PyQt5.QtGui import QPixmap, QPainter, QFont
+from PyQt5.QtCore import QEventLoop
 
 import VFLabel.gui.newProjectWidget, VFLabel.gui.mainWindow
 
@@ -160,7 +161,13 @@ class StartWindowView(QWidget):
     def open_main_window(self, project_path) -> None:
         # TODO: vehindern, dass anderes neues/altes Project nach öffnen des windows einfach ausgewählt werden kann, da mainwindow dann abstürzt
         self.main_window = VFLabel.gui.mainWindow.MainWindow(project_path)
+
+        # wait for main_window to be closed
         self.setEnabled(False)
+        loop = QEventLoop()
+        self.main_window.destroyed.connect(loop.quit)
+        loop.exec_()
+        self.setEnabled(True)
 
     def create_folder_structure(self, project_name, video_path) -> str:
         current_dir = os.getcwd()

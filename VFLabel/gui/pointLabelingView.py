@@ -20,7 +20,7 @@ import VFLabel.io
 import VFLabel.utils.utils
 
 
-class GlottisSegmentationView(QMainWindow):
+class PointLabelingView(QMainWindow):
 
     progress_signal = pyqtSignal(str)
 
@@ -35,7 +35,7 @@ class GlottisSegmentationView(QMainWindow):
 
         # Set up the main window
         self.setCentralWidget(central_widget)
-        self.setWindowTitle("Glottis Segmentation Designer")
+        self.setWindowTitle("Point Labeling Designer")
         self.setGeometry(100, 100, 800, 600)
 
         # Show the window
@@ -59,5 +59,5 @@ class GlottisSegmentationView(QMainWindow):
         # sends signal
         self.progress_signal.emit(self.progress)
 
-        # closes this window
+        # closes window
         self.deleteLater()
