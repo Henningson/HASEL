@@ -108,7 +108,8 @@ class Kernel3Classificator(nn.Module):
         x = self.b(x)
         x = self.c(x)
 
-        return torch.softmax(x.squeeze(), dim=1)
+        return x.squeeze()
+        # Don't forget to apply torch.softmax(x, dim=1) when we classify
 
 
 class Kernel5Classificator(nn.Module):
@@ -122,7 +123,8 @@ class Kernel5Classificator(nn.Module):
         x = self.a(x)
         x = self.b(x)
 
-        return torch.softmax(x.squeeze(), dim=1)
+        return x.squeeze()
+        # Don't forget to apply torch.softmax(x, dim=1) when we classify
 
 
 class FullyConnected(nn.Module):
@@ -145,7 +147,8 @@ class FullyConnected(nn.Module):
     def forward(self, x):
         x = self.a(x.squeeze().reshape(x.shape[0], -1))
 
-        return torch.softmax(x.squeeze(), dim=1)
+        return x.squeeze()
+        # Don't forget to apply torch.softmax(x, dim=1) when we classify
 
 
 class UNet(nn.Module):
