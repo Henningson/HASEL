@@ -4,6 +4,7 @@ import VFLabel.nn.models
 
 import numpy as np
 import torch
+import re
 from typing import List
 
 
@@ -45,18 +46,48 @@ def classify_points(cotracker_points: np.array, video: np.array):
 
 # Points over time is Nx3
 # Classes over time is Nx1
-def compute_subpixel_points(points, classes, crops, num_points_per_frame: int):
+def compute_subpixel_points(
+    point_predictions, classes, crops, num_points_per_frame: int
+):
     # 0.1 Reshape points, classes and crops into per frame segments, such that we can easily extract a timeseries.
     # I.e. shape is after this: NUM_POINTS x NUM_FRAMES x ...
-    points = points.reshape(-1, num_points_per_frame, 3)[:, :, [1, 2]].permute(1, 0, 2)
+    point_predictions = point_predictions.reshape(-1, num_points_per_frame, 3)[
+        :, :, [1, 2]
+    ].permute(1, 0, 2)
     classes = classes.reshape(-1, num_points_per_frame, 1).permute(1, 0, 2)
     crops = crops.reshape(
         -1, num_points_per_frame, crops.shape[-2], crops.shape[-1]
     ).permute(1, 0, 2, 3)
 
+    specular_duration = 5
     # Iterate over every point and class as well as their respective crops
+    optimized_points = torch.zeros_like(point_predictions)
     for point, label, crop in zip(points, classes, crops):
-        a = 1
+
+        # Here it now gets super hacky.
+        # Convert label array to a string
+        labelstring = "".join(map(str, label.squeeze().tolist()))
+        # Replace 0s with V for visible
+        compute_string = labelstring.replace("0", "V")
+
+        # This regex looks for occurences of VXV, where X may be any mix of specularity or unidentifiable classifications but at most of length 5.
+        # If this is given, we will replace VXV by VIV, where X is replaced by that many Is.#
+        # Is indicate that we want to interpolate in these values.
+        compute_string = re.sub(
+            r"(V)([12]{1,5})(V)",
+            lambda match: match.group(1) + "I" * len(match.group(2)) + match.group(3),
+            compute_string,
+        )
+        compute_string = re.sub(
+            r"(V)([12]{1,5})(V)",
+            lambda match: match.group(1) + "I" * len(match.group(2)) + match.group(3),
+            compute_string,
+        )
+
+        # Finally, every part that couldn't be identified will be labeled as E for error.
+        compute_string = compute_string.replace("1", "E")
+        compute_string = compute_string.replace("2", "E")
+
         # TODO: Compute sub-pixel position for each point labeled as 0
         # TODO: Interpolate based on specific cases
         # TODO: Lets regex this shit
