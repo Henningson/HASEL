@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QImage
 
 import VFLabel.gui
-import VFLabel.gui.vocalfoldSegmentationView
+import VFLabel.gui.vocalfoldSegmentationWidget
 
 
 import VFLabel.io
@@ -29,7 +29,7 @@ if __name__ == "__main__":
             videodata = VFLabel.io.data.read_video("assets/test_data/test_video_1.avi")
 
             # Set up the zoomable view
-            view = VFLabel.gui.VocalfoldSegmentationView(videodata)
+            view = VFLabel.gui.VocalfoldSegmentationWidget(videodata)
             layout.addWidget(view)
 
             # Set up the main window^
