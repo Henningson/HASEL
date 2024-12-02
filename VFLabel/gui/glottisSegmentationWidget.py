@@ -40,10 +40,14 @@ import VFLabel.utils.transforms
 import VFLabel.io.data
 import VFLabel.utils.utils
 import VFLabel.cv.segmentation
+import VFLabel.cv.analysis
+import VFLabel.nn.segmentation
 import cv2
 
 from VFLabel.utils.defines import COLOR
 from typing import List
+
+from tqdm import tqdm
 
 ############################### ^
 #         #         #         # |
@@ -66,6 +70,8 @@ class GlottisSegmentationWidget(QWidget):
         horizontal_layout_bot = QHBoxLayout()
         bot_widget = QWidget()
         self.project_path = project_path
+
+        self.video = video
         qvideo = VFLabel.utils.transforms.vid_2_QImage(video)
         self.video_view = VFLabel.gui.videoViewWidget.VideoViewWidget(qvideo)
         self.segmentation_view = VFLabel.gui.videoViewWidget.VideoViewWidget()
@@ -82,9 +88,16 @@ class GlottisSegmentationWidget(QWidget):
 
         self.model_label = QLabel("Segmentation Model")
         self.model_dropdown = QComboBox(self)
-        self.model_dropdown.addItem("Model A")
-        self.model_dropdown.addItem("Model B")
-        self.model_dropdown.addItem("Model C")
+
+        model_path = "assets/models/"
+        models = os.listdir(model_path)
+        models = [
+            model for model in models if "glottis" in model and ".pth.tar" in model
+        ]
+        models = [
+            model.replace("glottis_", "").replace(".pth.tar", "") for model in models
+        ]
+        self.model_dropdown.addItems(models)
 
         self.opacity_label = QLabel("Opacity:")
         self.alpha_slider = QSlider(QtCore.Qt.Orientation.Horizontal)
@@ -117,23 +130,19 @@ class GlottisSegmentationWidget(QWidget):
         self.alpha_slider.valueChanged.connect(self.change_opacity)
         self.video_player.slider.valueChanged.connect(self.change_frame)
 
-    # TODO: Implement me
     def generate_segmentations(self) -> None:
         # Load model from dropdown
+        encoder = self.model_dropdown.currentText()
 
-        # Generate segmentations with given model.
+        self.segmentations = VFLabel.nn.segmentation.segment_glottis(
+            encoder, self.video
+        )
 
-        # Set the segmentation images
-        images = VFLabel.io.data.read_images_from_folder(
-            "assets/test_data/CF/glottal_mask", is_gray=1
-        )[0:10]
-
-        self.segmentations = images
         self.glottal_midlines = [
-            VFLabel.cv.segmentation.compute_glottal_midline(image) for image in images
+            VFLabel.cv.analysis.glottal_midline(image) for image in tqdm(self.video)
         ]
 
-        normalized = [image // 255 for image in images]
+        normalized = [image // 255 for image in self.segmentations]
         colored = [
             VFLabel.utils.utils.class_to_color_np(
                 image, [COLOR.BACKGROUND, COLOR.GLOTTIS]
@@ -150,10 +159,6 @@ class GlottisSegmentationWidget(QWidget):
         self.overlay_view.redraw()
 
     def save(self) -> None:
-        save_folder = QFileDialog.getExistingDirectory(
-            self, "Save Frames to", "", QFileDialog.ShowDirsOnly
-        )
-
         segmentation_path = os.path.join(self.project_path, "glottis_segmentation")
         glottal_midlines_path = os.path.join(self.project_path, "glottal_midlines.json")
 
@@ -163,11 +168,11 @@ class GlottisSegmentationWidget(QWidget):
             lower = midline_points[1]
 
             glottal_midline_dict[f"Frame{frame_index}"] = {
-                "Upper": upper.tolist(),
-                "Lower": lower.tolist(),
+                "Upper": upper.tolist() if upper is not None else [-1, -1],
+                "Lower": lower.tolist() if lower is not None else [-1, -1],
             }
 
-        with open(glottal_midlines_path, "w") as outfile:
+        with open(glottal_midlines_path, "w+") as outfile:
             json.dump(glottal_midline_dict, outfile)
 
         for frame_index, seg in enumerate(self.segmentations):

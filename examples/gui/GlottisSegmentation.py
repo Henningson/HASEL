@@ -19,14 +19,6 @@ from VFLabel.utils.defines import COLOR
 from VFLabel.utils.defines import TEST_PROJECT_PATH
 
 if __name__ == "__main__":
-    video = VFLabel.io.data.read_images_from_folder(
-        "assets/test_data/CF/glottal_mask", is_gray=1
-    )
-    videodata = np.array(video) // 255
-    for image in videodata:
-        colored = VFLabel.utils.utils.class_to_color_np(
-            image, [COLOR.BACKGROUND, COLOR.GLOTTIS]
-        )
 
     class MainWindow(QMainWindow):
         def __init__(self):
@@ -37,10 +29,7 @@ if __name__ == "__main__":
             central_widget = QWidget(self)
             layout = QVBoxLayout(central_widget)
 
-            videodata = VFLabel.io.data.read_images_from_folder(
-                "assets/test_data/CF/png"
-            )[0:10]
-            videodata = np.array(videodata)
+            videodata = VFLabel.io.data.read_video("assets/test_data/test_video_2.avi")
 
             # Set up the zoomable view
             view = VFLabel.gui.GlottisSegmentationWidget(TEST_PROJECT_PATH, videodata)

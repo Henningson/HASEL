@@ -8,4 +8,4 @@ class COLOR:
     LASERPOINTS = np.array([141, 160, 203])
 
 
-TEST_PROJECT_PATH = "assets/test_project_path"
+TEST_PROJECT_PATH = "projects/test_project"

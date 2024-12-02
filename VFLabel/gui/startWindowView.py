@@ -176,18 +176,23 @@ class StartWindowView(QWidget):
 
         # main project folder
         project_path = os.path.join(folder_path, project_name)
-        os.mkdir(project_path)
+        os.makedirs(project_path, exist_ok=True)
         # TODO: Abfangen, wenn Ordner schon existiert
 
         # create subfolders
         images_folder = "video"
-        os.mkdir(os.path.join(project_path, images_folder))
-        os.mkdir(os.path.join(project_path, "laserpoint_segmentation"))
-        os.mkdir(os.path.join(project_path, "glottis_segmentation"))
-        os.mkdir(os.path.join(project_path, "vocalfold_segmentation"))
+        os.makedirs(os.path.join(project_path, images_folder), exist_ok=True)
+        os.makedirs(
+            os.path.join(project_path, "laserpoint_segmentation"), exist_ok=True
+        )
+        os.makedirs(os.path.join(project_path, "glottis_segmentation"), exist_ok=True)
+        os.makedirs(os.path.join(project_path, "vocalfold_segmentation"), exist_ok=True)
 
         # save video
-        shutil.copy(video_path, project_path)
+        if not os.path.exists(project_path) and not os.path.samefile(
+            video_path, project_path
+        ):
+            shutil.copy(video_path, project_path)
 
         # divide video into frames and save frames
         self.video_into_frames(video_path, project_path, images_folder)
