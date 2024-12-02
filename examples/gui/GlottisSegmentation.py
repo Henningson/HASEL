@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
 
 import VFLabel.gui
 import VFLabel.gui.glottisSegmentationWidget
-import VFLabel.gui.vocalfoldSegmentationView
+import VFLabel.gui.vocalfoldSegmentationWidget
 
 
 import VFLabel.io

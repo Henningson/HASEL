@@ -45,9 +45,9 @@ import VFLabel.utils.transforms
 ############################### v
 
 
-class VocalfoldSegmentationView(QWidget):
+class VocalfoldSegmentationWidget(QWidget):
     def __init__(self, video: np.array, parent=None):
-        super(VocalfoldSegmentationView, self).__init__(parent)
+        super(VocalfoldSegmentationWidget, self).__init__(parent)
 
         vertical_layout = QVBoxLayout()
         horizontal_layout_top = QHBoxLayout()
