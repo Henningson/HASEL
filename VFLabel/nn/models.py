@@ -109,7 +109,6 @@ class Kernel3Classificator(nn.Module):
         x = self.c(x)
 
         return x.squeeze()
-        # Don't forget to apply torch.softmax(x, dim=1) when we classify
 
 
 class Kernel5Classificator(nn.Module):

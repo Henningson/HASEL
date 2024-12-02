@@ -25,9 +25,9 @@ def windows_out_of_bounds(indices, image_size, pad):
 def extractWindow(batch, indices, window_size=7, device="cuda"):
     # Clean Windows, such that no image boundaries are hit
 
-    batch_index = indices[:, 0]
-    y = indices[:, 1]
-    x = indices[:, 2]
+    batch_index = indices[:, 0].int()
+    y = indices[:, 2].round().int()
+    x = indices[:, 1].round().int()
 
     y = windows_out_of_bounds(y, batch.shape[1], window_size // 2)
     x = windows_out_of_bounds(x, batch.shape[2], window_size // 2)

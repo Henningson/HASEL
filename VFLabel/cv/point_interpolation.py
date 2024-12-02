@@ -17,38 +17,49 @@ def filter_points_on_vocalfold(
     return filtered_points
 
 
-def classify_points(point_predictions_over_time, video_images: List[np.array]):
+def classify_points(cotracker_points: np.array, video: np.array):
     # Crop from each point over time
-    video = torch.from_numpy(np.array(video_images))
-    points = torch.from_numpy(point_predictions_over_time)
-    crops, y_windows, x_windows = subpixel_point_estimation.extractWindow(video, points)
+    video = torch.from_numpy(video)
+    points = torch.from_numpy(cotracker_points)
+    crops, y_windows, x_windows = subpixel_point_estimation.extractWindow(
+        video, points, device=points.device
+    )
 
     # Normalize points to [0, 1]
     model = VFLabel.nn.models.Kernel3Classificator()
     model.load_state_dict(torch.load("assets/models/specularity_classificator.pth.tar"))
+    model.eval()
 
-    per_crop_max = crops.max(dim=(-2, -1), keepdim=True)
-    per_crop_min = crops.max(dim=(-2, -1), keepdim=True)
+    per_crop_max = crops.amax([-1, -2], keepdim=True)
+    per_crop_min = crops.amin([-1, -2], keepdim=True)
 
     normalized_crops = (crops - per_crop_min) / (per_crop_max - per_crop_min)
 
     # Use 2-layered CNN to classify points
-    prediction = model(normalized_crops)
-    classifications = torch.softmax(prediction, dim=-1).argmax(dim=-1)
+    prediction = model(normalized_crops[:, None, :, :])
+    classifications = torch.softmax(prediction, dim=-1).argmax(dim=-1, keepdim=True)
 
     # Return per point classes in the same format as points over time
-    return classifications
+    return classifications, crops
 
 
-# Points over time is FxNx2
-# Classes over time is FxNx1
-def compute_subpixel_points(points_over_time, classes_over_time, video):
-    video = torch.from_numpy(np.array(video))
-    points = torch.from_numpy(points_over_time)
+# Points over time is Nx3
+# Classes over time is Nx1
+def compute_subpixel_points(points, classes, crops, num_points_per_frame: int):
+    # 0.1 Reshape points, classes and crops into per frame segments, such that we can easily extract a timeseries.
+    # I.e. shape is after this: NUM_POINTS x NUM_FRAMES x ...
+    points = points.reshape(-1, num_points_per_frame, 3)[:, :, [1, 2]].permute(1, 0, 2)
+    classes = classes.reshape(-1, num_points_per_frame, 1).permute(1, 0, 2)
+    crops = crops.reshape(
+        -1, num_points_per_frame, crops.shape[-2], crops.shape[-1]
+    ).permute(1, 0, 2, 3)
 
-    # Extract point crops
-    crops, y_windows, x_windows = subpixel_point_estimation.extractWindow(video, points)
-
+    # Iterate over every point and class as well as their respective crops
+    for point, label, crop in zip(points, classes, crops):
+        a = 1
+        # TODO: Compute sub-pixel position for each point labeled as 0
+        # TODO: Interpolate based on specific cases
+        # TODO: Lets regex this shit
     # 1. Compute sub-pixel position for each point that was classified as visible by the 2 layered network
 
     # Extract video_regions from points_over_time where classes_over_time is class VISIBLE.
@@ -64,3 +75,23 @@ def compute_subpixel_points(points_over_time, classes_over_time, video):
     # Case 2: VISIBLE -> SPECULARITY*N -> VISIBLE
     # If we find any amount of specularities inbetweeb visible points, we just interpolate regularly.
     return None
+
+
+if __name__ == "__main__":
+    from cotracker.utils.visualizer import Visualizer, read_video_from_path
+    import VFLabel.io.data as io
+    import VFLabel.utils.defines
+    import json
+    import os
+
+    project_path = VFLabel.utils.defines.TEST_PROJECT_PATH
+    video_path = os.path.join(project_path, "video")
+
+    video = np.array(io.read_images_from_folder(video_path, is_gray=True))
+    dict = io.dict_from_json("projects/test_project/predicted_laserpoints.json")
+    points, ids = io.point_dict_to_cotracker(dict)
+
+    classifications, crops = classify_points(points, video)
+    compute_subpixel_points(
+        torch.from_numpy(points), classifications, crops, len(dict["Frame0"])
+    )
