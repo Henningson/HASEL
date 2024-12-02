@@ -45,21 +45,24 @@ def track_points_windowed(
             backward_tracking=True,
         )
 
-        # Find suitable query points from second half of window size
-        frame_with_most_good_points = (
-            pred_visibility[:, stride:window_size].sum(dim=-1).argmax()
-        )
-        new_query_points = torch.zeros_like(query_points)
-        new_query_points[:, 0] = frame_with_most_good_points
-        new_query_points[:, 1:3] = pred_tracks[0, stride + frame_with_most_good_points]
-        query_points = new_query_points
-
         # Add the values to the final tensor and update the counts
         final_points[start_idx:end_idx] += pred_tracks.squeeze().detach().cpu().numpy()
         final_visibility[start_idx:end_idx] += (
             pred_visibility.squeeze().detach().cpu().numpy()
         )
         counts[start_idx:end_idx] += 1
+
+        if i < iterations - 1:
+            # Find suitable query points from second half of window size
+            frame_with_most_good_points = (
+                pred_visibility[:, stride:window_size].sum(dim=-1).argmax()
+            )
+            new_query_points = torch.zeros_like(query_points)
+            new_query_points[:, 0] = frame_with_most_good_points
+            new_query_points[:, 1:3] = pred_tracks[
+                0, stride + frame_with_most_good_points
+            ]
+            query_points = new_query_points
 
     # Average the overlapping regions
     final_points /= counts
@@ -90,11 +93,20 @@ def track_points(
 
 if __name__ == "__main__":
     from cotracker.utils.visualizer import Visualizer, read_video_from_path
+    import VFLabel.io.data as io
+    import json
 
-    video = read_video_from_path("assets/test_data/test_video_1.avi")[:95]
-    pred_points, pred_visibility = track_points_windowed(
-        video, np.array([[0.0, 128.0, 256.0], [0.0, 128.0, 300.0]])
-    )
+    video = read_video_from_path("assets/test_data/test_video_1.avi")[:175]
+    dict = io.dict_from_json("projects/test_project/clicked_laserpoints.json")
+    points, ids = io.point_dict_to_cotracker(dict)
+
+    pred_points, pred_visibility = track_points_windowed(video, points)
+
+    cotracker_dict = io.cotracker_to_point_dict(pred_points, ids[:, [1, 2]])
+    array = io.cotracker_to_numpy_array(pred_points, ids[:, [1, 2]], 18, 18)
+
+    json_path = "projects/test_project/predicted_laserpoints.json"
+    io.write_json(json_path, cotracker_dict)
 
     vis = Visualizer(save_dir="./videos", pad_value=100)
     vis.visualize(

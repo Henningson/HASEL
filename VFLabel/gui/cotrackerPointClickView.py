@@ -19,6 +19,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QPixmap, QImage, QCursor
 import os
 
+import VFLabel.gui.cotrackerPointClickWidget
 import VFLabel.utils.transforms
 
 import VFLabel.gui.drawSegmentationWidget
@@ -74,8 +75,10 @@ class CotrackerPointClickView(QWidget):
         # TODO: REMOVE IN THE FINAL FRAMEWORK
         qvideo = qvideo[self.cycle_start : self.cycle_end]
 
-        self.point_clicker_view = VFLabel.gui.pointClickWidget.PointClickWidget(
-            qvideo, grid_height=grid_height, grid_width=grid_width
+        self.point_clicker_view = (
+            VFLabel.gui.cotrackerPointClickWidget.CotrackerPointClickWidget(
+                qvideo, grid_height=grid_height, grid_width=grid_width
+            )
         )
 
         self.video_player = VFLabel.gui.videoPlayerWidget.VideoPlayerWidget(
@@ -158,7 +161,7 @@ class CotrackerPointClickView(QWidget):
 
             video_dict[f"Frame{self.cycle_start + frame_index}"] = point_list
 
-        with open(json_path, "w") as outfile:
+        with open(json_path, "w+") as outfile:
             json.dump(video_dict, outfile)
 
         segmentations = VFLabel.cv.generate_laserpoint_segmentations(

@@ -3,6 +3,7 @@ import cv2
 import scipy
 import numpy as np
 import json
+import re
 
 from typing import List
 
@@ -121,14 +122,112 @@ def read_images_from_folder(path: str, is_gray: bool = False) -> List[np.array]:
     return images
 
 
-if __name__ == "__main__":
-    base_path = "Dataset/"
-    file_basename = "Human_P181154_Broc15"
+# Reads a JSON that was created with the PointClick or CotrackerPointClickWidget.
+# Returns a numpy array with the point positions similar to the one used in PointClickWidgets.
+def dict_from_json(filepath: str) -> dict:
+    # Opening JSON file
+    json_file = open(filepath)
+    data = json.load(json_file)
+    json_file.close()
 
-    create_image_data(
-        os.path.join(base_path, file_basename, "png"),
-        "og_data/" + file_basename + ".mp4",
-    )
+    return data
+
+
+def point_dict_to_numpy(
+    point_dict: dict, grid_width: int, grid_height: int, video_length: int
+) -> np.array:
+    base = np.zeros([video_length, grid_height, grid_width, 2]) * np.nan
+    keys = point_dict.keys()
+    sorted_keys = sorted(keys, key=lambda x: int(re.search(r"\d+", x).group()))
+
+    for key in sorted_keys:
+        point_list = point_dict[key]
+
+        for point in point_list:
+            x = point["x_pos"]
+            y = point["y_pos"]
+            x_id = point["x_id"]
+            y_id = point["y_id"]
+
+            frame = int(key.replace("Frame", ""))
+
+            base[frame, y_id, x_id] = np.array([x, y])
+
+    return base
+
+
+# Returns two arrays that look like this:
+# [Frame, X, Y] and [Frame, x_id, y_id]
+def point_dict_to_cotracker(point_dict: dict) -> np.array:
+    positions = []
+    ids = []
+    keys = point_dict.keys()
+    sorted_keys = sorted(keys, key=lambda x: int(re.search(r"\d+", x).group()))
+
+    for key in sorted_keys:
+        point_list = point_dict[key]
+
+        for point in point_list:
+            frame = int(key.replace("Frame", ""))
+            x = point["x_pos"]
+            y = point["y_pos"]
+            x_id = point["x_id"]
+            y_id = point["y_id"]
+
+            positions.append(np.array([frame, x, y]))
+            ids.append(np.array([frame, x_id, y_id]))
+
+    return np.array(positions), np.array(ids)
+
+
+def cotracker_to_point_dict(per_frame_points: np.array, ids: np.array) -> dict:
+    final_dict = {}
+    for frame_num, points in enumerate(per_frame_points):
+        point_list = []
+        for point, id in zip(points, ids):
+            point_dict = {
+                "x_pos": point[0].item(),
+                "y_pos": point[1].item(),
+                "x_id": id[1].item(),
+                "y_id": id[0].item(),
+            }
+            point_list.append(point_dict)
+        final_dict[f"Frame{frame_num}"] = point_list
+    return final_dict
+
+
+# Takes in per_frame_points and ids of shape FRAMES x NUM_POINTS x 2 and NUM_POINTS x 2 respectively.
+# Outputs np array of size FRAMES x GRID_HEIGHT x GRID_WIDTH x 2 were points correspond to their respective laser id.
+def cotracker_to_numpy_array(
+    per_frame_points: np.array, ids: np.array, grid_width: int, grid_height: int
+) -> np.array:
+    base = np.zeros([per_frame_points.shape[0], grid_height, grid_width, 2]) * np.nan
+
+    for frame, points in enumerate(per_frame_points):
+        for point, id in zip(points, ids):
+            x = point[0]
+            y = point[1]
+            x_id = id[0]
+            y_id = id[1]
+
+            base[frame, y_id, x_id] = np.array([x, y])
+
+    return base
+
+
+def write_json(filepath: str, dict: dict) -> None:
+    with open(filepath, "w+") as outfile:
+        json.dump(dict, outfile)
+
+
+if __name__ == "__main__":
+    video_length: int = 100
+    grid_width = 18
+    grid_height = 18
+    data = dict_from_json("projects/test_project/clicked_laserpoints.json")
+    point_array = point_dict_to_numpy(data, grid_width, grid_height, video_length)
+    points, ids = point_dict_to_cotracker(data)
+    a = 1
 
     # generate_laserpoint_images_from_json(os.path.join(base_path, file_basename), 1200, 800)
     # generate_laserpoint_images_from_mat("data/VideoClick_P181133_E010_A010_F3.mat", "data/laserpoints/", 1200, 800)
