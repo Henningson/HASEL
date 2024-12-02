@@ -53,7 +53,7 @@ from typing import List
 #  VWP    # SAVE    #
 
 
-class PointClickView(QWidget):
+class CotrackerPointClickView(QWidget):
     def __init__(
         self,
         grid_height: int,
@@ -64,7 +64,7 @@ class PointClickView(QWidget):
         project_path: str,
         parent=None,
     ):
-        super(PointClickView, self).__init__(parent)
+        super(CotrackerPointClickView, self).__init__(parent)
         self.project_path: str = project_path
 
         self.cycle_start = cycle_start
@@ -122,7 +122,6 @@ class PointClickView(QWidget):
         self.button_remove.clicked.connect(self.set_remove_mode)
         self.button_disable_modes.clicked.connect(self.disable_modes)
         self.save_button.clicked.connect(self.save)
-        self.point_clicker_view.point_added.connect(self.increment_frame)
         self.button_grid.buttonSignal.connect(self.point_clicker_view.set_laser_index)
         self.video_player.slider.valueChanged.connect(self.change_frame)
 

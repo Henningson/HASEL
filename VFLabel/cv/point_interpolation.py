@@ -1,5 +1,5 @@
 # In this document, we should implement the point implementation schemes.
-import subpixel_point_estimation
+import VFLabel.cv.subpixel_point_estimation as subpixel_point_estimation
 import VFLabel.nn.models
 
 import numpy as np
