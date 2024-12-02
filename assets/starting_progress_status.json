@@ -1,7 +1,7 @@
 {
-    "grid_x": "15",
-    "grid_y": "40",
-    "progress_gl_seg": "finished",
+    "grid_x": 0,
+    "grid_y": 0,
+    "progress_gl_seg": "not started",
     "progress_vf_seg": "not started",
     "progress_pt_label": "not started",
     "progress_auto_pt_label": "not started"
