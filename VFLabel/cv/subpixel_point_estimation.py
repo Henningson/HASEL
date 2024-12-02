@@ -21,7 +21,7 @@ def windows_out_of_bounds(indices, image_size, pad):
 # Indices: Tensor of size Nx3, like [[batch, y, x], ..]
 # Batch: Image batch of size BATCH x X x Y
 # Returns: Tensor of Size N x 3 x 3
-def extractWindow(batch, indices, window_size=11, device="cuda"):
+def extractWindow(batch, indices, window_size=7, device="cuda"):
     # Clean Windows, such that no image boundaries are hit
 
     batch_index = indices[:, 0]
