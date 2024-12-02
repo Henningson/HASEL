@@ -33,13 +33,25 @@ def classify_points(point_predictions_over_time, video_images: List[np.array]):
     normalized_crops = (crops - per_crop_min) / (per_crop_max - per_crop_min)
 
     # Use 2-layered CNN to classify points
-    classifications = model(normalized_crops)
+    prediction = model(normalized_crops)
+    classifications = torch.softmax(prediction, dim=1)
 
     # Return per point classes in the same format as points over time
     return classifications
 
 
+# Points over time is FxNx2
+# Classes over time is FxNx1
 def compute_subpixel_points(points_over_time, classes_over_time, video):
+    video = torch.from_numpy(np.array(video))
+    points = torch.from_numpy(points_over_time)
+
+    # Extract point crops
+    crops, y_windows, x_windows = subpixel_point_estimation.extractWindow(video, points)
+
+    
+
+
     # 1. Compute sub-pixel position for each point that was classified as visible by the 2 layered network
 
     # Extract video_regions from points_over_time where classes_over_time is class VISIBLE.
@@ -55,3 +67,6 @@ def compute_subpixel_points(points_over_time, classes_over_time, video):
     # Case 2: VISIBLE -> SPECULARITY*N -> VISIBLE
     # If we find any amount of specularities inbetweeb visible points, we just interpolate regularly.
     return None
+
+
+if __name__ == "__main__":

@@ -1,5 +1,6 @@
 import torch
 import kornia
+import numpy as np
 
 
 # Indices [n] Tensor
@@ -81,6 +82,29 @@ def GuosBatchAnalytic(x, y, z):
     # c = (torch.linalg.pinv(ATA) @ A.transpose(1, 2) @ b.unsqueeze(-1)).squeeze()
     c = (ATA.inverse() @ A.transpose(1, 2) @ b.unsqueeze(-1)).squeeze()
     return poly_to_gauss(c[:, [2, 5]], c[:, [1, 3]], c[:, [0, 4]])
+
+
+def moment_method(images: np.array) -> np.array:
+    """
+    Computes the subpixel-accurate centroid of a 2D Gaussian distribution
+    in pixel space using the moment method.
+    """
+
+    # Get the pixel grid
+    y, x = np.indices(images[0].shape)
+
+    # Total intensity (0th moment)
+    total_intensity = np.sum(images, axis=(-2, -1), keepdims=True)
+
+    # First moments for x and y
+    x_moment = np.sum(x * images, axis=(-2, -1), keepdims=True)
+    y_moment = np.sum(y * images, axis=(-2, -1), keepdims=True)
+
+    # Subpixel centroid
+    x_centroids = x_moment / total_intensity
+    y_centroids = y_moment / total_intensity
+
+    return np.concatenate([x_centroids, y_centroids], axis=-1)[:, 0, :]
 
 
 def poly_to_gauss(A, B, C):
@@ -236,3 +260,21 @@ class LSQLocalization:
             torch.tensor_split(mu, split_indices),
             torch.tensor_split(amplitude, split_indices),
         )
+
+
+if __name__ == "__main__":
+    # Create a sample 2D Gaussian distribution
+    size = 11
+    x = np.linspace(-5, 5, size)
+    y = np.linspace(-5, 5, size)
+    x_grid, y_grid = np.meshgrid(x, y)
+    gaussian = np.exp(-(x_grid**2 + y_grid**2) / (2 * 1.5**2))  # Sigma = 1.5
+
+    # Add a slight offset for testing subpixel accuracy
+    gaussian_shifted = np.roll(np.roll(gaussian, 2, axis=0), 3, axis=1)
+
+    gaussian_shifted = np.repeat(np.expand_dims(gaussian_shifted, 0), 5, 0)
+
+    # Find the subpixel centroid
+    centroid = moment_method(gaussian_shifted)
+    print(f"Subpixel centroid: {centroid}")
