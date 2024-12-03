@@ -14,6 +14,7 @@ def filter_points_on_vocalfold(
     # For each predicted point, check if it was predicted on the vocalfold.
     # If not, remove it.
     filtered_points = point_predictions
+    # TODO: Implement me
 
     return filtered_points
 
@@ -28,7 +29,9 @@ def classify_points(cotracker_points: np.array, video: np.array):
 
     # Normalize points to [0, 1]
     model = VFLabel.nn.models.Kernel3Classificator()
-    model.load_state_dict(torch.load("assets/models/specularity_classificator.pth.tar"))
+    model.load_state_dict(
+        torch.load("assets/models/specularity_classificator.pth.tar", weights_only=True)
+    )
     model.eval()
 
     per_crop_max = crops.amax([-1, -2], keepdim=True)
@@ -47,13 +50,23 @@ def classify_points(cotracker_points: np.array, video: np.array):
 # Points over time is Nx3
 # Classes over time is Nx1
 def compute_subpixel_points(
-    point_predictions, classes, crops, num_points_per_frame: int
+    point_predictions, classes, video, num_points_per_frame: int
 ):
+    crops, y_windows, x_windows = subpixel_point_estimation.extractWindow(
+        video, point_predictions, device=point_predictions.device
+    )
+
     # 0.1 Reshape points, classes and crops into per frame segments, such that we can easily extract a timeseries.
     # I.e. shape is after this: NUM_POINTS x NUM_FRAMES x ...
     point_predictions = point_predictions.reshape(-1, num_points_per_frame, 3)[
         :, :, [1, 2]
     ].permute(1, 0, 2)
+    y_windows = y_windows.reshape(
+        -1, num_points_per_frame, crops.shape[-2], crops.shape[-1]
+    ).permute(1, 0, 2, 3)
+    x_windows = x_windows.reshape(
+        -1, num_points_per_frame, crops.shape[-2], crops.shape[-1]
+    ).permute(1, 0, 2, 3)
     classes = classes.reshape(-1, num_points_per_frame, 1).permute(1, 0, 2)
     crops = crops.reshape(
         -1, num_points_per_frame, crops.shape[-2], crops.shape[-1]
@@ -61,8 +74,10 @@ def compute_subpixel_points(
 
     specular_duration = 5
     # Iterate over every point and class as well as their respective crops
-    optimized_points = torch.zeros_like(point_predictions)
-    for point, label, crop in zip(points, classes, crops):
+    optimized_points = torch.zeros_like(point_predictions) * np.nan
+    for points_index, (points, label, crop) in enumerate(
+        zip(point_predictions, classes, crops)
+    ):
 
         # Here it now gets super hacky.
         # Convert label array to a string
@@ -87,25 +102,37 @@ def compute_subpixel_points(
         # Finally, every part that couldn't be identified will be labeled as E for error.
         compute_string = compute_string.replace("1", "E")
         compute_string = compute_string.replace("2", "E")
+        print(compute_string)
 
-        # TODO: Compute sub-pixel position for each point labeled as 0
-        # TODO: Interpolate based on specific cases
-        # TODO: Lets regex this shit
-    # 1. Compute sub-pixel position for each point that was classified as visible by the 2 layered network
+        # Compute sub-pixel position for each point labeled as visible (V)
+        for frame_index, label in enumerate(compute_string):
+            if label != "V":
+                continue
 
-    # Extract video_regions from points_over_time where classes_over_time is class VISIBLE.
+            new_point = torch.from_numpy(
+                subpixel_point_estimation.moment_method(
+                    crop[frame_index].unsqueeze(0).numpy()
+                )
+            ).squeeze()
+            x_pos = x_windows[points_index, frame_index, 0, 0] + new_point[0]
+            y_pos = y_windows[points_index, frame_index, 0, 0] + new_point[1]
+            optimized_points[points_index, frame_index] = torch.tensor([x_pos, y_pos])
 
-    # Compute sub-pixel point from image via moment method
+        # Interpolate inbetween two points
+        for frame_index, label in enumerate(compute_string):
+            if label != "I":
+                continue
 
-    # 2. We now need to define different cases for the interpolation:
+            prev_v_index = compute_string.rfind("V", 0, frame_index)
+            next_v_index = compute_string.find("V", frame_index + 1)
 
-    # Case 1: VISIBLE -> UNDEFINED -> UNDEFINED -> VISIBLE
-    # In this case, we will just interpolate over the undefined areas
-    # If the section of undefined points inbetween is longer, we assume thats the glottal gap.
+            lerp_alpha = (frame_index - prev_v_index) / (next_v_index - prev_v_index)
+            point_a = points[prev_v_index]
+            point_b = points[next_v_index]
+            lerped_point = VFLabel.utils.transforms.lerp(point_a, point_b, lerp_alpha)
+            optimized_points[points_index, frame_index] = lerped_point
 
-    # Case 2: VISIBLE -> SPECULARITY*N -> VISIBLE
-    # If we find any amount of specularities inbetweeb visible points, we just interpolate regularly.
-    return None
+    return optimized_points.permute(1, 0, 2), classes.permute(1, 0, 2)
 
 
 if __name__ == "__main__":
@@ -123,6 +150,11 @@ if __name__ == "__main__":
     points, ids = io.point_dict_to_cotracker(dict)
 
     classifications, crops = classify_points(points, video)
-    compute_subpixel_points(
-        torch.from_numpy(points), classifications, crops, len(dict["Frame0"])
+    points, classes = compute_subpixel_points(
+        torch.from_numpy(points),
+        classifications,
+        torch.from_numpy(video),
+        len(dict["Frame0"]),
     )
+
+    a = 1
