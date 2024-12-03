@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
     QApplication,
     QGraphicsScene,
     QMainWindow,
-    QVBoxLayout,
+    QHBoxLayout,
     QWidget,  #
     QMessageBox,
 )
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
             # Create a central widget and a layout
             central_widget = QWidget(self)
-            layout = QVBoxLayout(central_widget)
+            layout = QHBoxLayout(central_widget)
 
             project_path = VFLabel.utils.defines.TEST_PROJECT_PATH
             video_path = os.path.join(project_path, "video")
@@ -69,9 +69,13 @@ if __name__ == "__main__":
             video_rgb = np.array(io.read_images_from_folder(video_path))[:175]
             qvideo: List[QImage] = VFLabel.utils.transforms.vid_2_QImage(video_rgb)
             # Set up the zoomable view
-            self.view = VFLabel.gui.labeledPointWidget.LabeledPointWidget(qvideo)
-            self.view.add_points_and_classes(points_subpix, classifications)
-            layout.addWidget(self.view)
+            self.view_1 = VFLabel.gui.labeledPointWidget.LabeledPointWidget(qvideo)
+            self.view_1.add_points_and_classes(points, classifications)
+            layout.addWidget(self.view_1)
+
+            self.view_2 = VFLabel.gui.labeledPointWidget.LabeledPointWidget(qvideo)
+            self.view_2.add_points_and_classes(points_subpix, classifications)
+            layout.addWidget(self.view_2)
 
             # Set up the main window^
             self.setCentralWidget(central_widget)
