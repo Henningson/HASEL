@@ -95,6 +95,22 @@ class DownConv(nn.Module):
         return self.conv(x)
 
 
+class BinaryKernel3Classificator(nn.Module):
+    def __init__(self):
+        super(BinaryKernel3Classificator, self).__init__()
+
+        self.a = DownConv(1, 128, kernel_size=3)
+        self.b = DownConv(128, 64, kernel_size=3)
+        self.c = DownConv(64, 1, kernel_size=3, last_layer=True)
+
+    def forward(self, x):
+        x = self.a(x)
+        x = self.b(x)
+        x = self.c(x)
+
+        return x.squeeze()
+
+
 class Kernel3Classificator(nn.Module):
     def __init__(self):
         super(Kernel3Classificator, self).__init__()

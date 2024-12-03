@@ -215,6 +215,21 @@ def cotracker_to_numpy_array(
     return base
 
 
+def labels_to_numpy_array(
+    per_frame_labels: np.array, ids: np.array, grid_width: int, grid_height: int
+) -> np.array:
+    base = np.zeros([per_frame_labels.shape[0], grid_height, grid_width]) * np.nan
+
+    for frame, labels in enumerate(per_frame_labels):
+        for label, id in zip(labels, ids):
+            x_id = id[0]
+            y_id = id[1]
+
+            base[frame, y_id, x_id] = label
+
+    return base
+
+
 def write_json(filepath: str, dict: dict) -> None:
     with open(filepath, "w+") as outfile:
         json.dump(dict, outfile)
