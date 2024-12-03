@@ -110,12 +110,12 @@ def compute_subpixel_points(
         # If this is given, we will replace VXV by VIV, where X is replaced by that many Is.#
         # Is indicate that we want to interpolate in these values.
         compute_string = re.sub(
-            r"(V)([0]{1,5})(V)",
+            r"(V)([0]{1,10})(V)",
             lambda match: match.group(1) + "I" * len(match.group(2)) + match.group(3),
             compute_string,
         )
         compute_string = re.sub(
-            r"(V)([0]{1,5})(V)",
+            r"(V)([0]{1,10})(V)",
             lambda match: match.group(1) + "I" * len(match.group(2)) + match.group(3),
             compute_string,
         )
@@ -153,8 +153,6 @@ def compute_subpixel_points(
             point_b = points[next_v_index]
             lerped_point = VFLabel.utils.transforms.lerp(point_a, point_b, lerp_alpha)
             optimized_points[points_index, frame_index] = lerped_point
-
-        a = 1
 
     return optimized_points
 
