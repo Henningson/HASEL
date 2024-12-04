@@ -46,8 +46,9 @@ import VFLabel.utils.transforms
 
 
 class VocalfoldSegmentationWidget(QWidget):
-    def __init__(self, video: np.array, parent=None):
+    def __init__(self, project_path: str, video: np.array, parent=None):
         super(VocalfoldSegmentationWidget, self).__init__(parent)
+        self.project_path = project_path
 
         vertical_layout = QVBoxLayout()
         horizontal_layout_top = QHBoxLayout()
@@ -104,14 +105,15 @@ class VocalfoldSegmentationWidget(QWidget):
         )
 
     def save(self) -> None:
-        save_folder = QFileDialog.getExistingDirectory(
-            self, "Save Frames to", "", QFileDialog.ShowDirsOnly
-        )
+        save_folder = os.path.join(self.project_path, "vocalfold_segmentation")
+        os.makedirs(save_folder, exist_ok=True)
 
         for i in range(self.video_player.get_video_length()):
             pixmap = self.interpolate_view.generate_segmentation_for_frame(i)
             path = os.path.join(save_folder, f"{i:05d}.png")
             pixmap.save(path)
+
+        self.close()
 
     def add_polygon_to_transform_view(self) -> None:
         polygon = QPolygonF(self.draw_view.getPolygonPoints())

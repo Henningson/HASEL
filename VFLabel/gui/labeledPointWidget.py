@@ -11,12 +11,8 @@ import PyQt5.QtCore
 import PyQt5.Qt
 from typing import List
 
-from cotracker.utils.visualizer import Visualizer, read_video_from_path
-
 
 class LabeledPointWidget(videoViewWidget.VideoViewWidget):
-    point_added = pyqtSignal()
-
     def __init__(
         self,
         video: List[QImage],

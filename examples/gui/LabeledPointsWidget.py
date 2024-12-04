@@ -63,9 +63,6 @@ if __name__ == "__main__":
                 video.shape[0], len(dict["Frame0"])
             )
 
-            # ids = ids.reshape(video.shape[0], points.shape[1], 3)
-            # classifications = classifications.reshape(video.shape[0], poiddddddnts.shape[1])
-
             video_rgb = np.array(io.read_images_from_folder(video_path))[:175]
             qvideo: List[QImage] = VFLabel.utils.transforms.vid_2_QImage(video_rgb)
             # Set up the zoomable view

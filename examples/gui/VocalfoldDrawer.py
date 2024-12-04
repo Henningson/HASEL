@@ -13,6 +13,7 @@ import VFLabel.gui.vocalfoldSegmentationWidget
 
 
 import VFLabel.io
+import VFLabel.utils.defines
 
 
 if __name__ == "__main__":
@@ -29,7 +30,9 @@ if __name__ == "__main__":
             videodata = VFLabel.io.data.read_video("assets/test_data/test_video_1.avi")
 
             # Set up the zoomable view
-            view = VFLabel.gui.VocalfoldSegmentationWidget(videodata)
+            view = VFLabel.gui.VocalfoldSegmentationWidget(
+                VFLabel.utils.defines.TEST_PROJECT_PATH, videodata
+            )
             layout.addWidget(view)
 
             # Set up the main window^

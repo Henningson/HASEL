@@ -12,9 +12,19 @@ from typing import List
 
 def filter_points_on_vocalfold(
     point_predictions, vocalfold_segmentations: List[np.array]
-):
+) -> np.array:
     # For each predicted point, check if it was predicted on the vocalfold.
     # If not, remove it.
+    filtered_points = point_predictions
+    # TODO: Implement me
+
+    return filtered_points
+
+
+def filter_points_in_glottis(
+    point_predictions, vocalfold_segmentations: List[np.array]
+) -> np.array:
+
     filtered_points = point_predictions
     # TODO: Implement me
 
@@ -33,7 +43,9 @@ def classify_points(cotracker_points: np.array, video: np.array):
     model = VFLabel.nn.models.BinaryKernel3Classificator()
     model.load_state_dict(
         torch.load(
-            "assets/models/binary_specularity_classificator.pth.tar", weights_only=True
+            "assets/models/binary_specularity_classificator.pth.tar",
+            weights_only=True,
+            map_location=torch.device("cpu"),
         )
     )
     model.eval()
@@ -42,23 +54,6 @@ def classify_points(cotracker_points: np.array, video: np.array):
     per_crop_min = crops.amin([-1, -2], keepdim=True)
 
     normalized_crops = (crops - per_crop_min) / (per_crop_max - per_crop_min)
-    """normalized_crops = normalized_crops.numpy()
-
-    eval_transform = A.Compose(
-        [
-            A.Normalize(
-                mean=[0.0],
-                std=[1.0],
-                max_pixel_value=255.0,
-            ),
-            ToTensorV2(),
-        ],
-    )
-    transformed_images = []
-    for crop in normalized_crops:
-        transformed_images.append(eval_transform(image=crop)["image"])
-    normalized_crops = np.concatenate(transformed_images, 0)
-    normalized_crops = torch.from_numpy(normalized_crops)"""
 
     # Use 2-layered CNN to classify points
     prediction = model(normalized_crops[:, None, :, :])
@@ -110,12 +105,12 @@ def compute_subpixel_points(
         # If this is given, we will replace VXV by VIV, where X is replaced by that many Is.#
         # Is indicate that we want to interpolate in these values.
         compute_string = re.sub(
-            r"(V)([0]{1,10})(V)",
+            r"(V)([0]+)(V)",
             lambda match: match.group(1) + "I" * len(match.group(2)) + match.group(3),
             compute_string,
         )
         compute_string = re.sub(
-            r"(V)([0]{1,10})(V)",
+            r"(V)([0]+)(V)",
             lambda match: match.group(1) + "I" * len(match.group(2)) + match.group(3),
             compute_string,
         )
