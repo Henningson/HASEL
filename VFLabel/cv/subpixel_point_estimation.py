@@ -26,8 +26,8 @@ def extractWindow(batch, indices, window_size=7, device="cuda"):
     # Clean Windows, such that no image boundaries are hit
 
     batch_index = indices[:, 0].int()
-    y = indices[:, 2].round().int()
-    x = indices[:, 1].round().int()
+    y = indices[:, 2].floor().int()
+    x = indices[:, 1].floor().int()
 
     y = windows_out_of_bounds(y, batch.shape[1], window_size // 2)
     x = windows_out_of_bounds(x, batch.shape[2], window_size // 2)
@@ -78,10 +78,35 @@ def GuosBatchAnalytic(x, y, z):
     A = (A.transpose(1, 2) * weights.unsqueeze(1)).transpose(1, 2)
     b = torch.log(z) * weights
     ATA = (A.transpose(1, 2) @ A).float()
-    # c = (torch.linalg.lstsq(ATA, A.transpose(1, 2)).solution @ b.unsqueeze(-1)).squeeze()
-    # c = (torch.linalg.pinv(ATA) @ A.transpose(1, 2) @ b.unsqueeze(-1)).squeeze()
-    c = (ATA.inverse() @ A.transpose(1, 2) @ b.unsqueeze(-1)).squeeze()
+    c = ATA.inverse() @ A.transpose(1, 2) @ b.unsqueeze(-1)
+    c = c.squeeze(-1)
     return poly_to_gauss(c[:, [2, 5]], c[:, [1, 3]], c[:, [0, 4]])
+
+
+def moment_method_torch(images: torch.tensor) -> torch.tensor:
+    """
+    Computes the subpixel-accurate centroid of a 2D Gaussian distribution
+    in pixel space using the moment method.
+    """
+
+    # Get the pixel gridrows = torch.arange(size[0])
+    cols, rows = torch.arange(images.shape[-1]), torch.arange(images.shape[-2])
+
+    # Create a grid
+    y, x = torch.meshgrid(rows, cols, indexing="ij")
+
+    # Total intensity (0th moment)
+    total_intensity = torch.sum(images, dim=(-2, -1), keepdims=True)
+
+    # First moments for x and y
+    x_moment = torch.sum(x * images, dim=(-2, -1), keepdims=True)
+    y_moment = torch.sum(y * images, dim=(-2, -1), keepdims=True)
+
+    # Subpixel centroid
+    x_centroids = x_moment / total_intensity
+    y_centroids = y_moment / total_intensity
+
+    return torch.concatenate([x_centroids + 0.5, y_centroids + 0.5], dim=-1)[:, 0, :]
 
 
 def moment_method(images: np.array) -> np.array:

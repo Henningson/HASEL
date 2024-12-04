@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
             classifications, crops = pi.classify_points(points, video)
 
-            points_subpix = pi.compute_subpixel_points(
+            points_subpix, _ = pi.compute_subpixel_points(
                 torch.from_numpy(points),
                 classifications,
                 torch.from_numpy(video),

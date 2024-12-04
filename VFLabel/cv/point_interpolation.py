@@ -9,6 +9,8 @@ import torch
 import re
 from typing import List
 
+from scipy.optimize import curve_fit
+
 
 def filter_points_not_on_vocalfold(
     point_predictions, vocalfold_segmentations: np.array
@@ -84,6 +86,11 @@ def classify_points(cotracker_points: np.array, video: np.array):
     return classifications, crops
 
 
+def quadratic_2d(coords, a, b, c, d, e, f):
+    x, y = coords
+    return a * x**2 + b * y**2 + c * x * y + d * x + e * y + f
+
+
 # Points over time is Nx3
 # Classes over time is Nx1
 def compute_subpixel_points(
@@ -112,6 +119,7 @@ def compute_subpixel_points(
     specular_duration = 5
     # Iterate over every point and class as well as their respective crops
     optimized_points = torch.zeros_like(point_predictions) * np.nan
+    optimized_points_on_crops = torch.zeros_like(point_predictions) * np.nan
     for points_index, (points, label, crop) in enumerate(
         zip(point_predictions, labels, crops)
     ):
@@ -147,14 +155,51 @@ def compute_subpixel_points(
             if label != "V":
                 continue
 
-            new_point = torch.from_numpy(
-                subpixel_point_estimation.moment_method(
-                    crop[frame_index].unsqueeze(0).numpy()
-                )
+            normalized_crop = crop[frame_index]
+            normalized_crop = (normalized_crop - normalized_crop.min()) / (
+                normalized_crop.max() - normalized_crop.min()
+            )
+
+            # Find local maximum in 5x5 crop
+            local_maximum = torch.unravel_index(
+                torch.argmax(normalized_crop[1:-1, 1:-1]), [5, 5]
+            )
+
+            # Add one again, since we removed the border from the local maximum lookup
+            x0, y0 = local_maximum[1] + 1, local_maximum[0] + 1
+
+            # Get 3x3 subwindow from crop, where the local maximum is centered.
+            neighborhood = 1
+            x_min = max(0, x0 - neighborhood)
+            x_max = min(normalized_crop.shape[1], x0 + neighborhood + 1)
+            y_min = max(0, y0 - neighborhood)
+            y_max = min(normalized_crop.shape[0], y0 + neighborhood + 1)
+
+            sub_image = normalized_crop[y_min:y_max, x_min:x_max]
+            sub_image = (sub_image - sub_image.min()) / (
+                sub_image.max() - sub_image.min()
+            )
+
+            centroids = subpixel_point_estimation.moment_method_torch(
+                sub_image.unsqueeze(0)
             ).squeeze()
-            x_pos = x_windows[points_index, frame_index, 0, 0] + new_point[0]
-            y_pos = y_windows[points_index, frame_index, 0, 0] + new_point[1]
-            optimized_points[points_index, frame_index] = torch.tensor([x_pos, y_pos])
+
+            refined_x = (
+                x_windows[points_index, frame_index, 0, 0] + centroids[0] + x0 - 1
+            ).item()
+            refined_y = (
+                y_windows[points_index, frame_index, 0, 0] + centroids[1] + y0 - 1
+            ).item()
+
+            on_crop_x = (x0 + centroids[0] - 1).item()
+            on_crop_y = (y0 + centroids[1] - 1).item()
+
+            optimized_points[points_index, frame_index] = torch.tensor(
+                [refined_x, refined_y]
+            )
+            optimized_points_on_crops[points_index, frame_index] = torch.tensor(
+                [on_crop_x, on_crop_y]
+            )
 
         # Interpolate inbetween two points
         for frame_index, label in enumerate(compute_string):
@@ -170,7 +215,7 @@ def compute_subpixel_points(
             lerped_point = VFLabel.utils.transforms.lerp(point_a, point_b, lerp_alpha)
             optimized_points[points_index, frame_index] = lerped_point
 
-    return optimized_points
+    return optimized_points, optimized_points_on_crops
 
 
 if __name__ == "__main__":
