@@ -39,6 +39,10 @@ if __name__ == "__main__":
 
             project_path = VFLabel.utils.defines.TEST_PROJECT_PATH
             video_path = os.path.join(project_path, "video")
+            vf_segmentation_path = os.path.join(project_path, "vocalfold_segmentation")
+            glottis_segmentation_path = os.path.join(
+                project_path, "glottis_segmentation"
+            )
 
             video = np.array(io.read_images_from_folder(video_path, is_gray=True))[:175]
             dict = io.dict_from_json("projects/test_project/predicted_laserpoints.json")
@@ -63,6 +67,19 @@ if __name__ == "__main__":
                 video.shape[0], len(dict["Frame0"])
             )
 
+            vocalfold_segmentations = np.array(
+                io.read_images_from_folder(vf_segmentation_path, is_gray=True)
+            )[:175]
+            glottis_segmentations = np.array(
+                io.read_images_from_folder(glottis_segmentation_path, is_gray=True)
+            )[:175]
+            filtered_points = pi.filter_points_not_on_vocalfold(
+                points_subpix, vocalfold_segmentations
+            )
+            filtered_points = pi.filter_points_on_glottis(
+                points_subpix, glottis_segmentations
+            )
+
             video_rgb = np.array(io.read_images_from_folder(video_path))[:175]
             qvideo: List[QImage] = VFLabel.utils.transforms.vid_2_QImage(video_rgb)
             # Set up the zoomable view
@@ -71,7 +88,7 @@ if __name__ == "__main__":
             layout.addWidget(self.view_1)
 
             self.view_2 = VFLabel.gui.labeledPointWidget.LabeledPointWidget(qvideo)
-            self.view_2.add_points_and_classes(points_subpix, classifications)
+            self.view_2.add_points_and_classes(filtered_points, classifications)
             layout.addWidget(self.view_2)
 
             # Set up the main window^

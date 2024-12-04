@@ -10,23 +10,44 @@ import re
 from typing import List
 
 
-def filter_points_on_vocalfold(
-    point_predictions, vocalfold_segmentations: List[np.array]
+def filter_points_not_on_vocalfold(
+    point_predictions, vocalfold_segmentations: np.array
 ) -> np.array:
-    # For each predicted point, check if it was predicted on the vocalfold.
-    # If not, remove it.
-    filtered_points = point_predictions
-    # TODO: Implement me
+    # Convert all nans to 0
+    filtered_points = np.nan_to_num(point_predictions, 0)
+
+    # Floor points and cast such that we have pixel coordinates
+    point_indices = np.floor(filtered_points).astype(int)
+
+    for frame_index, (points_in_frame, segmentation) in enumerate(
+        zip(point_indices, vocalfold_segmentations)
+    ):
+        hits = segmentation[points_in_frame[:, 1], points_in_frame[:, 0]]
+        hits = (hits > 0) * 1
+        filtered_points[frame_index] *= hits[:, None]
+
+    filtered_points[filtered_points == 0] = np.nan
 
     return filtered_points
 
 
-def filter_points_in_glottis(
-    point_predictions, vocalfold_segmentations: List[np.array]
+def filter_points_on_glottis(
+    point_predictions, vocalfold_segmentations: np.array
 ) -> np.array:
+    # Convert all nans to 0
+    filtered_points = np.nan_to_num(point_predictions, 0)
 
-    filtered_points = point_predictions
-    # TODO: Implement me
+    # Floor points and cast such that we have pixel coordinates
+    point_indices = np.floor(filtered_points).astype(int)
+
+    for frame_index, (points_in_frame, segmentation) in enumerate(
+        zip(point_indices, vocalfold_segmentations)
+    ):
+        hits = segmentation[points_in_frame[:, 1], points_in_frame[:, 0]]
+        hits = (hits == 0) * 1
+        filtered_points[frame_index] *= hits[:, None]
+
+    filtered_points[filtered_points == 0] = np.nan
 
     return filtered_points
 
