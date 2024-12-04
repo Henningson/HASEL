@@ -10,6 +10,7 @@ import re
 from typing import List
 
 from scipy.optimize import curve_fit
+import torch.nn.functional as F
 
 
 def filter_points_not_on_vocalfold(
@@ -206,16 +207,58 @@ def compute_subpixel_points(
             if label != "I":
                 continue
 
+            if points_index == 4 and frame_index == 37:
+                a = 1
+
             prev_v_index = compute_string.rfind("V", 0, frame_index)
             next_v_index = compute_string.find("V", frame_index + 1)
 
             lerp_alpha = (frame_index - prev_v_index) / (next_v_index - prev_v_index)
-            point_a = points[prev_v_index]
-            point_b = points[next_v_index]
+            point_a = optimized_points[points_index, prev_v_index]
+            point_b = optimized_points[points_index, next_v_index]
             lerped_point = VFLabel.utils.transforms.lerp(point_a, point_b, lerp_alpha)
+            # dist_ab = ((point_a - point_b) ** 2).sum().sqrt().item()
+
+            # if dist_ab > 0.5:
+            #    a = 1
             optimized_points[points_index, frame_index] = lerped_point
 
+        a = 1
+
     return optimized_points, optimized_points_on_crops
+
+
+def smooth_points(points: torch.tensor) -> torch.tensor:
+    # We know that only values are nan, that lie at the border of the frames.
+    # So we can easily convolve with a gaussian kernel
+
+    # Define a Gaussian kernel
+    def gaussian_kernel(size, sigma):
+        x = torch.arange(-size // 2 + 1, size // 2 + 1)
+        kernel = torch.exp(-0.5 * (x / sigma) ** 2)
+        kernel /= kernel.sum()  # Normalize
+        return kernel
+
+    kernel_size = 7
+    sigma = 2.0
+    kernel = gaussian_kernel(kernel_size, sigma).view(1, 1, -1)
+
+    for point_over_time in points:
+        is_not_nan = ~torch.isnan(point_over_time[:, 0])
+        non_nan_points = point_over_time[is_not_nan]
+
+        if len(non_nan_points) < 10:
+            continue
+
+        smoothed_points = F.conv1d(
+            non_nan_points.permute(1, 0).unsqueeze(1),
+            kernel.double(),
+            padding=kernel_size // 2,
+        )
+        smoothed_points = smoothed_points.squeeze(1).permute(1, 0)
+        point_over_time[is_not_nan] = smoothed_points
+
+    return points
 
 
 if __name__ == "__main__":
@@ -224,6 +267,7 @@ if __name__ == "__main__":
     import VFLabel.utils.defines
     import json
     import os
+    import matplotlib.pyplot as plt
 
     project_path = VFLabel.utils.defines.TEST_PROJECT_PATH
     video_path = os.path.join(project_path, "video")
@@ -239,5 +283,44 @@ if __name__ == "__main__":
         torch.from_numpy(video),
         len(dict["Frame0"]),
     )
+
+    smooth_points(points)
+
+    for per_frame_points in points:
+        x_values = per_frame_points[:, 0]
+        x_mean = x_values[~torch.isnan(x_values)].mean()
+        x_values = torch.nan_to_num(x_values, x_mean)
+
+        y_values = per_frame_points[:, 1]
+        y_mean = y_values[~torch.isnan(y_values)].mean()
+        y_values = torch.nan_to_num(y_values, y_mean)
+
+        x_diff = torch.diff(x_values)
+        y_diff = torch.diff(y_values)
+
+        diff = (x_diff.pow(2) + y_diff.pow(2)).sqrt()
+
+        # Define a Gaussian kernel
+        def gaussian_kernel(size, sigma):
+            x = torch.arange(-size // 2 + 1, size // 2 + 1)
+            kernel = torch.exp(-0.5 * (x / sigma) ** 2)
+            kernel /= kernel.sum()  # Normalize
+            return kernel
+
+        kernel_size = 7
+        sigma = 2.0
+        kernel = gaussian_kernel(kernel_size, sigma).view(1, 1, -1)
+
+        # Reshape values to match conv1d input format: [batch, channels, length]
+        diff = diff.view(1, 1, -1)
+
+        # Apply convolution (with padding to preserve length)
+        smoothed_values = F.conv1d(
+            diff, kernel.double(), padding=kernel_size // 2
+        ).squeeze()
+
+        data = smoothed_values.numpy()
+        plt.plot(data)
+        plt.show()
 
     a = 1

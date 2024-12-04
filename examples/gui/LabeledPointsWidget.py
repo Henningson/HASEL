@@ -58,6 +58,8 @@ if __name__ == "__main__":
             )
             a = 1
 
+            # points_subpix = pi.smooth_points(points_subpix)
+
             # NEED TO TRANSFORM N x 3 OR WHATEVER TO NUM FRAMES x NUM POINTS x WHATEVER
             points = points.reshape(video.shape[0], len(dict["Frame0"]), 3)[
                 :, :, [1, 2]
