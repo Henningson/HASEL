@@ -56,9 +56,9 @@ if __name__ == "__main__":
                 torch.from_numpy(video),
                 len(dict["Frame0"]),
             )
-            a = 1
 
-            # points_subpix = pi.smooth_points(points_subpix)
+            points_subpix = pi.smooth_points(points_subpix)
+            points_subpix = pi.fill_nan_border_values(points_subpix)
 
             # NEED TO TRANSFORM N x 3 OR WHATEVER TO NUM FRAMES x NUM POINTS x WHATEVER
             points = points.reshape(video.shape[0], len(dict["Frame0"]), 3)[

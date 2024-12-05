@@ -228,6 +228,45 @@ def compute_subpixel_points(
     return optimized_points, optimized_points_on_crops
 
 
+def fill_nan_border_values(points: torch.tensor) -> torch.tensor:
+
+    for point_index, point_over_time in enumerate(points):
+        nan_count_start = 0
+        nan_count_end = 0
+
+        nan_mask = torch.isnan(point_over_time[:, 0])
+
+        for val in nan_mask:
+            # Count nans at beginning of sequence
+            if val:
+                nan_count_start += 1
+            else:
+                break
+
+        for val in nan_mask.flip(0):
+            # Count nans at end of sequence
+            if val:
+                nan_count_end += 1
+            else:
+                break
+
+        if nan_count_end == nan_count_start:
+            # Only nans, here we do nothing. Could also check that beforehand.
+            continue
+
+        if nan_count_end != 0:
+            point_over_time = point_over_time[nan_count_start:-nan_count_end]
+        else:
+            point_over_time = point_over_time[nan_count_start:]
+
+        point_over_time = torch.nn.functional.pad(
+            point_over_time.permute(1, 0), (nan_count_start, nan_count_end), "replicate"
+        ).permute(1, 0)
+        points[point_index] = point_over_time
+
+    return points
+
+
 def smooth_points(points: torch.tensor) -> torch.tensor:
     # We know that only values are nan, that lie at the border of the frames.
     # So we can easily convolve with a gaussian kernel
@@ -239,8 +278,8 @@ def smooth_points(points: torch.tensor) -> torch.tensor:
         kernel /= kernel.sum()  # Normalize
         return kernel
 
-    kernel_size = 7
-    sigma = 2.0
+    kernel_size = 5
+    sigma = 1.0
     kernel = gaussian_kernel(kernel_size, sigma).view(1, 1, -1)
 
     for point_over_time in points:
@@ -250,11 +289,11 @@ def smooth_points(points: torch.tensor) -> torch.tensor:
         if len(non_nan_points) < 10:
             continue
 
-        smoothed_points = F.conv1d(
-            non_nan_points.permute(1, 0).unsqueeze(1),
-            kernel.double(),
-            padding=kernel_size // 2,
+        a = non_nan_points.permute(1, 0).unsqueeze(1)
+        padded_points = torch.nn.functional.pad(
+            a, (kernel_size // 2, kernel_size // 2), "replicate"
         )
+        smoothed_points = F.conv1d(padded_points, kernel.double(), padding=0)
         smoothed_points = smoothed_points.squeeze(1).permute(1, 0)
         point_over_time[is_not_nan] = smoothed_points
 
@@ -284,7 +323,36 @@ if __name__ == "__main__":
         len(dict["Frame0"]),
     )
 
-    smooth_points(points)
+    points = smooth_points(points)
+    points = fill_nan_border_values(points)
+
+    average_per_frame_movement = torch.zeros_like(points[0, :, :])
+    counts = torch.zeros_like(points[:, 0, :1])
+
+    for per_frame_points in points:
+        average_per_frame_movement = torch.nan_to_num(per_frame_points, 0.0)
+        counts = ~torch.isnan(per_frame_points[:, 0]).any(dim=-1, keepdims=True)
+
+    x_diff = torch.diff(average_per_frame_movement[:, 0])
+    y_diff = torch.diff(average_per_frame_movement[:, 1])
+    diff = (x_diff.pow(2) + y_diff.pow(2)).sqrt()
+
+    # Define a Gaussian kernel
+    def gaussian_kernel(size, sigma):
+        x = torch.arange(-size // 2 + 1, size // 2 + 1)
+        kernel = torch.exp(-0.5 * (x / sigma) ** 2)
+        kernel /= kernel.sum()  # Normalize
+        return kernel
+
+    kernel_size = 7
+    sigma = 2.0
+    kernel = gaussian_kernel(kernel_size, sigma).view(1, 1, -1)
+
+    smoothed_values = F.conv1d(
+        diff.view(1, 1, -1), kernel.double(), padding=kernel_size // 2
+    ).squeeze()
+    plt.plot(diff.numpy().squeeze())
+    plt.show()
 
     for per_frame_points in points:
         x_values = per_frame_points[:, 0]
