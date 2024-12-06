@@ -19,6 +19,10 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QPixmap, QImage, QCursor
 import os
 
+import VFLabel.gui.cotrackerPointClickWidget
+import VFLabel.gui.pointViewWidget
+
+import VFLabel.gui.labeledPointWidget
 import VFLabel.utils.transforms
 
 import VFLabel.gui.drawSegmentationWidget
@@ -72,10 +76,22 @@ class PointClickView(QWidget):
 
         qvideo: List[QImage] = VFLabel.utils.transforms.vid_2_QImage(video)
         # TODO: REMOVE IN THE FINAL FRAMEWORK
-        qvideo = qvideo[self.cycle_start : self.cycle_end]
+        left_video = qvideo[self.cycle_start : self.cycle_end]
 
-        self.point_clicker_view = VFLabel.gui.pointClickWidget.PointClickWidget(
-            qvideo, grid_height=grid_height, grid_width=grid_width
+        self.point_clicker_widget = (
+            VFLabel.gui.cotrackerPointClickWidget.CotrackerPointClickWidget(
+                left_video, grid_height=grid_height, grid_width=grid_width
+            )
+        )
+
+        self.cotracker_widget = VFLabel.gui.labeledPointWidget.LabeledPointWidget(
+            qvideo, grid_width=grid_width, grid_height=grid_height
+        )
+
+        self.optimized_points_widget = (
+            VFLabel.gui.labeledPointWidget.LabeledPointWidget(
+                qvideo, grid_width=18, grid_height=18
+            )
         )
 
         self.video_player = VFLabel.gui.videoPlayerWidget.VideoPlayerWidget(
