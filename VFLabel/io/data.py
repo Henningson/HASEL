@@ -4,8 +4,10 @@ import scipy
 import numpy as np
 import json
 import re
+import VFLabel.cv
 
 from typing import List
+from tqdm import tqdm
 
 
 def create_image_data(image_dir, video_file):
@@ -228,6 +230,27 @@ def labels_to_numpy_array(
             base[frame, y_id, x_id] = label
 
     return base
+
+
+def write_points_to_json(path: str, points: np.array, cycle_start: int = 0) -> None:
+    video_dict = {}
+    for frame_index, per_frame_points in enumerate(points):
+        point_list = []
+        point_coordinates = VFLabel.cv.get_points_from_tensor(per_frame_points)
+        point_ids = VFLabel.cv.get_point_indices_from_tensor(per_frame_points)
+
+        for point, id in zip(point_coordinates, point_ids):
+            point_dict = {
+                "x_pos": point[0].item(),
+                "y_pos": point[1].item(),
+                "x_id": id[1].item(),
+                "y_id": id[0].item(),
+            }
+            point_list.append(point_dict)
+
+        video_dict[f"Frame{cycle_start + frame_index}"] = point_list
+
+    write_json(path, video_dict)
 
 
 def write_json(filepath: str, dict: dict) -> None:

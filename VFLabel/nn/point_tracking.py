@@ -13,6 +13,7 @@ def track_points_windowed(
     stride: int = 25,
     device="cuda",
 ) -> np.array:
+    video = torch.from_numpy(video).to(device)
     query_points = torch.from_numpy(query_points).float().to(device)
 
     # Run Offline CoTracker:

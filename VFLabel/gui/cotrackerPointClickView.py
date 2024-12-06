@@ -16,6 +16,8 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 
+from PyQt5.QtCore import pyqtSignal
+
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QPixmap, QImage, QCursor
 import os
 
@@ -55,6 +57,8 @@ from typing import List
 
 
 class CotrackerPointClickView(QWidget):
+    points_tracked = pyqtSignal()
+
     def __init__(
         self,
         grid_height: int,
