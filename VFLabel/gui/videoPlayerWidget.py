@@ -13,6 +13,9 @@ from PyQt5.QtCore import QTimer
 
 
 class VideoPlayerWidget(QWidget):
+
+    signal_current_frame = QtCore.pyqtSignal(int)
+
     def __init__(self, video_length: int = 0, timer_interval: int = 25, parent=None):
         super(VideoPlayerWidget, self).__init__(parent)
 
@@ -93,9 +96,11 @@ class VideoPlayerWidget(QWidget):
 
     def update_slider(self):
         self.slider.setValue(self._current_frame)
+        self.signal_current_frame.emit(self._current_frame)
 
     def update_current_from_slider(self):
         self._current_frame = self.slider.value()
+        self.signal_current_frame.emit(self._current_frame)
 
     def get_video_length(self) -> int:
         return self._video_length

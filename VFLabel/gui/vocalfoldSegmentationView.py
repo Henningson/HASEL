@@ -1,5 +1,5 @@
 import sys
-import numpy as np
+import os
 
 from PyQt5.QtWidgets import (
     QApplication,
@@ -13,6 +13,7 @@ from PyQt5.QtCore import pyqtSignal, QEventLoop
 import VFLabel.gui
 import VFLabel.gui.glottisSegmentationWidget
 import VFLabel.gui.progressStateWidget
+
 import VFLabel.gui.vocalfoldSegmentationWidget
 
 
@@ -33,12 +34,30 @@ class VocalfoldSegmentationView(QMainWindow):
         # Create a central widget and a layout
         central_widget = QWidget(self)
 
+        layout = QVBoxLayout(central_widget)
+
+        valid_extensions = (".mp4", ".avi")
+
+        # find video file
+        matching_files = [
+            os.path.join(self.project_path, f)
+            for f in os.listdir(self.project_path)
+            if f.endswith(valid_extensions)
+        ]
+
+        videodata = VFLabel.io.data.read_video(*matching_files)
+
+        # Set up the zoomable view
+        view = VFLabel.gui.VocalfoldSegmentationWidget(self.project_path, videodata)
+        # self.showFullScreen()
+        layout.addWidget(view)
+
         # Set up the main window
         self.setCentralWidget(central_widget)
         self.setWindowTitle("Vocalfold Segmentation Designer")
-        self.setGeometry(100, 100, 800, 600)
-
+        self.setStyleSheet("background-color:white")
         # Show the window
+        self.showMaximized()
         self.show()
 
     def update_progress(self, progress) -> None:

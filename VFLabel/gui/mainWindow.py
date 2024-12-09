@@ -67,7 +67,6 @@ class MainWindow(QWidget):
 
         # create progress text bars
         self.read_write_progress_state()
-        # TODO: wenn geöffnet wird, text anders initialisieren
 
         # centralize text of progress text bars
         self.centralize_text(self.progress_gl_seg)
@@ -152,7 +151,7 @@ class MainWindow(QWidget):
             self.progress_pt_label.setFixedSize(200, 30)
             self.color_progress_state(self.progress_pt_label, file["progress_pt_label"])
 
-    def color_progress_state(self, state_variable, state):
+    def color_progress_state(self, state_variable, state: str):
         if state == "finished":
             state_variable.setStyleSheet("background-color: rgb(144, 238, 144);")
         elif state == "in progress":
@@ -162,7 +161,7 @@ class MainWindow(QWidget):
         else:
             pass
 
-    def save_new_progress_state(self, variable, new_state) -> None:
+    def save_new_progress_state(self, variable: str, new_state: str) -> None:
 
         with open(self.progress_state_path, "r+") as prgrss_file:
             file = json.load(prgrss_file)
@@ -196,7 +195,7 @@ class MainWindow(QWidget):
         self.color_progress_state(self.progress_gl_seg, self.progress_state_gl_seg)
         # TODO add background color according to state
 
-    def update_signal_progress_gl_seg(self, progress) -> None:
+    def update_signal_progress_gl_seg(self, progress: str) -> None:
         self.progress_state_gl_seg = progress
 
     def open_vf_segmentation(self) -> None:
@@ -221,9 +220,7 @@ class MainWindow(QWidget):
         self.centralize_text(self.progress_vf_seg)
         self.color_progress_state(self.progress_vf_seg, self.progress_state_vf_seg)
 
-        # TODO add background color according to state
-
-    def update_signal_progress_vf_seg(self, progress) -> None:
+    def update_signal_progress_vf_seg(self, progress: str) -> None:
         self.progress_state_vf_seg = progress
 
     def open_pt_labeling(self) -> None:
@@ -248,9 +245,7 @@ class MainWindow(QWidget):
         self.centralize_text(self.progress_pt_label)
         self.color_progress_state(self.progress_pt_label, self.progress_state_pt_label)
 
-        # TODO add background color according to state
-
-    def update_signal_progress_pt_labeling(self, progress) -> None:
+    def update_signal_progress_pt_labeling(self, progress: str) -> None:
         self.progress_state_pt_label = progress
 
     def centralize_text(self, widget) -> None:
