@@ -49,7 +49,6 @@ class VocalfoldSegmentationView(QMainWindow):
 
         # Set up the zoomable view
         view = VFLabel.gui.VocalfoldSegmentationWidget(self.project_path, videodata)
-        # self.showFullScreen()
         layout.addWidget(view)
 
         # Set up the main window
@@ -57,26 +56,25 @@ class VocalfoldSegmentationView(QMainWindow):
         self.setWindowTitle("Vocalfold Segmentation Designer")
         self.setStyleSheet("background-color:white")
         # Show the window
-        self.showMaximized()
         self.show()
 
     def update_progress(self, progress) -> None:
         self.progress = progress
 
     def closeEvent(self, event) -> None:
-        # opens window which asks for current state of this task
+        # open window which asks for current state of this task
         self.progress_window = VFLabel.gui.progressStateWidget.ProgressStateWidget()
 
         # connect signal which updates progress state
         self.progress_window.progress_signal.connect(self.update_progress)
 
-        # waits for progress_window to close
+        # wait for progress_window to close
         loop = QEventLoop()
         self.progress_window.destroyed.connect(loop.quit)
         loop.exec_()
 
-        # sends signal
+        # send signal
         self.progress_signal.emit(self.progress)
 
-        # closes this window
+        # close this window
         self.deleteLater()

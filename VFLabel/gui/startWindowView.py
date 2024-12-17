@@ -196,11 +196,8 @@ class StartWindowView(QWidget):
         os.makedirs(os.path.join(project_path, "vocalfold_segmentation"), exist_ok=True)
 
         # save video
-        if not os.path.exists(project_path) and not os.path.samefile(
-            video_path, project_path
-        ):
+        if not os.path.samefile(video_path, project_path):
             shutil.copy(video_path, project_path)
-
         # divide video into frames and save frames
         self.video_into_frames(video_path, project_path, images_folder)
 
@@ -212,6 +209,7 @@ class StartWindowView(QWidget):
         json_path_computed_laserpts = os.path.join(
             project_path, "computed_laserpoints.json"
         )
+        json_path_vf_points = os.path.join(project_path, "vocalfold_points.json")
 
         with open(json_path_label_cycles, "w") as f:
             pass
@@ -220,6 +218,8 @@ class StartWindowView(QWidget):
             pass
 
         with open(json_path_computed_laserpts, "w") as f:
+            pass
+        with open(json_path_vf_points, "w") as f:
             pass
 
         # copy json file

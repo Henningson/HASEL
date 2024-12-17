@@ -13,6 +13,7 @@ import numpy as np
 
 class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
     transform_updated = pyqtSignal()
+    signal_current_image = pyqtSignal(int)
 
     def __init__(self, image: QImage, polygon_points: List[QPointF], parent=None):
         super(TransformSegmentationWidget, self).__init__(parent)
@@ -81,6 +82,14 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
     def get_transform(self) -> List[float]:
         return self.x_translation, self.y_translation, self.scale, self.rotation_angle
 
+    def set_transform(
+        self, x_translation: int, y_translation: int, scale: int, rotation_angle: int
+    ):
+        self.x_translation = x_translation
+        self.y_translation = y_translation
+        self.scale = scale
+        self.rotation_angle = rotation_angle
+
     def downscale(self):
         self.scale -= 0.01
         self.redraw()
@@ -130,6 +139,7 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self._polygon_pointer.setPos(self.x_translation, self.y_translation)
 
         self.transform_updated.emit()
+        self.signal_current_image.emit(self.current_image_number)
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Space:
@@ -161,3 +171,6 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self._polygon_pointer = self.scene().addPolygon(
             polygon, self._polygonpen, self._polygonbrush
         )
+
+    def update_signal_current_move_window_frame_number(self, current_frame):
+        self.current_image_number = current_frame

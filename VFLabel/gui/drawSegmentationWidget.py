@@ -35,6 +35,10 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
     def getPolygonPoints(self) -> List[QPointF]:
         return self._polygon_points
 
+    def setPolygonPoints(self, polygon_points: List[QPointF]):
+        self._polygon_points = polygon_points
+        self.add_polygon(QPolygonF(polygon_points))
+
     def wheelEvent(self, event) -> None:
         mouse = event.angleDelta().y() / 120
 

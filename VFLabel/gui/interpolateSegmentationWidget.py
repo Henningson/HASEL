@@ -64,6 +64,9 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         menu.exec_(event.globalPos())
 
     def generate_segmentation_for_frame(self, index: int) -> np.array:
+        if not self._polygon_pointer:
+            return np.array([-1])
+
         self.fit_view()
 
         # Make background black
@@ -91,6 +94,50 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         lerped_y_trans = transforms.lerp(0.0, self.y_translation, interpolation_factor)
         lerped_rot = transforms.lerp(0.0, self.rotation_angle, interpolation_factor)
 
+        if index == self.marks[-1]:
+            arg_smaller = np.where(self.marks < index, self.marks, -10)
+            border_frame_bottom = sorted(
+                np.intersect1d(arg_smaller, list(self.dict_transform.keys())),
+                key=lambda x: int(x),
+            )[-1].astype(int)
+            border_frame_top = self.marks[-1].astype(int)
+        else:
+            arg_smaller = np.where(self.marks <= index, self.marks, -10)
+            border_frame_bottom = sorted(
+                np.intersect1d(arg_smaller, list(self.dict_transform.keys())),
+                key=lambda x: int(x),
+            )[-1].astype(int)
+            arg_bigger = np.where(self.marks > index, self.marks, -10)
+            border_frame_top = sorted(
+                np.intersect1d(arg_bigger, list(self.dict_transform.keys())),
+                key=lambda x: int(x),
+            )[0].astype(int)
+
+        interpolation_factor = (index - border_frame_bottom) / (
+            border_frame_top - border_frame_bottom
+        )
+
+        lerped_x_trans = transforms.lerp(
+            self.dict_transform[f"{border_frame_bottom}"][0],
+            self.dict_transform[f"{border_frame_top}"][0],
+            interpolation_factor,
+        )
+        lerped_y_trans = transforms.lerp(
+            self.dict_transform[f"{border_frame_bottom}"][1],
+            self.dict_transform[f"{border_frame_top}"][1],
+            interpolation_factor,
+        )
+        lerped_scale = transforms.lerp(
+            self.dict_transform[f"{border_frame_bottom}"][2],
+            self.dict_transform[f"{border_frame_top}"][2],
+            interpolation_factor,
+        )
+        lerped_rot = transforms.lerp(
+            self.dict_transform[f"{border_frame_bottom}"][3],
+            self.dict_transform[f"{border_frame_top}"][3],
+            interpolation_factor,
+        )
+
         self._polygon_pointer.setScale(lerped_scale)
         self._polygon_pointer.setRotation(lerped_rot)
         self._polygon_pointer.setPos(lerped_x_trans, lerped_y_trans)
@@ -112,7 +159,7 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self.y_translation = y_trans
         self.scale = scale
         self.rotation_angle = rot
-        self.redraw()
+        self.redraw_from_dictionary()
 
     def redraw(self) -> None:
         self.set_image(self.frames[self._current_frame])
@@ -132,6 +179,96 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         lerped_y_trans = transforms.lerp(0.0, self.y_translation, interpolation_factor)
         lerped_rot = transforms.lerp(0.0, self.rotation_angle, interpolation_factor)
 
+        self._polygon_pointer.setScale(lerped_scale)
+        self._polygon_pointer.setRotation(lerped_rot)
+        self._polygon_pointer.setPos(lerped_x_trans, lerped_y_trans)
+
+    def redraw_from_dictionary(self) -> None:
+        self.set_image(self.frames[self._current_frame])
+
+        if not self._polygon_pointer:
+            return
+
+        self._polygon_pointer.setZValue(1.0)
+
+        self._polygon_pointer.setTransformOriginPoint(
+            self._polygon_pointer.boundingRect().center()
+        )
+
+        # calculate upper and lower limit values for interpolation factor
+        if self._current_frame == self.marks[-1]:
+            # for the last frame
+            # find limit values that are smaller than current
+            values_smaller = np.where(self.marks < self._current_frame, self.marks, -10)
+
+            # check which values have already initialized interpolation values and choose closest to current
+            smaller_values_available = np.intersect1d(
+                values_smaller, list(self.dict_transform.keys())
+            )
+            border_frame_bottom = sorted(
+                smaller_values_available,
+                key=lambda x: int(x),
+            )[-1].astype(int)
+
+            border_frame_top = self.marks[-1].astype(int)
+        else:
+            # for all other frames
+            # find limit values that are smaller than current / same size
+            values_smaller = np.where(
+                self.marks <= self._current_frame, self.marks, -10
+            )
+
+            # check which values have already initialized interpolation values and choose closest to current
+            smaller_values_available = np.intersect1d(
+                values_smaller, list(self.dict_transform.keys())
+            )
+            border_frame_bottom = sorted(
+                smaller_values_available,
+                key=lambda x: int(x),
+            )[-1].astype(int)
+
+            # find limit values that are bigger than current
+            arg_bigger = np.where(self.marks > self._current_frame, self.marks, -10)
+
+            # check which values have already initialized interpolation factors and choose closest to current
+            smaller_values_available = np.intersect1d(
+                arg_bigger, list(self.dict_transform.keys())
+            )
+            border_frame_top = sorted(
+                smaller_values_available,
+                key=lambda x: int(x),
+            )[
+                0
+            ].astype(int)
+
+        # calculate interpolation factor
+        interpolation_factor = (self._current_frame - border_frame_bottom) / (
+            border_frame_top - border_frame_bottom
+        )
+
+        # calculate interpolated values with interpolation factor
+        lerped_x_trans = transforms.lerp(
+            self.dict_transform[f"{border_frame_bottom}"][0],
+            self.dict_transform[f"{border_frame_top}"][0],
+            interpolation_factor,
+        )
+        lerped_y_trans = transforms.lerp(
+            self.dict_transform[f"{border_frame_bottom}"][1],
+            self.dict_transform[f"{border_frame_top}"][1],
+            interpolation_factor,
+        )
+        lerped_scale = transforms.lerp(
+            self.dict_transform[f"{border_frame_bottom}"][2],
+            self.dict_transform[f"{border_frame_top}"][2],
+            interpolation_factor,
+        )
+        lerped_rot = transforms.lerp(
+            self.dict_transform[f"{border_frame_bottom}"][3],
+            self.dict_transform[f"{border_frame_top}"][3],
+            interpolation_factor,
+        )
+
+        # set the interpolated values
         self._polygon_pointer.setScale(lerped_scale)
         self._polygon_pointer.setRotation(lerped_rot)
         self._polygon_pointer.setPos(lerped_x_trans, lerped_y_trans)
@@ -169,11 +306,18 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
 
     def change_frame(self, frame: int) -> None:
         self._current_frame = frame
-        self.redraw()
+        self.redraw_from_dictionary()
 
     def next_frame(self) -> None:
         if self._current_frame == self._num_frames - 1:
             return
 
         self._current_frame += 1
-        self.redraw()
+        self.redraw_from_dictionary()
+
+    def update_signal_dictionary_update(self, dictionary):
+        self.dict_transform = dictionary
+        print(self.dict_transform)
+
+    def update_signal_current_marks(self, marks):
+        self.marks = marks

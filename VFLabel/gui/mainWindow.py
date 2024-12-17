@@ -81,7 +81,7 @@ class MainWindow(QWidget):
         num_pt_label = QLabel("3.")
         num_pt_label.setFixedSize(200, 30)
 
-        # centralize text of progress text bars
+        # centralize text of progress num bars
         num_gl_seg.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         num_vf_seg.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
         num_pt_label.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
