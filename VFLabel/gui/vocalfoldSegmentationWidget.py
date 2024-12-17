@@ -44,7 +44,6 @@ class VocalfoldSegmentationWidget(QWidget):
     signal_move_window_frame_number = QtCore.pyqtSignal(int)
     signal_dictionary = QtCore.pyqtSignal(object)
     signal_marks_to_interpolate = QtCore.pyqtSignal(object)
-    signal = QtCore.pyqtSignal()
 
     def __init__(self, project_path: str, video: np.array, parent=None):
         super(VocalfoldSegmentationWidget, self).__init__(parent)
@@ -231,7 +230,6 @@ class VocalfoldSegmentationWidget(QWidget):
             pixmap.save(path)
 
         self.upload_existing_data()
-        self.signal.emit()
 
     def upload_existing_data(self):
         vf_path = os.path.join(self.project_path, "vocalfold_points.json")
