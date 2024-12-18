@@ -207,9 +207,6 @@ def compute_subpixel_points(
             if label != "I":
                 continue
 
-            if points_index == 4 and frame_index == 37:
-                a = 1
-
             prev_v_index = compute_string.rfind("V", 0, frame_index)
             next_v_index = compute_string.find("V", frame_index + 1)
 
@@ -217,13 +214,8 @@ def compute_subpixel_points(
             point_a = optimized_points[points_index, prev_v_index]
             point_b = optimized_points[points_index, next_v_index]
             lerped_point = VFLabel.utils.transforms.lerp(point_a, point_b, lerp_alpha)
-            # dist_ab = ((point_a - point_b) ** 2).sum().sqrt().item()
 
-            # if dist_ab > 0.5:
-            #    a = 1
             optimized_points[points_index, frame_index] = lerped_point
-
-        a = 1
 
     return optimized_points, optimized_points_on_crops
 

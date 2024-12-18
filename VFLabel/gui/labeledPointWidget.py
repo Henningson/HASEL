@@ -50,10 +50,6 @@ class LabeledPointWidget(videoViewWidget.VideoViewWidget):
     def keyPressEvent(self, event) -> None:
         self.change_frame(self._current_frame + 1)
 
-    def mousePressEvent(self, event) -> None:
-        global_pos = event.pos()
-        pos = self.mapToScene(global_pos)
-
     def contextMenuEvent(self, event) -> None:
         """
         Opens a context menu with options for zooming in and out.
@@ -96,9 +92,12 @@ class LabeledPointWidget(videoViewWidget.VideoViewWidget):
             )
             self._point_items.append(ellipse_item)
 
-    def add_points_and_classes(self, points: np.array, labels: np.array) -> None:
+    def add_points_labels_and_ids(
+        self, points: np.array, labels: np.array, ids: np.array
+    ) -> None:
         self.point_positions = points
         self.point_labels = labels
+        self.point_ids = ids
         self.redraw()
 
     def get_point_indices(self, frame_index: int) -> np.array:

@@ -38,7 +38,7 @@ def track_points_windowed(
 
         video_tensor = video[start_idx:end_idx]
         video_tensor = (
-            torch.from_numpy(video_tensor).permute(0, 3, 1, 2)[None].float().to(device)
+            video_tensor.permute(0, 3, 1, 2)[None].float().to(device)
         )  # B T C H W
         pred_tracks, pred_visibility = model(
             video_tensor,
@@ -47,9 +47,9 @@ def track_points_windowed(
         )
 
         # Add the values to the final tensor and update the counts
-        final_points[start_idx:end_idx] += pred_tracks.squeeze().detach().cpu().numpy()
+        final_points[start_idx:end_idx] += pred_tracks.squeeze(0).detach().cpu().numpy()
         final_visibility[start_idx:end_idx] += (
-            pred_visibility.squeeze().detach().cpu().numpy()
+            pred_visibility.squeeze(0).detach().cpu().numpy()
         )
         counts[start_idx:end_idx] += 1
 
@@ -67,7 +67,7 @@ def track_points_windowed(
 
     # Average the overlapping regions
     final_points /= counts
-    final_visibility = final_visibility / counts[:, :, 0]
+    final_visibility = (final_visibility / counts[:, :, 0] > 0.5) * 1.0
 
     return final_points, final_visibility
 

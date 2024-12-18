@@ -24,7 +24,7 @@ class VideoViewWidget(zoomableViewWidget.ZoomableViewWidget):
             self.set_image(self.images[self._current_frame])
 
     def change_frame(self, frame: int) -> None:
-        if frame < 0 or frame >= self.num_frames:
+        if frame < 0 or frame >= self._num_frames:
             return
 
         self._current_frame = frame
