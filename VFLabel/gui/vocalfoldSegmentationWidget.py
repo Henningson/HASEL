@@ -1,20 +1,13 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
-from PyQt5 import QtCore
-import numpy as np
-
-from PyQt5.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QPushButton,
-    QLabel,
-)
-
-from PyQt5.QtGui import (
-    QPolygonF,
-)
 import os
 import json
+import numpy as np
 from typing import List
+
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QApplication
+from PyQt5 import QtCore
+from PyQt5.QtCore import QThread, QObject, QEventLoop, pyqtSlot
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
+from PyQt5.QtGui import QPolygonF
 
 import VFLabel.utils.transforms
 import VFLabel.gui.drawSegmentationWidget
@@ -22,8 +15,6 @@ import VFLabel.gui.transformSegmentationWidget
 import VFLabel.gui.interpolateSegmentationWidget
 import VFLabel.gui.videoPlayerWidget
 import VFLabel.gui.vocalfoldSegmentationSliderWidget
-
-import VFLabel.utils.transforms
 
 ############################### ^
 #         #         #         # |
@@ -217,6 +208,9 @@ class VocalfoldSegmentationWidget(QWidget):
                 self.interpolate_view.redraw_from_dictionary()
 
     def save(self) -> None:
+        self.setEnabled(False)
+        QApplication.processEvents()
+        print("hallo")
         save_folder = os.path.join(self.project_path, "vocalfold_segmentation")
         os.makedirs(save_folder, exist_ok=True)
 
@@ -230,6 +224,7 @@ class VocalfoldSegmentationWidget(QWidget):
             pixmap.save(path)
 
         self.upload_existing_data()
+        self.setEnabled(True)
 
     def upload_existing_data(self):
         vf_path = os.path.join(self.project_path, "vocalfold_points.json")
