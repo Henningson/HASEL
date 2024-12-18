@@ -7,9 +7,6 @@ This tool enables to robustly and rapidly generate data of:
 * Semi-automatic and Deep Learning enhanced generation of laserpoint data.
 
 
-![GlotSegmentation](https://github.com/user-attachments/assets/bc77784e-d4ce-4dd8-a725-cfed5569b6bf)
-![VFSegmentation](https://github.com/user-attachments/assets/ccc7a8ec-75cc-4073-afe1-7af80db5f443)
-![PointTracking](https://github.com/user-attachments/assets/fccfdc43-069c-4751-92b8-9145ad257ee0)
 
 
 
@@ -100,3 +97,10 @@ There, you will fine-tune the decoder of common segmentation model architectures
 
 
 ## Data preparation
+
+
+# Examples
+
+![GlotSegmentation](https://github.com/user-attachments/assets/bc77784e-d4ce-4dd8-a725-cfed5569b6bf)
+![VFSegmentation](https://github.com/user-attachments/assets/ccc7a8ec-75cc-4073-afe1-7af80db5f443)
+![PointTracking](https://github.com/user-attachments/assets/fccfdc43-069c-4751-92b8-9145ad257ee0)
