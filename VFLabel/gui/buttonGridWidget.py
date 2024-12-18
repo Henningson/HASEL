@@ -10,7 +10,10 @@ class ButtonGrid(QWidget):
     def __init__(self, grid_height: int = 18, grid_width: int = 18, parent=None):
         super(ButtonGrid, self).__init__()
 
+        button_size: int = 15
+
         self.setLayout(QGridLayout())
+        self.setFixedSize(QSize(button_size * grid_width, button_size * grid_height))
         self.layout().setSpacing(0)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.buttons = []
@@ -18,7 +21,7 @@ class ButtonGrid(QWidget):
         for y in range(grid_height):
             y_range = []
             for x in range(grid_width):
-                button = GridButton(x, y)
+                button = GridButton(x, y, button_size=button_size)
                 button.id_signal.connect(self.clicked_button)
                 self.layout().addWidget(button, y, x, 1, 1)
                 y_range.append(button)
@@ -40,13 +43,13 @@ class ButtonGrid(QWidget):
 class GridButton(QPushButton):
     id_signal = pyqtSignal(int, int)
 
-    def __init__(self, x, y, parent=None):
+    def __init__(self, x: int, y: int, button_size: int = 25, parent=None):
         super(GridButton, self).__init__("")
         self.x = x
         self.y = y
         self.clicked.connect(self.on_clicked)
         self.setContentsMargins(0, 0, 0, 0)
-        self.setFixedSize(QSize(25, 25))
+        self.setFixedSize(QSize(button_size, button_size))
         self.setStyleSheet("border: 1px solid #333333;")
 
     def setActivated(self):
