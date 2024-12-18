@@ -79,6 +79,10 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         menu.addAction("Reset View", self.zoomReset)
         menu.exec_(event.globalPos())
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.fit_view()
+
     def toggle_draw_mode(self) -> None:
         if self._draw_mode == enums.DRAW_MODE.OFF:
             self._draw_mode = enums.DRAW_MODE.ON
@@ -105,6 +109,7 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self.scene().removeItem(point_pointer)
 
         if len(self._polygon_points) > 2:
+            print("hallo")
             self.add_polygon(QPolygonF(self._polygon_points))
         else:
             self.remove_polygon()

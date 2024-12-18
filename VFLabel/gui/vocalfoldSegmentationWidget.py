@@ -212,11 +212,20 @@ class VocalfoldSegmentationWidget(QWidget):
         QApplication.processEvents()
         save_folder = os.path.join(self.project_path, "vocalfold_segmentation")
         os.makedirs(save_folder, exist_ok=True)
+        if (
+            not self.draw_view.getPolygonPoints()
+            or len(self.draw_view.getPolygonPoints()) < 3
+        ):
+            print("Not enough points to complete saving. At least 3 are necessary.")
+            self.setEnabled(True)
+            return
 
         for i in range(self.video_player.get_video_length()):
             pixmap = self.interpolate_view.generate_segmentation_for_frame(i)
 
             if pixmap == np.array([-1]):
+                print("A polygon of at least 3 points is needed to save")
+                self.setEnabled(True)
                 return
 
             path = os.path.join(save_folder, f"{i:05d}.png")
@@ -299,7 +308,7 @@ class VocalfoldSegmentationWidget(QWidget):
 
         x, y, s, r = self.dict_transform[f"{position}"]
         self.move_view.set_transform(x, y, s, r)
-        if not self.draw_view.getPolygonPoints() is None:
+        if self.draw_view.getPolygonPoints():
             # if a polygon already exists --> draw polygon in move view
             self.move_view.add_polygon(self.polygon)
             self.move_view.redraw()

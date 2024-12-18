@@ -164,6 +164,10 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         elif event.key() == QtCore.Qt.Key_D:
             self.move_right()
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.fit_view()
+
     def add_polygon(self, polygon: QPolygonF) -> None:
         if self._polygon_pointer:
             self.scene().removeItem(self._polygon_pointer)
