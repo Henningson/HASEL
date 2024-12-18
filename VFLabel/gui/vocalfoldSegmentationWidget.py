@@ -210,7 +210,6 @@ class VocalfoldSegmentationWidget(QWidget):
     def save(self) -> None:
         self.setEnabled(False)
         QApplication.processEvents()
-        print("hallo")
         save_folder = os.path.join(self.project_path, "vocalfold_segmentation")
         os.makedirs(save_folder, exist_ok=True)
 
@@ -224,6 +223,7 @@ class VocalfoldSegmentationWidget(QWidget):
             pixmap.save(path)
 
         self.upload_existing_data()
+        self.interpolate_view.change_frame(self.video_player.slider.value())
         self.setEnabled(True)
 
     def upload_existing_data(self):

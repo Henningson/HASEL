@@ -317,7 +317,6 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
 
     def update_signal_dictionary_update(self, dictionary):
         self.dict_transform = dictionary
-        print(self.dict_transform)
 
     def update_signal_current_marks(self, marks):
         self.marks = marks
