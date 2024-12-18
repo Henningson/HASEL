@@ -267,12 +267,12 @@ class VocalfoldSegmentationWidget(QWidget):
         value = self.video_player.slider.value()
         self.signal_remove_mark.emit(value)
         if (
-            f"{value}" in self.dict_transform.keys()
-            and value != "0"
-            and value != f"{len(self.qvideo) - 1}"
+            str(value) in self.dict_transform.keys()
+            and value != 0
+            and value != len(self.qvideo) - 1
         ):
             # not first or last frame
-            self.dict_transform.pop(value)
+            self.dict_transform.pop(str(value))
             self.signal_dictionary.emit(self.dict_transform)
 
     def update_signal_btn_pressed_position(self, position):
