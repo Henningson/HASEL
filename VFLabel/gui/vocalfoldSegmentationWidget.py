@@ -238,7 +238,7 @@ class VocalfoldSegmentationWidget(QWidget):
     def upload_existing_data(self):
         vf_path = os.path.join(self.project_path, "vocalfold_points.json")
 
-        with open(vf_path, "r+") as f:
+        with open(vf_path, "w") as f:
             file = {}
             file["dict_transform"] = self.dict_transform
             file["marks_list"] = self.marks_list.tolist()

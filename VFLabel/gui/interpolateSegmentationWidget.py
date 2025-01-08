@@ -311,6 +311,7 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
     def change_frame(self, frame: int) -> None:
         self._current_frame = frame
         self.redraw_from_dictionary()
+        self.fit_view()
 
     def next_frame(self) -> None:
         if self._current_frame == self._num_frames - 1:
