@@ -11,25 +11,24 @@ from PyQt5.QtWidgets import (
     QFileDialog,
     QInputDialog,
     QLineEdit,
+    QMainWindow,
+    QMenu,
+    QAction,
 )
 from PyQt5.QtGui import QPixmap, QPainter, QFont
-from PyQt5.QtCore import QEventLoop
+from PyQt5.QtCore import QEventLoop, pyqtSignal
 
-import VFLabel.gui.newProjectWidget, VFLabel.gui.mainWindow
+import VFLabel.gui.newProjectWidget, VFLabel.gui.mainMenuView
 
 
 class StartWindowView(QWidget):
+    signal_open_main_menu = pyqtSignal(str)
 
-    def __init__(self):
+    def __init__(self, parent=None):
         super().__init__()
         self.init_window()
-        self.main_window = None
 
     def init_window(self):
-        # general setup of window
-        self.setGeometry(100, 100, 1000, 1000)
-        self.setWindowTitle("HASEL - Start menu")
-
         # create layout
         box_layout = QHBoxLayout()
 
@@ -159,15 +158,7 @@ class StartWindowView(QWidget):
                 self.open_main_window(folder_path)
 
     def open_main_window(self, project_path) -> None:
-        # TODO: vehindern, dass anderes neues/altes Project nach öffnen des windows einfach ausgewählt werden kann, da mainwindow dann abstürzt
-        self.main_window = VFLabel.gui.mainWindow.MainWindow(project_path)
-
-        # wait for main_window to be closed
-        self.setEnabled(False)
-        loop = QEventLoop()
-        self.main_window.destroyed.connect(loop.quit)
-        loop.exec_()
-        self.setEnabled(True)
+        self.signal_open_main_menu.emit(project_path)
 
     def create_folder_structure(self, project_name, video_path) -> str:
         current_dir = os.getcwd()
@@ -265,3 +256,9 @@ class StartWindowView(QWidget):
             frame_count += 1
 
         video.release()
+
+    def close_window(self):
+        pass
+
+    def save_current_state(self):
+        pass

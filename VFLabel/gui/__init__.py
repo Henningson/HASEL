@@ -16,6 +16,10 @@ from .selectCycleView import SelectCycleView
 from .startWindowView import StartWindowView
 from .newProjectWidget import NewProjectWidget
 from .mainWindow import MainWindow
+from .mainMenuView import MainMenuView
 
 from .vocalfoldSegmentationSliderWidget import VocalfoldSegmentationSliderWidget
 from .vocalfoldSegmentationView import VocalfoldSegmentationView
+from .glottisSegmentationView import GlottisSegmentationView
+from .pointLabelingView import PointLabelingView
+from .saveStateWidget import SaveStateWidget

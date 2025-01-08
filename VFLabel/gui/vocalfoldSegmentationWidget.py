@@ -110,12 +110,12 @@ class VocalfoldSegmentationWidget(QWidget):
         # definition of buttons
         add_btn = QPushButton("add mark")
         remove_btn = QPushButton("remove mark")
-        self.save_button = QPushButton("Save")
+        # self.save_button = QPushButton("Save")
 
         # adding functionality to buttons
         add_btn.clicked.connect(self.add_mark)
         remove_btn.clicked.connect(self.remove_mark)
-        self.save_button.clicked.connect(self.save)
+        # self.save_button.clicked.connect(self.save)
 
         # defining layout and layout positions
         seg_slider_layout = QHBoxLayout()
@@ -131,7 +131,7 @@ class VocalfoldSegmentationWidget(QWidget):
         top_widget.setLayout(horizontal_layout_top)
 
         horizontal_layout_bot.addWidget(self.video_player)
-        horizontal_layout_bot.addWidget(self.save_button)
+        # horizontal_layout_bot.addWidget(self.save_button)
         bot_widget.setLayout(horizontal_layout_bot)
 
         vertical_layout.addWidget(frame_label_widget)
@@ -287,6 +287,8 @@ class VocalfoldSegmentationWidget(QWidget):
     def update_signal_btn_pressed_position(self, position):
         self.video_player.slider.setValue(position)
         self.video_player.update_current_from_slider()
+        if position != 0:
+            self.update_signal_end_btn_pressed(position)
 
     def update_signal_begin_btn_pressed(self, position):
         self.video_player.slider.setValue(position)

@@ -109,7 +109,6 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self.scene().removeItem(point_pointer)
 
         if len(self._polygon_points) > 2:
-            print("hallo")
             self.add_polygon(QPolygonF(self._polygon_points))
         else:
             self.remove_polygon()
