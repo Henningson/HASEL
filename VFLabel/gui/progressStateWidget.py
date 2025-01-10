@@ -30,7 +30,7 @@ class ProgressStateWidget(QWidget):
         question_text.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 
         # create finish and toBeContinued btns
-        btn_finished = QPushButton("Yes, I am finished", self)
+        btn_finished = QPushButton("Yes, I finished", self)
         btn_finished.setToolTip("This <b>button</b> ...")
         btn_finished.setFixedSize(120, 40)
         btn_continue = QPushButton("Continue next time", self)

@@ -19,13 +19,14 @@ from PyQt5.QtGui import QPixmap, QPainter, QFont
 from PyQt5.QtCore import QEventLoop, pyqtSignal
 
 import VFLabel.gui.newProjectWidget, VFLabel.gui.mainMenuView
+import VFLabel.gui.baseWindowWidget as baseWindowWidget
 
 
-class StartWindowView(QWidget):
+class StartWindowView(baseWindowWidget.BaseWindowWidget):
     signal_open_main_menu = pyqtSignal(str)
 
     def __init__(self, parent=None):
-        super().__init__()
+        super().__init__(parent)
         self.init_window()
 
     def init_window(self):
@@ -256,9 +257,3 @@ class StartWindowView(QWidget):
             frame_count += 1
 
         video.release()
-
-    def close_window(self):
-        pass
-
-    def save_current_state(self):
-        pass

@@ -16,13 +16,13 @@ import VFLabel.gui
 import VFLabel.gui.glottisSegmentationWidget
 import VFLabel.gui.progressStateWidget
 import VFLabel.gui.vocalfoldSegmentationWidget
-
+import VFLabel.gui.baseWindowWidget as baseWindowWidget
 
 import VFLabel.io
 import VFLabel.utils.utils
 
 
-class GlottisSegmentationView(QWidget):
+class GlottisSegmentationView(baseWindowWidget.BaseWindowWidget):
 
     signal_open_main_menu = pyqtSignal(str)
 
@@ -32,13 +32,36 @@ class GlottisSegmentationView(QWidget):
         self.init_window()
 
     def init_window(self) -> None:
+        layout = QVBoxLayout()
 
+        valid_extensions = (".mp4", ".avi")
+
+        # find video file
+        matching_files = [
+            os.path.join(self.project_path, f)
+            for f in os.listdir(self.project_path)
+            if f.endswith(valid_extensions)
+        ]
+
+        videodata = VFLabel.io.data.read_video(*matching_files)
+        print("before")
+        # Set up the zoomable view
+        self.glottis_widget = (
+            VFLabel.gui.glottisSegmentationWidget.GlottisSegmentationWidget(
+                self.project_path, videodata
+            )
+        )
+        layout.addWidget(self.glottis_widget)
+
+        # Set up the main window
+        self.setLayout(layout)
+        # self.glottis_widget = VFLabel.gui.glottisSegmentationWidget.GlottisSegmentationWidget(self.project_path, video_np)
         # Show the window
         self.show()
 
     def save_current_state(self):
         print("save glottis segmentation")
-        # TODO implement
+        self.glottis_widget.save()
 
     def update_progress(self, progress) -> None:
         self.progress = progress

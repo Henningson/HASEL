@@ -16,13 +16,14 @@ import VFLabel.gui.glottisSegmentationWidget
 import VFLabel.gui.progressStateWidget
 
 import VFLabel.gui.vocalfoldSegmentationWidget
+import VFLabel.gui.baseWindowWidget as baseWindowWidget
 
 
 import VFLabel.io
 import VFLabel.utils.utils
 
 
-class VocalfoldSegmentationView(QWidget):
+class VocalfoldSegmentationView(baseWindowWidget.BaseWindowWidget):
 
     signal_open_main_menu = pyqtSignal(str)
 
@@ -46,7 +47,7 @@ class VocalfoldSegmentationView(QWidget):
         videodata = VFLabel.io.data.read_video(*matching_files)
 
         # Set up the zoomable view
-        self.view = VFLabel.gui.VocalfoldSegmentationWidget(
+        self.view = VFLabel.gui.vocalfoldSegmentationWidget.VocalfoldSegmentationWidget(
             self.project_path, videodata
         )
         layout.addWidget(self.view)

@@ -15,9 +15,10 @@ import VFLabel.gui as gui
 import VFLabel.gui.glottisSegmentationView as glottisSegmentationView
 import VFLabel.gui.pointLabelingView as pointLabelingView
 import VFLabel.gui.vocalfoldSegmentationView as vocalfoldSegmentationView
+import VFLabel.gui.baseWindowWidget as baseWindowWidget
 
 
-class MainMenuView(QWidget):
+class MainMenuView(baseWindowWidget.BaseWindowWidget):
 
     signal_open_vf_segm_window = pyqtSignal(str)
     signal_close_main_menu_window = pyqtSignal()
@@ -180,6 +181,3 @@ class MainMenuView(QWidget):
 
     def close_window(self):
         self.signal_close_main_menu_window.emit()
-
-    def save_current_state(self):
-        pass

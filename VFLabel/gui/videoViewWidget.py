@@ -33,3 +33,7 @@ class VideoViewWidget(zoomableViewWidget.ZoomableViewWidget):
     def add_video(self, video: List[QImage]) -> None:
         self.images = video
         self._num_frames = len(self.images)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.fit_view()

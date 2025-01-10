@@ -16,13 +16,14 @@ import VFLabel.gui
 import VFLabel.gui.glottisSegmentationWidget
 import VFLabel.gui.progressStateWidget
 import VFLabel.gui.vocalfoldSegmentationWidget
+import VFLabel.gui.baseWindowWidget as baseWindowWidget
 
 
 import VFLabel.io
 import VFLabel.utils.utils
 
 
-class PointLabelingView(QWidget):
+class PointLabelingView(baseWindowWidget.BaseWindowWidget):
 
     signal_open_main_menu = pyqtSignal(str)
 
@@ -41,7 +42,7 @@ class PointLabelingView(QWidget):
 
     def save_current_state(self):
         print("save point labeling")
-        # TODO implement
+        # self.view.save()
 
     def update_save_state(self, state) -> None:
         if state:
