@@ -27,7 +27,7 @@ import VFLabel.gui.interpolateSegmentationWidget
 import VFLabel.gui.videoPlayerWidget
 import VFLabel.gui.videoViewWidget
 import VFLabel.gui.zoomableViewWidget
-import VFLabel.gui.videoOverlayWidget
+import VFLabel.gui.videoOverlayWithGMWidget
 
 import VFLabel.utils.transforms
 import VFLabel.io.data
@@ -73,6 +73,7 @@ class GlottisSegmentationWidget(QWidget):
 
         qvideo_segmentations = None
         segmentations_with_alpha = None
+        glottal_midlines = None
         if os.listdir(self.glottis_path):
             self.segmentations = self.load_segmentations_from_folder(self.glottis_path)
             qvideo_segmentations = VFLabel.utils.transforms.vid_2_QImage(
@@ -86,12 +87,18 @@ class GlottisSegmentationWidget(QWidget):
                 segmentations_with_alpha
             )
 
+            glottal_midlines = VFLabel.io.dict_from_json(
+                os.path.join(self.project_path, "glottal_midlines.json")
+            )
+
         self.video_view = VFLabel.gui.videoViewWidget.VideoViewWidget(qvideo)
         self.segmentation_view = VFLabel.gui.videoViewWidget.VideoViewWidget(
             qvideo_segmentations if self.segmentations else None
         )
-        self.overlay_view = VFLabel.gui.videoOverlayWidget.VideoOverlayWidget(
-            qvideo, segmentations_with_alpha
+        self.overlay_view = (
+            VFLabel.gui.videoOverlayWithGMWidget.VideoOverlayGlottalMidlineWidget(
+                qvideo, segmentations_with_alpha, glottal_midlines
+            )
         )
 
         self.video_player = VFLabel.gui.videoPlayerWidget.VideoPlayerWidget(
@@ -173,10 +180,14 @@ class GlottisSegmentationWidget(QWidget):
             for image in normalized
         ]
         colored = np.array(colored)
+        segmentations_with_alpha = [
+            VFLabel.utils.utils.add_alpha_to_segmentations(seg) for seg in colored
+        ]
 
         colored = VFLabel.utils.transforms.vid_2_QImage(colored)
+        overlays = VFLabel.utils.transforms.vid_2_QImage(segmentations_with_alpha)
         self.segmentation_view.add_video(colored)
-        self.overlay_view.add_overlay(colored)
+        self.overlay_view.add_overlay(overlays)
 
         self.segmentation_view.redraw()
         self.overlay_view.redraw()
