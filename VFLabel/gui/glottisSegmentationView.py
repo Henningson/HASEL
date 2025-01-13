@@ -1,5 +1,7 @@
 import sys
 import numpy as np
+import json
+import os
 
 from PyQt5.QtWidgets import (
     QApplication,
@@ -14,50 +16,97 @@ import VFLabel.gui
 import VFLabel.gui.glottisSegmentationWidget
 import VFLabel.gui.progressStateWidget
 import VFLabel.gui.vocalfoldSegmentationWidget
-
+import VFLabel.gui.baseWindowWidget as baseWindowWidget
 
 import VFLabel.io
 import VFLabel.utils.utils
 
 
-class GlottisSegmentationView(QMainWindow):
+class GlottisSegmentationView(baseWindowWidget.BaseWindowWidget):
 
-    progress_signal = pyqtSignal(str)
+    signal_open_main_menu = pyqtSignal(str)
 
-    def __init__(self, project_path):
-        super().__init__()
+    def __init__(self, project_path, parent=None):
+        super().__init__(parent)
         self.project_path = project_path
         self.init_window()
 
     def init_window(self) -> None:
-        # Create a central widget and a layout
-        central_widget = QWidget(self)
+        layout = QVBoxLayout()
+
+        valid_extensions = (".mp4", ".avi")
+
+        # find video file
+        matching_files = [
+            os.path.join(self.project_path, f)
+            for f in os.listdir(self.project_path)
+            if f.endswith(valid_extensions)
+        ]
+
+        videodata = VFLabel.io.data.read_video(*matching_files)
+        print("before")
+        # Set up the zoomable view
+        self.glottis_widget = (
+            VFLabel.gui.glottisSegmentationWidget.GlottisSegmentationWidget(
+                self.project_path, videodata
+            )
+        )
+        layout.addWidget(self.glottis_widget)
 
         # Set up the main window
-        self.setCentralWidget(central_widget)
-        self.setWindowTitle("Glottis Segmentation Designer")
-        self.setGeometry(100, 100, 800, 600)
-
+        self.setLayout(layout)
+        # self.glottis_widget = VFLabel.gui.glottisSegmentationWidget.GlottisSegmentationWidget(self.project_path, video_np)
         # Show the window
         self.show()
+
+    def save_current_state(self):
+        print("save glottis segmentation")
+        self.glottis_widget.save()
 
     def update_progress(self, progress) -> None:
         self.progress = progress
 
-    def closeEvent(self, event) -> None:
-        # opens window which asks for current state of this task
-        self.progress_window = VFLabel.gui.progressStateWidget.ProgressStateWidget()
+    def update_save_state(self, state) -> None:
+        if state:
+            self.save_current_state()
+        else:
+            pass
+
+    def close_window(self) -> None:
+
+        # open window which asks if the data should be saved (again)
+        self.save_state_window = VFLabel.gui.saveStateWidget.SaveStateWidget(self)
+
+        # connect signal which updates save state
+        self.save_state_window.save_state_signal.connect(self.update_save_state)
+
+        # wait for save_state_window to close
+        loop = QEventLoop()
+        self.save_state_window.destroyed.connect(loop.quit)
+        loop.exec_()
+
+        # open window which asks for current state of this task
+        self.progress_window = VFLabel.gui.progressStateWidget.ProgressStateWidget(self)
 
         # connect signal which updates progress state
         self.progress_window.progress_signal.connect(self.update_progress)
 
-        # waits for progress_window to close
+        # wait for progress_window to close
         loop = QEventLoop()
         self.progress_window.destroyed.connect(loop.quit)
         loop.exec_()
 
-        # sends signal
-        self.progress_signal.emit(self.progress)
+        # save new progress state
+        self.progress_state_path = os.path.join(
+            self.project_path, "progress_status.json"
+        )
 
-        # closes this window
-        self.deleteLater()
+        with open(self.progress_state_path, "r+") as prgrss_file:
+            file = json.load(prgrss_file)
+            file["progress_gl_seg"] = self.progress
+            prgrss_file.seek(0)
+            prgrss_file.truncate()
+            json.dump(file, prgrss_file, indent=4)
+
+        # go back to main window
+        self.signal_open_main_menu.emit(self.project_path)

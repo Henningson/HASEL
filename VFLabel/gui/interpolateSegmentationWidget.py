@@ -296,6 +296,10 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         elif event.key() == QtCore.Qt.Key_D:
             self.move_right()
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.fit_view()
+
     def add_polygon(self, polygon: QPolygonF) -> None:
         if self._polygon_pointer:
             self.scene().removeItem(self._polygon_pointer)
@@ -307,6 +311,7 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
     def change_frame(self, frame: int) -> None:
         self._current_frame = frame
         self.redraw_from_dictionary()
+        self.fit_view()
 
     def next_frame(self) -> None:
         if self._current_frame == self._num_frames - 1:
