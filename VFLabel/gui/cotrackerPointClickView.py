@@ -132,6 +132,12 @@ class CotrackerPointClickView(QWidget):
         self.button_grid.buttonSignal.connect(self.point_clicker_view.set_laser_index)
         self.video_player.slider.valueChanged.connect(self.change_frame)
 
+        self.point_clicker_view.point_added.connect(
+            self.button_grid.activate_highlighted
+        )
+        self.point_clicker_view.point_removed.connect(self.button_grid.reset_button)
+        self.point_clicker_view.point_added.connect(self.trigger_next_laser_point)
+
     def save(self) -> None:
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Are you sure?")
@@ -201,3 +207,12 @@ class CotrackerPointClickView(QWidget):
     def increment_frame(self) -> None:
         self.video_player.increment_frame(force=True)
         self.point_clicker_view.change_frame(self.video_player.slider.value())
+
+    def trigger_next_laser_point(self) -> None:
+        x_laser = self.point_clicker_view.x_index
+        y_laser = self.point_clicker_view.y_index
+
+        if y_laser + 1 >= len(self.button_grid.buttons):
+            return
+
+        self.button_grid.getButton(x_laser, y_laser + 1).on_clicked(True)

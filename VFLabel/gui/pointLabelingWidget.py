@@ -210,6 +210,12 @@ class PointLabelingWidget(QWidget):
         self.button_disable_modes
         self.video_player.slider.valueChanged.connect(self.change_frame)
 
+        self.point_clicker_widget.point_added.connect(
+            self.button_grid.activate_highlighted
+        )
+        self.point_clicker_widget.point_removed.connect(self.button_grid.reset_button)
+        self.point_clicker_widget.point_added.connect(self.trigger_next_laser_point)
+
     def change_frame_label(self, value):
         if value < self.cycle_end:
             self.frame_label_left.setText(f"Frame {value}")
@@ -397,3 +403,12 @@ class PointLabelingWidget(QWidget):
     def increment_frame(self) -> None:
         self.video_player.increment_frame(force=True)
         self.change_frame()
+
+    def trigger_next_laser_point(self) -> None:
+        x_laser = self.point_clicker_widget.x_index
+        y_laser = self.point_clicker_widget.y_index
+
+        if y_laser + 1 >= len(self.button_grid.buttons):
+            return
+
+        self.button_grid.getButton(x_laser, y_laser + 1).on_clicked(True)

@@ -14,6 +14,7 @@ from typing import List
 
 class CotrackerPointClickWidget(videoViewWidget.VideoViewWidget):
     point_added = pyqtSignal()
+    point_removed = pyqtSignal(int, int)
 
     def __init__(
         self,
@@ -154,6 +155,8 @@ class CotrackerPointClickWidget(videoViewWidget.VideoViewWidget):
             x_id, y_id = clicked_item.getID()
             self.point_positions[self._current_frame, y_id, x_id] = np.nan
 
+            self.point_removed.emit(x_id, y_id)
+
     def add_point(self, point: QPointF) -> None:
         if self.y_index is None or self.x_index is None:
             msgWarning = QMessageBox()
@@ -175,6 +178,10 @@ class CotrackerPointClickWidget(videoViewWidget.VideoViewWidget):
             point.x(),
             point.y(),
         ]
+
+        for ellipse_item in self._point_items:
+            if ellipse_item.x_id == self.x_index and ellipse_item.y_id == self.y_index:
+                return
 
         # Transformed point, such that ellipse center is at mouse position
         ellipse_item = ellipseWithID.GraphicEllipseItemWithID(

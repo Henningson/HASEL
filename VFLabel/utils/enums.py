@@ -55,3 +55,9 @@ class NN_MODE(Enum):
     TRAIN = 0
     EVAL = 1
     TEST = 2
+
+
+class GRID_BUTTON_MODE(Enum):
+    UNSET = 0
+    HIGHLIGHTED = 1
+    SET = 2
