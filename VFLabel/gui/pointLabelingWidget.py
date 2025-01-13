@@ -147,14 +147,38 @@ class PointLabelingWidget(QWidget):
         horizontal_layout_bot = QHBoxLayout()
         bot_widget = QWidget()
 
+        frame_label_widget = QWidget()
+
+        # create number text bars
+        self.frame_label_left = QLabel("Frame 0")
+        self.frame_label_left.setFixedSize(110, 30)
+        self.frame_label_middle = QLabel(f"Frame 0")
+        self.frame_label_middle.setFixedSize(110, 30)
+        self.frame_label_right = QLabel(f"Frame 0")
+        self.frame_label_right.setFixedSize(110, 30)
+
+        # insert number text in window
+
         grid_button_widget = QWidget()
         grid_button_layout = QVBoxLayout()
+        grid_button_layout.addStretch(1)
         grid_button_layout.addWidget(self.button_grid)
+        grid_button_layout.addStretch(1)
         grid_button_layout.addWidget(self.button_draw)
         grid_button_layout.addWidget(self.button_remove)
         grid_button_layout.addWidget(self.button_disable_modes)
         grid_button_layout.addWidget(self.button_finished_clicking)
         grid_button_widget.setLayout(grid_button_layout)
+
+        boxh_frame_no_layout = QHBoxLayout()
+        boxh_frame_no_layout.addStretch(1)
+        boxh_frame_no_layout.addWidget(self.frame_label_left)
+        boxh_frame_no_layout.addStretch(1)
+        boxh_frame_no_layout.addWidget(self.frame_label_middle)
+        boxh_frame_no_layout.addStretch(1)
+        boxh_frame_no_layout.addWidget(self.frame_label_right)
+        boxh_frame_no_layout.addStretch(1)
+        frame_label_widget.setLayout(boxh_frame_no_layout)
 
         horizontal_layout_top.addWidget(grid_button_widget)
         horizontal_layout_top.addWidget(self.point_clicker_widget)
@@ -168,6 +192,7 @@ class PointLabelingWidget(QWidget):
         horizontal_layout_bot.addWidget(self.button_save)
         bot_widget.setLayout(horizontal_layout_bot)
 
+        vertical_layout.addWidget(frame_label_widget)
         vertical_layout.addWidget(top_widget)
         vertical_layout.addWidget(bot_widget)
         self.setLayout(vertical_layout)
@@ -184,6 +209,13 @@ class PointLabelingWidget(QWidget):
 
         self.button_disable_modes
         self.video_player.slider.valueChanged.connect(self.change_frame)
+
+    def change_frame_label(self, value):
+        if value < self.cycle_end:
+            self.frame_label_left.setText(f"Frame {value}")
+
+        self.frame_label_middle.setText(f"Frame {value}")
+        self.frame_label_right.setText(f"Frame {value}")
 
     def show_ok_dialog(self) -> None:
         dlg = QMessageBox(self)
@@ -231,7 +263,9 @@ class PointLabelingWidget(QWidget):
             self.show_ok_dialog()
 
     def track_points(self) -> None:
-        dict = io.dict_from_json("projects/test_project/clicked_laserpoints.json")
+        dict = io.dict_from_json(
+            os.path.join(self.path_project, "clicked_laserpoints.json")
+        )
         points, ids = io.point_dict_to_cotracker(dict)
 
         pred_points, pred_visibility = VFLabel.nn.point_tracking.track_points_windowed(
@@ -244,7 +278,9 @@ class PointLabelingWidget(QWidget):
         self.save_tracked_points(show_dialog=False)
 
     def optimize_points(self) -> None:
-        dict = io.dict_from_json("projects/test_project/predicted_laserpoints.json")
+        dict = io.dict_from_json(
+            os.path.join(self.path_project, "predicted_laserpoints.json")
+        )
         points, ids = io.point_dict_to_cotracker(dict)
 
         video = self.video if self.video.shape[-1] == 1 else self.video[:, :, :, :1]
@@ -300,8 +336,8 @@ class PointLabelingWidget(QWidget):
         if button == QMessageBox.No:
             return
 
-        path = os.path.join(self.project_path, "laserpoint_segmentations")
-        json_path = os.path.join(self.project_path, "clicked_laserpoints.json")
+        path = os.path.join(self.path_project, "laserpoint_segmentations")
+        json_path = os.path.join(self.path_project, "clicked_laserpoints.json")
 
         laserpoints = self.point_clicker_widget.point_positions
 
@@ -356,6 +392,7 @@ class PointLabelingWidget(QWidget):
         self.point_clicker_widget.change_frame(self.video_player.slider.value())
         self.cotracker_widget.change_frame(self.video_player.slider.value())
         self.optimized_points_widget.change_frame(self.video_player.slider.value())
+        self.change_frame_label(self.video_player.slider.value())
 
     def increment_frame(self) -> None:
         self.video_player.increment_frame(force=True)

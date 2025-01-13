@@ -10,7 +10,7 @@ class ButtonGrid(QWidget):
     def __init__(self, grid_height: int = 18, grid_width: int = 18, parent=None):
         super(ButtonGrid, self).__init__()
 
-        button_size: int = 15
+        button_size: int = 25
 
         self.setLayout(QGridLayout())
         self.setFixedSize(QSize(button_size * grid_width, button_size * grid_height))
@@ -18,9 +18,26 @@ class ButtonGrid(QWidget):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.buttons = []
 
-        for y in range(grid_height):
+        for y in range(grid_height + 1):
             y_range = []
-            for x in range(grid_width):
+            for x in range(grid_width + 1):
+                if y == grid_height:
+                    if x == grid_width:
+                        continue
+                    label = QPushButton(str(x + 1))
+                    label.setContentsMargins(0, 0, 0, 0)
+                    label.setFixedSize(QSize(button_size, button_size))
+                    label.setStyleSheet("border: 0px solid #FFF")
+                    self.layout().addWidget(label, y, x)
+                    continue
+                if x == grid_width:
+                    label = QPushButton(str(y + 1))
+                    label.setContentsMargins(0, 0, 0, 0)
+                    label.setFixedSize(QSize(button_size, button_size))
+                    label.setStyleSheet("border: 0px solid #FFF")
+                    self.layout().addWidget(label, y, x, 1, 1)
+                    continue
+
                 button = GridButton(x, y, button_size=button_size)
                 button.id_signal.connect(self.clicked_button)
                 self.layout().addWidget(button, y, x, 1, 1)

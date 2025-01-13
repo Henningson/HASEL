@@ -33,6 +33,42 @@ class PointLabelingView(baseWindowWidget.BaseWindowWidget):
         self.init_window()
 
     def init_window(self) -> None:
+        layout = QVBoxLayout()
+
+        valid_extensions = (".mp4", ".avi")
+
+        # find video file
+        matching_files = [
+            os.path.join(self.project_path, f)
+            for f in os.listdir(self.project_path)
+            if f.endswith(valid_extensions)
+        ]
+
+        videodata = VFLabel.io.data.read_video(*matching_files)
+        print("before")
+        path_grid_json = os.path.join(self.project_path, "progress_status.json")
+
+        with open(path_grid_json, "r+") as f:
+            file = json.load(f)
+            grid_width = int(file["grid_x"])
+            grid_height = int(file["grid_y"])
+
+        cycle_start = 0
+        cycle_end = 50
+        # Set up the zoomable view
+        self.view = VFLabel.gui.pointLabelingWidget.PointLabelingWidget(
+            grid_height,
+            grid_width,
+            cycle_start,
+            cycle_end,
+            videodata,
+            self.project_path,
+        )
+
+        layout.addWidget(self.view)
+
+        # Set up the main window
+        self.setLayout(layout)
 
         # Show the window
         self.show()
