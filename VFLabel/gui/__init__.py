@@ -24,3 +24,5 @@ from .glottisSegmentationView import GlottisSegmentationView
 from .pointLabelingView import PointLabelingView
 from .saveStateWidget import SaveStateWidget
 from .baseWindowWidget import BaseWindowWidget
+
+from .pointLabelingWidget import PointLabelingWidget
