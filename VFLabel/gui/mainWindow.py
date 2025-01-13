@@ -1,10 +1,14 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, QToolBar
+from PyQt5.QtWidgets import QMainWindow, QAction, QToolBar, QFileDialog
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
+from tqdm import tqdm
 
-
+import os
+import json
+import cv2
 import VFLabel.gui
+import VFLabel.cv
 import VFLabel.gui.newProjectWidget, VFLabel.gui.mainMenuView
 
 
@@ -43,6 +47,14 @@ class MainWindow(QMainWindow):
         # file submenu
         file_menu = self.menubar.addMenu("&File")
         file_menu.addAction("Save", self.save_current_state)
+        file_menu.addAction(
+            "Load Glottis Segmentation from Folder",
+            self.load_glottis_segmentation_folder,
+        )
+
+        file_menu.addAction(
+            "Load glottis segmentation from Video", self.load_glottis_segmentation_video
+        )
 
         # menu close button
         menu_close_window = QAction("Close current window", self)
@@ -163,9 +175,76 @@ class MainWindow(QMainWindow):
         # make it visible in main window
         self.setCentralWidget(self.pt_labeling_window)
 
-    def close_current_window(self):
+    def close_current_window(self) -> None:
         # called when "close current window" in menubar is triggered
         self.centralWidget().close_window()
 
-    def save_current_state(self):
+    def save_current_state(self) -> None:
         self.centralWidget().save_current_state()
+
+    def load_glottis_segmentation_folder(self) -> None:
+        dir_path = QFileDialog.getExistingDirectory(
+            caption="Folder containing the segmentation images"
+        )
+
+        segmentations = []
+        for image_file in sorted(os.listdir(dir_path)):
+            image_path = os.path.join(dir_path, image_file)
+            segmentation = cv2.imread(image_path, 0)
+            segmentations.append(segmentation)
+
+    def load_glottis_segmentation_video(self) -> None:
+        video_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Video of the glottis segmentation",
+            "Only video-files(*.mp4 *.avi)",
+        )
+
+        video = VFLabel.io.data.read_video(video_path)
+        self.generate_glottis_data(video)
+
+    def generate_glottis_data(self, segmentations) -> None:
+        midlines = [
+            VFLabel.cv.analysis.glottal_midline(image) for image in tqdm(segmentations)
+        ]
+
+        self.save_segmentations_and_midlines(segmentations, midlines)
+        self.update_glottis_progress()
+        self.open_main_menu(self.centralWidget().project_path)
+
+    def save_segmentations_and_midlines(self, segmentations, midlines) -> None:
+        segmentation_path = os.path.join(
+            self.centralWidget().project_path, "glottis_segmentation"
+        )
+        glottal_midlines_path = os.path.join(
+            self.centralWidget().project_path, "glottal_midlines.json"
+        )
+
+        glottal_midline_dict = {}
+        for frame_index, midline_points in enumerate(midlines):
+            upper = midline_points[0]
+            lower = midline_points[1]
+
+            glottal_midline_dict[f"Frame{frame_index}"] = {
+                "Upper": upper.tolist() if upper is not None else [-1, -1],
+                "Lower": lower.tolist() if lower is not None else [-1, -1],
+            }
+
+        with open(glottal_midlines_path, "w+") as outfile:
+            json.dump(glottal_midline_dict, outfile)
+
+        for frame_index, seg in enumerate(segmentations):
+            image_save_path = os.path.join(segmentation_path, f"{frame_index:05d}.png")
+            cv2.imwrite(image_save_path, seg)
+
+    def update_glottis_progress(self):
+        progress_state_path = os.path.join(
+            self.centralWidget().project_path, "progress_status.json"
+        )
+
+        with open(progress_state_path, "r+") as prgrss_file:
+            file = json.load(prgrss_file)
+            file["progress_gl_seg"] = "finished"
+            prgrss_file.seek(0)
+            prgrss_file.truncate()
+            json.dump(file, prgrss_file, indent=4)
