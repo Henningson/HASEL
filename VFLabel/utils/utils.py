@@ -110,6 +110,24 @@ def class_to_color_np(prediction, class_colors):
     return np.moveaxis(output, 0, -1)
 
 
+def add_alpha_to_segmentations(image):
+    # Create an alpha channel
+    alpha_channel = (
+        np.ones((image.shape[0], image.shape[1]), dtype=np.uint8) * 255
+    )  # Fully opaque
+
+    # Identify black pixels (where all RGB channels are 0)
+    black_pixels = np.all(image == [0, 0, 0], axis=-1)
+
+    # Set alpha to 0 for black pixels
+    alpha_channel[black_pixels] = 0
+
+    # Combine RGB and alpha channels
+    image_with_alpha = np.dstack((image, alpha_channel))
+
+    return image_with_alpha
+
+
 def draw_points(gt_image, gt_points, pred_points):
     blank = gt_image.copy() * 255
 

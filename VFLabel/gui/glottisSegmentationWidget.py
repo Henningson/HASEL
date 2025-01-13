@@ -16,14 +16,7 @@ from PyQt5.QtWidgets import (
     QComboBox,
 )
 
-from PyQt5.QtGui import (
-    QIcon,
-    QPen,
-    QBrush,
-    QPolygonF,
-    QColor,
-    QPixmap,
-)
+from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QPixmap, QImage
 import os
 
 import VFLabel.utils.transforms
@@ -70,17 +63,36 @@ class GlottisSegmentationWidget(QWidget):
         horizontal_layout_bot = QHBoxLayout()
         bot_widget = QWidget()
         self.project_path = project_path
+        self.glottis_path = os.path.join(project_path, "glottis_segmentation")
 
         self.video = video
         qvideo = VFLabel.utils.transforms.vid_2_QImage(video)
-        self.video_view = VFLabel.gui.videoViewWidget.VideoViewWidget(qvideo)
-        self.segmentation_view = VFLabel.gui.videoViewWidget.VideoViewWidget()
-        self.overlay_view = VFLabel.gui.videoOverlayWidget.VideoOverlayWidget(
-            qvideo, None
-        )
-        self.segmentations: List[np.array] = []
 
+        self.segmentations: List[np.array] = []
         self.glottal_midlines: List[np.array] = []
+
+        qvideo_segmentations = None
+        segmentations_with_alpha = None
+        if os.listdir(self.glottis_path):
+            self.segmentations = self.load_segmentations_from_folder(self.glottis_path)
+            qvideo_segmentations = VFLabel.utils.transforms.vid_2_QImage(
+                self.segmentations
+            )
+            segmentations_with_alpha = [
+                VFLabel.utils.utils.add_alpha_to_segmentations(seg)
+                for seg in self.segmentations
+            ]
+            segmentations_with_alpha = VFLabel.utils.transforms.vid_2_QImage(
+                segmentations_with_alpha
+            )
+
+        self.video_view = VFLabel.gui.videoViewWidget.VideoViewWidget(qvideo)
+        self.segmentation_view = VFLabel.gui.videoViewWidget.VideoViewWidget(
+            qvideo_segmentations if self.segmentations else None
+        )
+        self.overlay_view = VFLabel.gui.videoOverlayWidget.VideoOverlayWidget(
+            qvideo, segmentations_with_alpha
+        )
 
         self.video_player = VFLabel.gui.videoPlayerWidget.VideoPlayerWidget(
             len(qvideo), 100
@@ -129,6 +141,17 @@ class GlottisSegmentationWidget(QWidget):
         self.generate_button.clicked.connect(self.generate_segmentations)
         self.alpha_slider.valueChanged.connect(self.change_opacity)
         self.video_player.slider.valueChanged.connect(self.change_frame)
+
+    def load_segmentations_from_folder(self, path) -> List[np.array]:
+        segmentations = []
+        for file in sorted(os.listdir(path)):
+            file_path = os.path.join(path, file)
+            image = cv2.imread(file_path, 0) // 255
+            colored = VFLabel.utils.utils.class_to_color_np(
+                image, [COLOR.BACKGROUND, COLOR.GLOTTIS]
+            ).astype(np.uint8)
+            segmentations.append(np.array(colored))
+        return segmentations
 
     def generate_segmentations(self) -> None:
         # Load model from dropdown

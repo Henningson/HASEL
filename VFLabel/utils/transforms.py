@@ -29,8 +29,15 @@ def qpixmap_to_cv(qpixmap):
 
 def np_2_QImage(image: np.array) -> QImage:
     height, width, channel = image.shape
-    bytesPerLine = 3 * width
-    return QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
+
+    bytesPerLine = channel * width
+    return QImage(
+        image.copy().data,
+        width,
+        height,
+        bytesPerLine,
+        QImage.Format_RGBA8888 if channel == 4 else QImage.Format_RGB888,
+    )
 
 
 # We assume NumPy-Style format [NUM_FRAMES, HEIGHT, WIDTH, CHANNEL]
