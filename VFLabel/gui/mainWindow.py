@@ -26,15 +26,13 @@ class MainWindow(QMainWindow):
             }
 
             QMenuBar {
-                background: rgb(240, 248, 255);       /* background*/
-                color: rgb(0, 0, 0);        /* text color*/
+                background: rgb(240, 248, 255);                 /* background*/
+                color: rgb(0, 0, 0);                            /* text color*/
                 border-top: 1px solid rgb(211, 211, 211);
-                /*border-bottom: 1px solid rgb(211, 211, 211);*/
             }
             QToolBar {
-                background: rgb(240, 248, 255);       /* background*/
-                color: rgb(0, 0, 0);       /* text color*/
-                /*border-top: 1px solid rgb(211, 211, 211);*/
+                background: rgb(240, 248, 255);                 /* background*/
+                color: rgb(0, 0, 0);                            /* text color*/
                 border-bottom: 1px solid rgb(211, 211, 211);
             }
             """
@@ -61,9 +59,15 @@ class MainWindow(QMainWindow):
         menu_close_window.triggered.connect(self.close_current_window)
         self.menubar.addAction(menu_close_window)
 
+        # menu help button
+        menu_help_window = QAction("Help", self)
+        menu_help_window.triggered.connect(self.help)
+        self.menubar.addAction(menu_help_window)
+
         # icons for toolbar - icons from license-free page: https://uxwing.com/
         close_icon_path = "assets/icons/close-square-line-icon.svg"
         save_icon_path = "assets/icons/check-mark-box-line-icon.svg"
+        help_icon_path = "assets/icons/help-icon.svg"
 
         # setup tool bar
         self.toolbar = QToolBar()
@@ -85,6 +89,13 @@ class MainWindow(QMainWindow):
         self.tool_save_window.setShortcut("Ctrl+s")
         self.tool_save_window.triggered.connect(self.save_current_state)
         self.toolbar.addAction(self.tool_save_window)
+
+        # tool help button
+        self.tool_help_window = QAction(QIcon(f"{help_icon_path}"), "Help", self)
+        self.tool_help_window.setToolTip("Help  Ctrl+h")
+        self.tool_help_window.setShortcut("Ctrl+h")
+        self.tool_help_window.triggered.connect(self.help)
+        self.toolbar.addAction(self.tool_help_window)
 
         self.addToolBar(self.toolbar)
 
@@ -181,6 +192,9 @@ class MainWindow(QMainWindow):
 
     def save_current_state(self) -> None:
         self.centralWidget().save_current_state()
+
+    def help(self):
+        self.centralWidget().help()
 
     def load_glottis_segmentation_folder(self) -> None:
         dir_path = QFileDialog.getExistingDirectory(

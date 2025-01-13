@@ -6,8 +6,14 @@ from typing import List
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QApplication
 from PyQt5 import QtCore
 from PyQt5.QtCore import QThread, QObject, QEventLoop, pyqtSlot
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QPushButton, QLabel
-from PyQt5.QtGui import QPolygonF
+from PyQt5.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QLabel,
+    QMessageBox,
+)
+from PyQt5.QtGui import QPolygonF, QIcon
 
 import VFLabel.utils.transforms
 import VFLabel.gui.drawSegmentationWidget
@@ -115,6 +121,16 @@ class VocalfoldSegmentationWidget(QWidget):
         # adding functionality to buttons
         add_btn.clicked.connect(self.add_mark)
         remove_btn.clicked.connect(self.remove_mark)
+
+        help_icon_path = "assets/icons/help-icon.svg"
+
+        help_segment_slider_button = QPushButton(QIcon(help_icon_path), "")
+        help_segment_slider_button.setStyleSheet("border: 0px solid #FFF")
+        help_segment_slider_button.clicked.connect(self.help_segment_dialog)
+
+        help_slider_button = QPushButton(QIcon(help_icon_path), "")
+        help_slider_button.setStyleSheet("border: 0px solid #FFF")
+        help_slider_button.clicked.connect(self.help_slider_dialog)
         # self.save_button.clicked.connect(self.save)
 
         # defining layout and layout positions
@@ -123,6 +139,7 @@ class VocalfoldSegmentationWidget(QWidget):
         seg_slider_layout.setSpacing(1)
         seg_slider_layout.addWidget(add_btn)
         seg_slider_layout.addWidget(remove_btn)
+        seg_slider_layout.addWidget(help_segment_slider_button)
         segment_widget.setLayout(seg_slider_layout)
 
         horizontal_layout_top.addWidget(self.draw_view)
@@ -131,6 +148,7 @@ class VocalfoldSegmentationWidget(QWidget):
         top_widget.setLayout(horizontal_layout_top)
 
         horizontal_layout_bot.addWidget(self.video_player)
+        horizontal_layout_bot.addWidget(help_slider_button)
         # horizontal_layout_bot.addWidget(self.save_button)
         bot_widget.setLayout(horizontal_layout_bot)
 
@@ -340,18 +358,68 @@ class VocalfoldSegmentationWidget(QWidget):
         )
         self.frame_current_no.setFixedSize(110, 30)
 
+        help_icon_path = "assets/icons/help-icon.svg"
+
+        help_first_frame_button = QPushButton(QIcon(help_icon_path), "")
+        help_first_frame_button.setStyleSheet("border: 0px solid #FFF")
+        help_first_frame_button.clicked.connect(self.help_first_frame_dialog)
+
+        help_last_frame_button = QPushButton(QIcon(help_icon_path), "")
+        help_last_frame_button.setStyleSheet("border: 0px solid #FFF")
+        help_last_frame_button.clicked.connect(self.help_last_frame_dialog)
+
+        help_current_frame_button = QPushButton(QIcon(help_icon_path), "")
+        help_current_frame_button.setStyleSheet("border: 0px solid #FFF")
+        help_current_frame_button.clicked.connect(self.help_current_frame_dialog)
+
         # insert number text in window
         boxh_frame_no_layout = QHBoxLayout()
         boxh_frame_no_layout.addStretch(1)
         boxh_frame_no_layout.addWidget(self.frame_start_no)
+        boxh_frame_no_layout.addWidget(help_first_frame_button)
         boxh_frame_no_layout.addStretch(1)
         boxh_frame_no_layout.addWidget(self.frame_end_no)
+        boxh_frame_no_layout.addWidget(help_last_frame_button)
         boxh_frame_no_layout.addStretch(1)
         boxh_frame_no_layout.addWidget(self.frame_current_no)
+        boxh_frame_no_layout.addWidget(help_current_frame_button)
         boxh_frame_no_layout.addStretch(1)
         frame_label_widget.setLayout(boxh_frame_no_layout)
 
         return frame_label_widget
+
+    def help_first_frame_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - first frame")
+        dlg.setText(
+            "draw the segmentation of the vocal fold. Click E to start drawing points aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_last_frame_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - last frame")
+        dlg.setText(
+            "Rotate and translate segmentation mask aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_current_frame_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - current frame")
+        dlg.setText(
+            "The interpolation between the two other states aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
 
     def download_data_from_project_folder(self):
         vf_path = os.path.join(self.project_path, "vocalfold_points.json")
@@ -374,3 +442,25 @@ class VocalfoldSegmentationWidget(QWidget):
                     self.polygon = QPolygonF(self.polygon_points)
 
         return True
+
+    def help_segment_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - segment slider")
+        dlg.setText(
+            "Slider to subdivide video aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_slider_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - slider")
+        dlg.setText(
+            "Start, stop, play the video aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
