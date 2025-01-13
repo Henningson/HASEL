@@ -185,21 +185,6 @@ class PointClickView(QWidget):
         self.button_disable_modes
         self.video_player.slider.valueChanged.connect(self.change_frame)
 
-    def save(self) -> None:
-        dlg = QMessageBox(self)
-        dlg.setWindowTitle("Save everything?")
-        dlg.setText(f"Are you sure?")
-        dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        dlg.setIcon(QMessageBox.Question)
-        button = dlg.exec()
-
-        if button == QMessageBox.No:
-            return
-
-        self.save_clicked_points(show_dialog=False)
-        self.save_tracked_points(show_dialog=False)
-        self.save_optimized_points(show_dialog=False)
-
     def show_ok_dialog(self) -> None:
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Success")
@@ -208,7 +193,6 @@ class PointClickView(QWidget):
         dlg.setIcon(QMessageBox.Information)
         dlg.exec()
 
-    # TODO: Refactor save functionality!
     def save_clicked_points(self, show_dialog: bool = True) -> None:
         self.disable_modes()
 
@@ -288,10 +272,10 @@ class PointClickView(QWidget):
 
         vocalfold_segmentations = np.array(
             io.read_images_from_folder(self.path_vf_segmentations, is_gray=True)
-        )[:175]
+        )
         glottis_segmentations = np.array(
             io.read_images_from_folder(self.path_glottis_segmentations, is_gray=True)
-        )[:175]
+        )
         filtered_points = pi.filter_points_not_on_vocalfold(
             points_subpix, vocalfold_segmentations
         )
