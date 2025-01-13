@@ -2,12 +2,7 @@ import sys
 import os
 import json
 
-from PyQt5.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QMessageBox
 
 from PyQt5.QtCore import pyqtSignal, QEventLoop
 
@@ -58,10 +53,6 @@ class VocalfoldSegmentationView(baseWindowWidget.BaseWindowWidget):
         # Show the window
         self.show()
 
-    def save_current_state(self):
-        print("save vf segm")
-        self.view.save()
-
     def update_progress(self, progress) -> None:
         self.progress = progress
 
@@ -70,6 +61,21 @@ class VocalfoldSegmentationView(baseWindowWidget.BaseWindowWidget):
             self.save_current_state()
         else:
             pass
+
+    def help(self):
+        print("helpvf segm")
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help")
+        dlg.setText(
+            f"In this step of the pipeline the vocalfold is segmented. This is done by creating a mask of the vocal fold in the first frame. In the last frame, the vocal fold mask is transformed to match the vocal fold in this view. The other frames are interpolated."
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.exec()
+
+    def save_current_state(self):
+        print("save vf segm")
+        self.view.save()
 
     def close_window(self) -> None:
 

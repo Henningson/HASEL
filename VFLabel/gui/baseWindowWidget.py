@@ -12,3 +12,7 @@ class BaseWindowWidget(QWidget):
     def save_current_state(self):
         print("save function in base view")
         pass
+
+    def help(self):
+        print("help function in base view")
+        pass
