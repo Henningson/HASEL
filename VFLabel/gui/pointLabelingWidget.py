@@ -65,7 +65,7 @@ from typing import List
 #  VWP    # SAVE    #
 
 
-class PointClickView(QWidget):
+class PointLabelingWidget(QWidget):
     def __init__(
         self,
         grid_height: int,
@@ -76,7 +76,7 @@ class PointClickView(QWidget):
         project_path: str,
         parent=None,
     ):
-        super(PointClickView, self).__init__(parent)
+        super(PointLabelingWidget, self).__init__(parent)
 
         # Setup paths
         self.path_project: str = project_path
