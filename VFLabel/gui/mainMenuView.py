@@ -8,9 +8,11 @@ from PyQt5.QtWidgets import (
     QTextEdit,
     QLabel,
     QMessageBox,
+    QSpacerItem,
+    QSizePolicy,
 )
-from PyQt5.QtGui import QFont, QTextCursor, QTextBlockFormat
-from PyQt5.QtCore import Qt, QEventLoop, pyqtSignal
+from PyQt5.QtGui import QFont, QTextCursor, QTextBlockFormat, QIcon
+from PyQt5.QtCore import Qt, QEventLoop, pyqtSignal, QSize
 
 import VFLabel.gui as gui
 import VFLabel.gui.glottisSegmentationView as glottisSegmentationView
@@ -25,6 +27,8 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
     signal_close_main_menu_window = pyqtSignal()
     signal_open_glottis_segm_window = pyqtSignal(str)
     signal_open_pt_label_window = pyqtSignal(str)
+
+    signal_upload_glottis_segmentation = pyqtSignal(bool)
 
     def __init__(self, project_path, parent=None):
         super().__init__(parent)
@@ -51,7 +55,7 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
         btn_gl_seg.setFont(font)
         btn_gl_seg.setFixedSize(200, 100)
 
-        btn_vf_seg = QPushButton("Vocal Fold \n segmentation", self)
+        btn_vf_seg = QPushButton("Vocal Fold \nsegmentation", self)
         btn_vf_seg.setToolTip("This <b>button</b> ...")
         btn_vf_seg.setFont(font)
         btn_vf_seg.setFixedSize(200, 100)
@@ -60,6 +64,21 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
         btn_pt_label.setToolTip("This <b>button</b> ...")
         btn_pt_label.setFont(font)
         btn_pt_label.setFixedSize(200, 100)
+
+        path_upload_icon = "assets/icons/file-download-import.svg"
+
+        btn_upload_glottis_segm = QPushButton(QIcon(path_upload_icon), "")
+        btn_upload_glottis_segm.setIconSize(QSize(50, 50))
+        btn_upload_glottis_segm.setStyleSheet("border: 0px solid;")
+        btn_upload_glottis_segm.setToolTip("Upload glottis segmentation data")
+        btn_upload_glottis_segm.clicked.connect(self.upload_glottis_segmentation_data)
+
+        horizontal_spacer = QSpacerItem(
+            60, 20, QSizePolicy.Minimum, QSizePolicy.Expanding
+        )
+        horizontal_spacer_2 = QSpacerItem(
+            60, 20, QSizePolicy.Minimum, QSizePolicy.Expanding
+        )
 
         # create close button
         font = QFont("Arial", 15, QFont.Bold)
@@ -92,6 +111,7 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
         # insert buttons in window
         boxh_btn_layout.addStretch(1)
         boxh_btn_layout.addWidget(btn_gl_seg)
+        boxh_btn_layout.addWidget(btn_upload_glottis_segm)
         boxh_btn_layout.addStretch(1)
         boxh_btn_layout.addWidget(btn_vf_seg)
         boxh_btn_layout.addStretch(1)
@@ -101,6 +121,7 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
         # insert progress text in window
         boxh_txt_layout.addStretch(1)
         boxh_txt_layout.addWidget(self.progress_gl_seg)
+        boxh_txt_layout.addItem(horizontal_spacer)
         boxh_txt_layout.addStretch(1)
         boxh_txt_layout.addWidget(self.progress_vf_seg)
         boxh_txt_layout.addStretch(1)
@@ -110,6 +131,7 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
         # insert number text in window
         boxh_num_layout.addStretch(1)
         boxh_num_layout.addWidget(num_gl_seg)
+        boxh_num_layout.addItem(horizontal_spacer_2)
         boxh_num_layout.addStretch(1)
         boxh_num_layout.addWidget(num_vf_seg)
         boxh_num_layout.addStretch(1)
@@ -140,6 +162,28 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
 
         # show window
         self.show()
+
+    def upload_glottis_segmentation_data(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Upload glottis Segmentation")
+        dlg.setText("Do you want to upload the glottis segmentation ?")
+        button_video = dlg.addButton("Upload as video", QMessageBox.YesRole)
+        button_folder = dlg.addButton(
+            "Upload as folder with images", QMessageBox.NoRole
+        )
+        dlg.addButton("Cancel", QMessageBox.RejectRole)
+        # dlg.setStandardButtons(QMessageBox.Cancel)
+        dlg.adjustSize()
+        dlg.exec()
+
+        if dlg.clickedButton() == button_video:
+            as_video = True
+        elif dlg.clickedButton() == button_folder:
+            as_video = False
+        else:
+            return
+
+        self.signal_upload_glottis_segmentation.emit(as_video)
 
     def open_glottis_segmentation(self) -> None:
         self.signal_open_glottis_segm_window.emit(self.project_path)

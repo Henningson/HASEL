@@ -32,7 +32,7 @@ class NewProjectWidget(QDialog):
         self.gridy_input = QLineEdit()
 
         # add input areas to layout
-        layout.addRow("Project Name: ", self.name_input)
+        layout.addRow("Project folder name: ", self.name_input)
         layout.addRow("LaserGrid width: ", self.gridx_input)
         layout.addRow("LaserGrid height: ", self.gridy_input)
         # TODO: allow only integers, Pflicht, dass Felder gefüllt werden müssen

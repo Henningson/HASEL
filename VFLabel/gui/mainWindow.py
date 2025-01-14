@@ -136,6 +136,9 @@ class MainWindow(QMainWindow):
             self.open_glottis_segmentation_window
         )
         self.main_menu.signal_close_main_menu_window.connect(self.open_start_window)
+        self.main_menu.signal_upload_glottis_segmentation.connect(
+            self.upload_glottis_data_video
+        )
 
         # make it visible in main window
         self.setCentralWidget(self.main_menu)
@@ -201,6 +204,8 @@ class MainWindow(QMainWindow):
             caption="Folder containing the segmentation images"
         )
 
+        if dir_path == "":
+            return
         segmentations = []
         for image_file in sorted(os.listdir(dir_path)):
             image_path = os.path.join(dir_path, image_file)
@@ -208,11 +213,16 @@ class MainWindow(QMainWindow):
             segmentations.append(segmentation)
 
     def load_glottis_segmentation_video(self) -> None:
+        current_dir = os.getcwd()
         video_path, _ = QFileDialog.getOpenFileName(
             self,
             "Video of the glottis segmentation",
+            current_dir,
             "Only video-files(*.mp4 *.avi)",
         )
+
+        if video_path == "":
+            return
 
         video = VFLabel.io.data.read_video(video_path)
         self.generate_glottis_data(video)
@@ -262,3 +272,9 @@ class MainWindow(QMainWindow):
             prgrss_file.seek(0)
             prgrss_file.truncate()
             json.dump(file, prgrss_file, indent=4)
+
+    def upload_glottis_data_video(self, asvideo):
+        if asvideo:
+            self.load_glottis_segmentation_video()
+        else:
+            self.load_glottis_segmentation_folder()

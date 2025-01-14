@@ -166,7 +166,7 @@ class StartWindowView(baseWindowWidget.BaseWindowWidget):
 
         # open file manager to choose project
         fd = QFileDialog()
-        fd.setWindowTitle("Select location of project")
+        fd.setWindowTitle("Select location of the project folder")
         fd.setFileMode(QFileDialog.Directory)
         fd.setAcceptMode(QFileDialog.AcceptOpen)
         fd.setDirectory(current_dir)
