@@ -3,12 +3,7 @@ import numpy as np
 import json
 import os
 
-from PyQt5.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QMessageBox
 
 from PyQt5.QtCore import pyqtSignal, QEventLoop
 
@@ -71,6 +66,17 @@ class GlottisSegmentationView(baseWindowWidget.BaseWindowWidget):
             self.save_current_state()
         else:
             pass
+
+    def help(self):
+        print("help gl segm")
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help")
+        dlg.setText(
+            f"In this step of the pipeline, the glottis is segmented and the midline of the glottis is determined. This is done by a neural network."
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.exec()
 
     def close_window(self) -> None:
 

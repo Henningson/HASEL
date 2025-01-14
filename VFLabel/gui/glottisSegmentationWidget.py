@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import (
     QLabel,
     QFileDialog,
     QComboBox,
+    QMessageBox,
 )
 
 from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QPixmap, QImage
@@ -126,17 +127,84 @@ class GlottisSegmentationWidget(QWidget):
 
         self.save_button = QPushButton("Save")
 
-        horizontal_layout_top.addWidget(self.video_view)
-        horizontal_layout_top.addWidget(self.segmentation_view)
-        horizontal_layout_top.addWidget(self.overlay_view)
+        self.frame_label_left = QLabel("Frame 0")
+        self.frame_label_left.setFixedSize(70, 20)
+        self.frame_label_middle = QLabel(f"Frame 0")
+        self.frame_label_middle.setFixedSize(70, 20)
+        self.frame_label_right = QLabel(f"Frame 0")
+        self.frame_label_right.setFixedSize(70, 20)
+
+        help_icon_path = "assets/icons/help-icon.svg"
+
+        help_opacity_button = QPushButton(QIcon(help_icon_path), "")
+        help_opacity_button.setStyleSheet("border: 0px solid #FFF")
+        help_opacity_button.clicked.connect(self.help_opacity_dialog)
+
+        help_model_button = QPushButton(QIcon(help_icon_path), "")
+        help_model_button.setStyleSheet("border: 0px solid #FFF")
+        help_model_button.clicked.connect(self.help_model_dialog)
+
+        help_left_frame_button = QPushButton(QIcon(help_icon_path), "")
+        help_left_frame_button.setStyleSheet("border: 0px solid #FFF")
+        help_left_frame_button.clicked.connect(self.help_left_frame_dialog)
+
+        video_view_label = QHBoxLayout()
+        video_view_label.addStretch(1)
+        video_view_label.addWidget(self.frame_label_left)
+        video_view_label.addWidget(help_left_frame_button)
+        video_view_label.addStretch(1)
+
+        help_right_frame_button = QPushButton(QIcon(help_icon_path), "")
+        help_right_frame_button.setStyleSheet("border: 0px solid #FFF")
+        help_right_frame_button.clicked.connect(self.help_right_frame_dialog)
+
+        overlay_view_label = QHBoxLayout()
+        overlay_view_label.addStretch(1)
+        overlay_view_label.addWidget(self.frame_label_right)
+        overlay_view_label.addWidget(help_right_frame_button)
+        overlay_view_label.addStretch(1)
+
+        help_middle_frame_button = QPushButton(QIcon(help_icon_path), "")
+        help_middle_frame_button.setStyleSheet("border: 0px solid #FFF")
+        help_middle_frame_button.clicked.connect(self.help_middle_frame_dialog)
+
+        segmentation_view_label = QHBoxLayout()
+        segmentation_view_label.addStretch(1)
+        segmentation_view_label.addWidget(self.frame_label_middle)
+        segmentation_view_label.addWidget(help_middle_frame_button)
+        segmentation_view_label.addStretch(1)
+
+        vertical_video_view_widget = QWidget()
+        vertical_video_view = QVBoxLayout()
+        vertical_video_view.addLayout(video_view_label)
+        vertical_video_view.addWidget(self.video_view)
+        vertical_video_view_widget.setLayout(vertical_video_view)
+
+        vertical_segmentation_view_widget = QWidget()
+        vertical_segmentation_view = QVBoxLayout()
+        vertical_segmentation_view.addLayout(segmentation_view_label)
+        vertical_segmentation_view.addWidget(self.segmentation_view)
+        vertical_segmentation_view_widget.setLayout(vertical_segmentation_view)
+
+        vertical_overlay_view_widget = QWidget()
+        vertical_overlay_view = QVBoxLayout()
+        vertical_overlay_view.addLayout(overlay_view_label)
+        vertical_overlay_view.addWidget(self.overlay_view)
+        vertical_overlay_view_widget.setLayout(vertical_overlay_view)
+
+        horizontal_layout_top.addWidget(vertical_video_view_widget)
+        horizontal_layout_top.addWidget(vertical_segmentation_view_widget)
+        horizontal_layout_top.addWidget(vertical_overlay_view_widget)
         top_widget.setLayout(horizontal_layout_top)
 
         horizontal_layout_bot.addWidget(self.model_label)
+        horizontal_layout_bot.addWidget(help_model_button)
         horizontal_layout_bot.addWidget(self.model_dropdown)
         horizontal_layout_bot.addWidget(self.generate_button)
         horizontal_layout_bot.addWidget(self.video_player)
         horizontal_layout_bot.addWidget(self.save_button)
         horizontal_layout_bot.addWidget(self.opacity_label)
+        horizontal_layout_bot.addWidget(help_opacity_button)
         horizontal_layout_bot.addWidget(self.alpha_slider)
         bot_widget.setLayout(horizontal_layout_bot)
 
@@ -148,6 +216,11 @@ class GlottisSegmentationWidget(QWidget):
         self.generate_button.clicked.connect(self.generate_segmentations)
         self.alpha_slider.valueChanged.connect(self.change_opacity)
         self.video_player.slider.valueChanged.connect(self.change_frame)
+
+    def change_frame_label(self, value):
+        self.frame_label_left.setText(f"Frame {value}")
+        self.frame_label_middle.setText(f"Frame {value}")
+        self.frame_label_right.setText(f"Frame {value}")
 
     def load_segmentations_from_folder(self, path) -> List[np.array]:
         segmentations = []
@@ -220,3 +293,57 @@ class GlottisSegmentationWidget(QWidget):
         self.video_view.change_frame(self.video_player.slider.value())
         self.segmentation_view.change_frame(self.video_player.slider.value())
         self.overlay_view.change_frame(self.video_player.slider.value())
+        self.change_frame_label(self.video_player.slider.value())
+
+    def help_left_frame_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Left frame")
+        dlg.setText("This window shows the video in its single frames")
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_middle_frame_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Middle frame")
+        dlg.setText(
+            "This window shows the segmentation mask for each frame. To generate the mask choose 'Generate'"
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_right_frame_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Right frame")
+        dlg.setText(
+            "This window shows an overlay of the video frames and the segmentation mask."
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_opacity_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Opacity slider")
+        dlg.setText(
+            "This slider adjusts the opacity of the segmentation mask in the right window."
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_model_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Model")
+        dlg.setText(
+            "Choose a model from the dropdown list and press 'Generate' in order to generate a segmentation mask of the glottis."
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()

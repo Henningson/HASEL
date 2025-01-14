@@ -3,12 +3,7 @@ import numpy as np
 import json
 import os
 
-from PyQt5.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QMessageBox
 
 from PyQt5.QtCore import pyqtSignal, QEventLoop
 
@@ -85,6 +80,16 @@ class PointLabelingView(baseWindowWidget.BaseWindowWidget):
             self.save_current_state()
         else:
             pass
+
+    def help(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help")
+        dlg.setText(
+            f"In this step of the pipeline, the laserpoints are marked and tracked over time."
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.exec()
 
     def close_window(self) -> None:
         # open window which asks if the data should be saved (again)

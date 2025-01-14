@@ -146,49 +146,106 @@ class PointLabelingWidget(QWidget):
         top_widget = QWidget()
         horizontal_layout_bot = QHBoxLayout()
         bot_widget = QWidget()
-
         frame_label_widget = QWidget()
 
         # create number text bars
         self.frame_label_left = QLabel("Frame 0")
-        self.frame_label_left.setFixedSize(110, 30)
+        self.frame_label_left.setFixedSize(70, 20)
         self.frame_label_middle = QLabel(f"Frame 0")
-        self.frame_label_middle.setFixedSize(110, 30)
+        self.frame_label_middle.setFixedSize(70, 20)
         self.frame_label_right = QLabel(f"Frame 0")
-        self.frame_label_right.setFixedSize(110, 30)
+        self.frame_label_right.setFixedSize(70, 20)
 
-        # insert number text in window
+        help_icon_path = "assets/icons/help-icon.svg"
+
+        help_track_button = QPushButton(QIcon(help_icon_path), "")
+        help_track_button.setStyleSheet("border: 0px solid #FFF")
+        help_track_button.clicked.connect(self.help_track_buttons)
+
+        help_optimize_button = QPushButton(QIcon(help_icon_path), "")
+        help_optimize_button.setStyleSheet("border: 0px solid #FFF")
+        help_optimize_button.clicked.connect(self.help_optimize_buttons)
+
+        help_grid_btn_button = QPushButton(QIcon(help_icon_path), "")
+        help_grid_btn_button.setStyleSheet("border: 0px solid #FFF")
+        help_grid_btn_button.clicked.connect(self.help_grid_buttons)
+
+        help_btn_button = QPushButton(QIcon(help_icon_path), "")
+        help_btn_button.setStyleSheet("border: 0px solid #FFF")
+        help_btn_button.clicked.connect(self.help_different_buttons)
+
+        help_left_frame_button = QPushButton(QIcon(help_icon_path), "")
+        help_left_frame_button.setStyleSheet("border: 0px solid #FFF")
+        help_left_frame_button.clicked.connect(self.help_left_frame_dialog)
+
+        point_clicker_label = QHBoxLayout()
+        point_clicker_label.addStretch(1)
+        point_clicker_label.addWidget(self.frame_label_left)
+        point_clicker_label.addWidget(help_left_frame_button)
+        point_clicker_label.addStretch(1)
+
+        help_middle_frame_button = QPushButton(QIcon(help_icon_path), "")
+        help_middle_frame_button.setStyleSheet("border: 0px solid #FFF")
+        help_middle_frame_button.clicked.connect(self.help_middle_frame_dialog)
+
+        cotracker_label = QHBoxLayout()
+        cotracker_label.addStretch(1)
+        cotracker_label.addWidget(self.frame_label_middle)
+        cotracker_label.addWidget(help_middle_frame_button)
+        cotracker_label.addStretch(1)
+
+        help_right_frame_button = QPushButton(QIcon(help_icon_path), "")
+        help_right_frame_button.setStyleSheet("border: 0px solid #FFF")
+        help_right_frame_button.clicked.connect(self.help_right_frame_dialog)
+
+        optimized_points_label = QHBoxLayout()
+        optimized_points_label.addStretch(1)
+        optimized_points_label.addWidget(self.frame_label_right)
+        optimized_points_label.addWidget(help_right_frame_button)
+        optimized_points_label.addStretch(1)
 
         grid_button_widget = QWidget()
         grid_button_layout = QVBoxLayout()
         grid_button_layout.addStretch(1)
+        grid_button_layout.addWidget(help_grid_btn_button)
         grid_button_layout.addWidget(self.button_grid)
         grid_button_layout.addStretch(1)
+        grid_button_layout.addWidget(help_btn_button)
         grid_button_layout.addWidget(self.button_draw)
         grid_button_layout.addWidget(self.button_remove)
         grid_button_layout.addWidget(self.button_disable_modes)
         grid_button_layout.addWidget(self.button_finished_clicking)
         grid_button_widget.setLayout(grid_button_layout)
 
-        boxh_frame_no_layout = QHBoxLayout()
-        boxh_frame_no_layout.addStretch(1)
-        boxh_frame_no_layout.addWidget(self.frame_label_left)
-        boxh_frame_no_layout.addStretch(1)
-        boxh_frame_no_layout.addWidget(self.frame_label_middle)
-        boxh_frame_no_layout.addStretch(1)
-        boxh_frame_no_layout.addWidget(self.frame_label_right)
-        boxh_frame_no_layout.addStretch(1)
-        frame_label_widget.setLayout(boxh_frame_no_layout)
+        vertical_point_clicker_widget = QWidget()
+        vertical_point_clicker = QVBoxLayout()
+        vertical_point_clicker.addLayout(point_clicker_label)
+        vertical_point_clicker.addWidget(self.point_clicker_widget)
+        vertical_point_clicker_widget.setLayout(vertical_point_clicker)
+
+        vertical_cotracker_widget = QWidget()
+        vertical_cotracker = QVBoxLayout()
+        vertical_cotracker.addLayout(cotracker_label)
+        vertical_cotracker.addWidget(self.cotracker_widget)
+        vertical_cotracker_widget.setLayout(vertical_cotracker)
+
+        vertical_optimized_points_widget = QWidget()
+        vertical_optimized_points = QVBoxLayout()
+        vertical_optimized_points.addLayout(optimized_points_label)
+        vertical_optimized_points.addWidget(self.optimized_points_widget)
+        vertical_optimized_points_widget.setLayout(vertical_optimized_points)
 
         horizontal_layout_top.addWidget(grid_button_widget)
-        horizontal_layout_top.addWidget(self.point_clicker_widget)
-        horizontal_layout_top.addWidget(self.cotracker_widget)
-        horizontal_layout_top.addWidget(self.optimized_points_widget)
+        horizontal_layout_top.addWidget(vertical_point_clicker_widget)
+        horizontal_layout_top.addWidget(vertical_cotracker_widget)
+        horizontal_layout_top.addWidget(vertical_optimized_points_widget)
         top_widget.setLayout(horizontal_layout_top)
 
         horizontal_layout_bot.addWidget(self.video_player)
         horizontal_layout_bot.addWidget(self.button_track_points)
+        horizontal_layout_bot.addWidget(help_track_button)
         horizontal_layout_bot.addWidget(self.button_optimize_points)
+        horizontal_layout_bot.addWidget(help_optimize_button)
         horizontal_layout_bot.addWidget(self.button_save)
         bot_widget.setLayout(horizontal_layout_bot)
 
@@ -412,3 +469,80 @@ class PointLabelingWidget(QWidget):
             return
 
         self.button_grid.getButton(x_laser, y_laser + 1).on_clicked(True)
+
+    def help_left_frame_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Left frame")
+        dlg.setText(
+            "This window shows the single frames of the video. Click the laserpoints here."
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_middle_frame_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Middle frame")
+        dlg.setText("This window shows the results of 'Track points'.")
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_right_frame_dialog(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Right frame")
+        dlg.setText("This window shows the results of 'Optimize points'.")
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_grid_buttons(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Button grid")
+        dlg.setText(
+            "Click the corresponding point that you want to click in the left window. \n"
+            "Green: This point already has a chosen point in the left window. \n"
+            "Red: Activated point for which a point in the left window is chosen."
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_different_buttons(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Buttons")
+        dlg.setText(
+            "These buttons help with the marking of the laser points.\n"
+            "Add points: add one point in the left window.\n"
+            "Remove points: remove one point in the left window.\n"
+            "Disable Modes: Disable add/remove mode.\n"
+            "Finished Clicking: Save the points.\n"
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_optimize_buttons(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Optimize points")
+        dlg.setText("Determine invalid points from the previous points")
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
+
+    def help_track_buttons(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Track points")
+        dlg.setText(
+            "By pressing this button, a neural network is activated tracking the clicked points through the different frames."
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()

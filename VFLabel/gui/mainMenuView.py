@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QTextEdit,
     QLabel,
+    QMessageBox,
 )
 from PyQt5.QtGui import QFont, QTextCursor, QTextBlockFormat
 from PyQt5.QtCore import Qt, QEventLoop, pyqtSignal
@@ -178,6 +179,21 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
         block_format = QTextBlockFormat()
         block_format.setAlignment(Qt.AlignCenter)
         cursor.mergeBlockFormat(block_format)
+
+    def help(self):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Help - Main Menu")
+        dlg.setText(
+            "This is the main menu. There are three tasks that need to be completed: \n"
+            "- glottis segmentation \n"
+            "- vocalfold segmentation \n"
+            "- point labeling \n"
+            " All three tasks need to be marked as completed."
+        )
+        dlg.setStandardButtons(QMessageBox.Ok)
+        dlg.setIcon(QMessageBox.Information)
+        dlg.adjustSize()
+        dlg.exec()
 
     def close_window(self):
         self.signal_close_main_menu_window.emit()

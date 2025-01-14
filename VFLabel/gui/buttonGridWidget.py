@@ -28,7 +28,7 @@ class ButtonGrid(QWidget):
                     label = QPushButton(str(x))
                     label.setContentsMargins(0, 0, 0, 0)
                     label.setFixedSize(QSize(button_size, button_size))
-                    self.layout().addWidget(label, y, x)
+                    self.layout().addWidget(label, y, x, 1, 1)
                     continue
                 if x == grid_width:
                     label = QPushButton(str(y))
