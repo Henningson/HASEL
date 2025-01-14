@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (
     QAction,
 )
 from PyQt5.QtGui import QPixmap, QPainter, QFont
-from PyQt5.QtCore import QEventLoop, pyqtSignal
+from PyQt5.QtCore import QEventLoop, pyqtSignal, QRect
 
 import VFLabel.gui.newProjectWidget, VFLabel.gui.mainMenuView
 import VFLabel.gui.baseWindowWidget as baseWindowWidget
@@ -60,13 +60,20 @@ class StartWindowView(baseWindowWidget.BaseWindowWidget):
         self.show()
 
     def paintEvent(self, event):
-        """Paint background of Main Menu"""
         painter = QPainter(self)
         current_dir = os.getcwd()
         image_path = os.path.join(current_dir, "assets", "logo.png")
-        # TODO: Pfad so aussuchen, dass er immer funktioniert ?
         pixmap = QPixmap(image_path)
-        painter.drawPixmap(self.rect(), pixmap)
+
+        window_width = self.width()
+        window_height = self.height()
+        img_size = min(window_width, window_height)
+
+        x_offset = (window_width - img_size) // 2
+        y_offset = (window_height - img_size) // 2
+
+        target_rect = QRect(x_offset, y_offset, img_size, img_size)
+        painter.drawPixmap(target_rect, pixmap)
 
     def create_new_project(self):
         """Creates a new project
