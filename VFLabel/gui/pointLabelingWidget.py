@@ -131,11 +131,8 @@ class PointLabelingWidget(QWidget):
 
         # create number text bars
         self.frame_label_left = QLabel("Click Points - Frame: 0")
-        self.frame_label_left.setFixedSize(70, 20)
         self.frame_label_middle = QLabel(f"Tracked Points - Frame: 0")
-        self.frame_label_middle.setFixedSize(70, 20)
         self.frame_label_right = QLabel(f"Optimized Points - Frame: 0")
-        self.frame_label_right.setFixedSize(70, 20)
 
         help_icon_path = "assets/icons/help-icon.svg"
 
@@ -453,9 +450,9 @@ class PointLabelingWidget(QWidget):
 
     def help_left_frame_dialog(self):
         dlg = QMessageBox(self)
-        dlg.setWindowTitle("Help - Left frame")
+        dlg.setWindowTitle("Help - Point Clicking")
         dlg.setText(
-            "This window shows the single frames of the video. Click the laserpoints here."
+            "This view shows the first 50 frames of the input video. Use this view to generate initial point candidates for each laserpoint. It is only necessary to select one visible candidate for each laserpoint inside this cycle. You can add points by starting the 'Add Point' mode with the button on the left hand side. To select a point, first click its corresponding position inside the grid on the left, and then select the point inside the image. A point can be selected with the Left Mousebutton.  Selecting a point will automatically advance the selected box inside the gid, allowing for fast selecting of suitable point candidates. Removing points is possible by using the 'Remove points' button on the left. If all suitable point-candidates were selected, save your selection using the 'Finished clicking' button."
         )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)
@@ -464,8 +461,10 @@ class PointLabelingWidget(QWidget):
 
     def help_middle_frame_dialog(self):
         dlg = QMessageBox(self)
-        dlg.setWindowTitle("Help - Middle frame")
-        dlg.setText("This window shows the results of 'Track points'.")
+        dlg.setWindowTitle("Help - Tracked Points")
+        dlg.setText(
+            "This window shows the results of 'Track points' that were tracked using metas cotracker3."
+        )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)
         dlg.adjustSize()
@@ -511,7 +510,9 @@ class PointLabelingWidget(QWidget):
     def help_optimize_buttons(self):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help - Optimize points")
-        dlg.setText("Determine invalid points from the previous points")
+        dlg.setText(
+            "Tracks, optimize and filters points based on the tracking information coming from the previous step 'Track Points'."
+        )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)
         dlg.adjustSize()
