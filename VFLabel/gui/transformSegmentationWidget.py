@@ -1,6 +1,5 @@
 from typing import List
 
-import numpy as np
 from PyQt5 import QtCore
 from PyQt5.QtCore import QPointF, pyqtSignal
 from PyQt5.QtGui import QBrush, QColor, QImage, QPen, QPolygonF
