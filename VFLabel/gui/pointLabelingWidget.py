@@ -130,11 +130,11 @@ class PointLabelingWidget(QWidget):
         frame_label_widget = QWidget()
 
         # create number text bars
-        self.frame_label_left = QLabel("Frame 0")
+        self.frame_label_left = QLabel("Click Points - Frame: 0")
         self.frame_label_left.setFixedSize(70, 20)
-        self.frame_label_middle = QLabel(f"Frame 0")
+        self.frame_label_middle = QLabel(f"Tracked Points - Frame: 0")
         self.frame_label_middle.setFixedSize(70, 20)
-        self.frame_label_right = QLabel(f"Frame 0")
+        self.frame_label_right = QLabel(f"Optimized Points - Frame: 0")
         self.frame_label_right.setFixedSize(70, 20)
 
         help_icon_path = "assets/icons/help-icon.svg"
@@ -256,10 +256,10 @@ class PointLabelingWidget(QWidget):
 
     def change_frame_label(self, value):
         if value < self.cycle_end:
-            self.frame_label_left.setText(f"Frame {value}")
+            self.frame_label_left.setText(f"Click Points - Frame: {value}")
 
-        self.frame_label_middle.setText(f"Frame {value}")
-        self.frame_label_right.setText(f"Frame {value}")
+        self.frame_label_middle.setText(f"Tracked Points - Frame: {value}")
+        self.frame_label_right.setText(f"Optimized Points - Frame: {value}")
 
     def show_ok_dialog(self) -> None:
         dlg = QMessageBox(self)

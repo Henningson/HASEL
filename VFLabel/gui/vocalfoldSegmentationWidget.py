@@ -332,14 +332,14 @@ class VocalfoldSegmentationWidget(QWidget):
             # if a polygon already exists --> draw polygon in move view
             self.move_view.add_polygon(self.polygon)
             self.move_view.redraw()
-        self.frame_end_no.setText(f"Last frame {position}")
+        self.frame_end_no.setText(f"Transform View - Last Frame: {position}")
 
     def update_signal_current_move_frame(self, frame_number):
         self.dict_transform[f"{frame_number}"] = self.move_view.get_transform()
         self.signal_dictionary.emit(self.dict_transform)
 
     def update_signal_label_current_frame(self, frame):
-        self.frame_current_no.setText(f"Current frame {frame}")
+        self.frame_current_no.setText(f"Interpolated Polygon - Current Frame: {frame}")
 
     def update_signal_current_marks_updating(self, marks_list):
         self.marks_list = marks_list
@@ -349,14 +349,11 @@ class VocalfoldSegmentationWidget(QWidget):
         frame_label_widget = QWidget()
 
         # create number text bars
-        self.frame_start_no = QLabel("First frame 0")
-        self.frame_start_no.setFixedSize(110, 30)
-        self.frame_end_no = QLabel(f"Last frame {length_video - 1}")
-        self.frame_end_no.setFixedSize(110, 30)
+        self.frame_start_no = QLabel("Click Vocalfold Polygon - First frame: 0")
+        self.frame_end_no = QLabel(f"Transform View - Last Frame: {length_video - 1}")
         self.frame_current_no = QLabel(
-            f"Current frame {self.video_player._current_frame}"
+            f"Interpolated Polygon - Current Frame: {self.video_player._current_frame}"
         )
-        self.frame_current_no.setFixedSize(110, 30)
 
         help_icon_path = "assets/icons/help-icon.svg"
 
@@ -392,7 +389,7 @@ class VocalfoldSegmentationWidget(QWidget):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help - first frame")
         dlg.setText(
-            "draw the segmentation of the vocal fold. Click E to start drawing points aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "Use this window to generate an initial segmentation of the vocal folds. You can start adding points by pressing E. This will toggle the 'point add'-mode. Add points with the left mouse button. To remove the last point, press R."
         )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)
@@ -403,7 +400,7 @@ class VocalfoldSegmentationWidget(QWidget):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help - last frame")
         dlg.setText(
-            "Rotate and translate segmentation mask aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "Generate a transformation in this view, such that the previously generated segmentation follows the movement of the vocal folds in the video. To move the segmentation UP, LEFT, DOWN or RIGHT use W, A, S or D respectively. Rotate anti-clockwise with J, clockwise with L, scale the vocalfolds up with I and scale the vocalfolds down using K. You can add multiple transforms (for example in the case where the physician moves forwards and backwards in a single recording) using the 'Add Mark' at the currently selected frame."
         )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)
@@ -413,9 +410,7 @@ class VocalfoldSegmentationWidget(QWidget):
     def help_current_frame_dialog(self):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help - current frame")
-        dlg.setText(
-            "The interpolation between the two other states aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        )
+        dlg.setText("This view shows interpolated segmentation for the given frame.")
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)
         dlg.adjustSize()
@@ -447,7 +442,7 @@ class VocalfoldSegmentationWidget(QWidget):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help - segment slider")
         dlg.setText(
-            "Slider to subdivide video aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "Generate a new transformation for the current frame. You can switch between the transformations by clicking inbetween the newly created boxes."
         )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)
@@ -458,7 +453,7 @@ class VocalfoldSegmentationWidget(QWidget):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help - slider")
         dlg.setText(
-            "Start, stop, play the video aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "Use this slider to choose a frame that you want to generate a transformation for, should multiple transformations be necessary to adequately follow the vocal folds in the video."
         )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)
