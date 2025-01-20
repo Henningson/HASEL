@@ -117,12 +117,9 @@ class GlottisSegmentationWidget(QWidget):
 
         self.save_button = QPushButton("Save")
 
-        self.frame_label_left = QLabel("Frame 0")
-        self.frame_label_left.setFixedSize(70, 20)
-        self.frame_label_middle = QLabel(f"Frame 0")
-        self.frame_label_middle.setFixedSize(70, 20)
-        self.frame_label_right = QLabel(f"Frame 0")
-        self.frame_label_right.setFixedSize(70, 20)
+        self.frame_label_left = QLabel("Input Video - Frame: 0")
+        self.frame_label_middle = QLabel(f"Segmentation - Frame: 0")
+        self.frame_label_right = QLabel(f"Segmentation Overlay - Frame: 0")
 
         help_icon_path = "assets/icons/help-icon.svg"
 
@@ -208,9 +205,9 @@ class GlottisSegmentationWidget(QWidget):
         self.video_player.slider.valueChanged.connect(self.change_frame)
 
     def change_frame_label(self, value):
-        self.frame_label_left.setText(f"Frame {value}")
-        self.frame_label_middle.setText(f"Frame {value}")
-        self.frame_label_right.setText(f"Frame {value}")
+        self.frame_label_left.setText(f"Input Video - Frame: {value}")
+        self.frame_label_middle.setText(f"Segmentation - Frame: {value}")
+        self.frame_label_right.setText(f"Segmentation Overlay - Frame: {value}")
 
     def load_segmentations_from_folder(self, path) -> List[np.array]:
         segmentations = []
@@ -287,8 +284,8 @@ class GlottisSegmentationWidget(QWidget):
 
     def help_left_frame_dialog(self):
         dlg = QMessageBox(self)
-        dlg.setWindowTitle("Help - Left frame")
-        dlg.setText("This window shows the video in its single frames")
+        dlg.setWindowTitle("Help - Input Video")
+        dlg.setText("This view shows the input video.")
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)
         dlg.adjustSize()
@@ -296,9 +293,9 @@ class GlottisSegmentationWidget(QWidget):
 
     def help_middle_frame_dialog(self):
         dlg = QMessageBox(self)
-        dlg.setWindowTitle("Help - Middle frame")
+        dlg.setWindowTitle("Help - Segmentation View")
         dlg.setText(
-            "This window shows the segmentation mask for each frame. To generate the mask choose 'Generate'"
+            "This window shows the segmentation mask for each frame. To generate the mask click 'Generate'"
         )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)
@@ -307,7 +304,7 @@ class GlottisSegmentationWidget(QWidget):
 
     def help_right_frame_dialog(self):
         dlg = QMessageBox(self)
-        dlg.setWindowTitle("Help - Right frame")
+        dlg.setWindowTitle("Help - Segmentation Overlay")
         dlg.setText(
             "This window shows an overlay of the video frames and the segmentation mask."
         )
@@ -320,7 +317,7 @@ class GlottisSegmentationWidget(QWidget):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help - Opacity slider")
         dlg.setText(
-            "This slider adjusts the opacity of the segmentation mask in the right window."
+            "This slider adjusts the opacity of the segmentation mask in the Segmentation Overlay."
         )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)

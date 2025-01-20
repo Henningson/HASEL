@@ -70,7 +70,7 @@ class GlottisSegmentationView(baseWindowWidget.BaseWindowWidget):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help")
         dlg.setText(
-            f"In this step of the pipeline, the glottis is segmented and the midline of the glottis is determined. This is done by a neural network."
+            f"In this step of the pipeline, the glottis is segmented and the midline of the glottis is determined. We supply different neural network architectures."
         )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)
