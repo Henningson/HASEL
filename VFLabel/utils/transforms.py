@@ -1,8 +1,8 @@
-import numpy as np
-import cv2
-
-from PyQt5.QtGui import QImage
 from typing import List
+
+import cv2
+import numpy as np
+from PyQt5.QtGui import QImage
 
 
 def qpixmap_to_cv(qpixmap):

@@ -1,13 +1,14 @@
-import os
-import cv2
-import scipy
-import numpy as np
 import json
+import os
 import re
-import VFLabel.cv
-
 from typing import List
+
+import cv2
+import numpy as np
+import scipy
 from tqdm import tqdm
+
+import VFLabel.cv
 
 
 def create_image_data(image_dir, video_file):

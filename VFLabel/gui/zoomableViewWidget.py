@@ -1,11 +1,6 @@
-from PyQt5.QtGui import QTransform, QImage, QPixmap
-from PyQt5.QtWidgets import QGraphicsView, QMenu
-
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QImage, QPixmap
-
-from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsPixmapItem, QGraphicsScene
-from PyQt5.QtGui import QTransform
+from PyQt5.QtGui import QImage, QPixmap, QTransform
+from PyQt5.QtWidgets import QGraphicsPixmapItem, QGraphicsScene, QGraphicsView, QMenu
 
 
 class ZoomableViewWidget(QGraphicsView):

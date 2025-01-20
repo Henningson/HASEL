@@ -1,26 +1,26 @@
-import os
 import json
-import numpy as np
+import os
 from typing import List
 
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout, QApplication
+import numpy as np
 from PyQt5 import QtCore
-from PyQt5.QtCore import QThread, QObject, QEventLoop, pyqtSlot
+from PyQt5.QtGui import QIcon, QPolygonF
 from PyQt5.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QPushButton,
+    QApplication,
+    QHBoxLayout,
     QLabel,
     QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
 )
-from PyQt5.QtGui import QPolygonF, QIcon
 
-import VFLabel.utils.transforms
 import VFLabel.gui.drawSegmentationWidget
-import VFLabel.gui.transformSegmentationWidget
 import VFLabel.gui.interpolateSegmentationWidget
+import VFLabel.gui.transformSegmentationWidget
 import VFLabel.gui.videoPlayerWidget
 import VFLabel.gui.vocalfoldSegmentationSliderWidget
+import VFLabel.utils.transforms
 
 ############################### ^
 #         #         #         # |

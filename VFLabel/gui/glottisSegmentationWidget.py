@@ -1,47 +1,37 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
-
-
-from PyQt5 import QtCore
-import numpy as np
 import json
-
-from PyQt5.QtWidgets import (
-    QApplication,
-    QWidget,
-    QVBoxLayout,
-    QSlider,
-    QPushButton,
-    QLabel,
-    QFileDialog,
-    QComboBox,
-    QMessageBox,
-)
-
-from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QPixmap, QImage
 import os
+from typing import List
 
-import VFLabel.utils.transforms
+import cv2
+import numpy as np
+from PyQt5 import QtCore
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
+)
+from tqdm import tqdm
 
+import VFLabel.cv.analysis
+import VFLabel.cv.segmentation
 import VFLabel.gui.drawSegmentationWidget
-import VFLabel.gui.transformSegmentationWidget
 import VFLabel.gui.interpolateSegmentationWidget
+import VFLabel.gui.transformSegmentationWidget
+import VFLabel.gui.videoOverlayWithGMWidget
 import VFLabel.gui.videoPlayerWidget
 import VFLabel.gui.videoViewWidget
 import VFLabel.gui.zoomableViewWidget
-import VFLabel.gui.videoOverlayWithGMWidget
-
-import VFLabel.utils.transforms
 import VFLabel.io.data
-import VFLabel.utils.utils
-import VFLabel.cv.segmentation
-import VFLabel.cv.analysis
 import VFLabel.nn.segmentation
-import cv2
-
+import VFLabel.utils.transforms
+import VFLabel.utils.utils
 from VFLabel.utils.defines import COLOR
-from typing import List
-
-from tqdm import tqdm
 
 ############################### ^
 #         #         #         # |

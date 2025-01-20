@@ -1,5 +1,6 @@
-import numpy as np
 from typing import List
+
+import numpy as np
 
 
 def glottal_area_waveform(segmentation_video: np.array) -> np.array:

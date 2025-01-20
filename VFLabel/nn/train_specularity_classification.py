@@ -1,15 +1,14 @@
-import torchmetrics.classification
-import torchmetrics.classification.average_precision
-import models, datasets
 import albumentations as A
 import cv2
+import models
+import nn.dataset as datasets
 import torch
 import torchmetrics
-
-import models
-
+import torchmetrics.classification
+import torchmetrics.classification.average_precision
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from utils.enums import NN_MODE
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
@@ -50,13 +49,13 @@ if __name__ == "__main__":
     train_transform = eval_transform
 
     train_dataset = datasets.Specularity(
-        "SpecularHighlights", datasets.MODE.train, transform=train_transform
+        "SpecularHighlights", NN_MODE.train, transform=train_transform
     )
     train_dataset.printStatistics()
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
     eval_dataset = datasets.Specularity(
-        "SpecularHighlights", datasets.MODE.eval, transform=eval_transform
+        "SpecularHighlights", NN_MODE.eval, transform=eval_transform
     )
     eval_dataset.printStatistics()
     eval_loader = DataLoader(eval_dataset, batch_size=batch_size, shuffle=False)

@@ -1,19 +1,14 @@
-import sys
-import numpy as np
 import json
 import os
 
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QMessageBox
-
-from PyQt5.QtCore import pyqtSignal, QEventLoop
+from PyQt5.QtCore import QEventLoop, pyqtSignal
+from PyQt5.QtWidgets import QMessageBox, QVBoxLayout
 
 import VFLabel.gui
+import VFLabel.gui.baseWindowWidget as baseWindowWidget
 import VFLabel.gui.glottisSegmentationWidget
 import VFLabel.gui.progressStateWidget
 import VFLabel.gui.vocalfoldSegmentationWidget
-import VFLabel.gui.baseWindowWidget as baseWindowWidget
-
-
 import VFLabel.io
 import VFLabel.utils.utils
 

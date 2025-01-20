@@ -1,12 +1,4 @@
-import os
-from PyQt5.QtWidgets import (
-    QDialog,
-    QFormLayout,
-    QLineEdit,
-    QPushButton,
-    QFileDialog,
-    QApplication,
-)
+from PyQt5.QtWidgets import QDialog, QFormLayout, QLineEdit, QPushButton
 
 
 class NewProjectWidget(QDialog):

@@ -1,45 +1,17 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
-
-
-from PyQt5 import QtCore
-import numpy as np
-
-from PyQt5.QtWidgets import (
-    QApplication,
-    QWidget,
-    QVBoxLayout,
-    QSlider,
-    QPushButton,
-    QLabel,
-    QFileDialog,
-    QComboBox,
-    QMessageBox,
-)
-
-from PyQt5.QtGui import (
-    QIcon,
-    QPen,
-    QBrush,
-    QPolygonF,
-    QColor,
-    QPixmap,
-)
+import json
 import os
 
-import VFLabel.utils.transforms
+import numpy as np
+import PyQt5.QtCore
+from PyQt5.QtWidgets import QHBoxLayout, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
 import VFLabel.gui.videoPlayerWidget
 import VFLabel.gui.videoViewWidget
 import VFLabel.gui.zoomableViewWidget
-
-import VFLabel.utils.transforms
 import VFLabel.io.data
-import VFLabel.utils.utils
 import VFLabel.utils.defines
-
-import PyQt5.QtCore
-
-import json
+import VFLabel.utils.transforms
+import VFLabel.utils.utils
 
 ############################### ^
 #         #         #         # |

@@ -1,6 +1,6 @@
-import torch
 import kornia
 import numpy as np
+import torch
 
 
 # Indices [n] Tensor

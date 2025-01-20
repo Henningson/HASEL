@@ -1,15 +1,6 @@
-import sys
-from PyQt5.QtWidgets import (
-    QWidget,
-    QPushButton,
-    QHBoxLayout,
-    QSlider,
-)
-from PyQt5.QtCore import QRect
-
-
 from PyQt5 import QtCore
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QRect, QTimer
+from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QSlider, QWidget
 
 
 class VideoPlayerWidget(QWidget):

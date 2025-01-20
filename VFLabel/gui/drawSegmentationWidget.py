@@ -1,12 +1,13 @@
+from typing import List
+
+import PyQt5.Qt
+import PyQt5.QtCore
+from PyQt5.QtCore import QPointF, pyqtSignal
+from PyQt5.QtGui import QBrush, QColor, QPen, QPolygonF
+from PyQt5.QtWidgets import QGraphicsEllipseItem, QMenu
+
 import VFLabel.gui.zoomableViewWidget as zoomableViewWidget
 import VFLabel.utils.enums as enums
-
-from typing import List
-from PyQt5.QtCore import QPointF, pyqtSignal
-from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
-from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem, QGraphicsScene
-import PyQt5.QtCore
-import PyQt5.Qt
 
 
 class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):

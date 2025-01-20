@@ -1,5 +1,6 @@
-from PyQt5.QtWidgets import QGraphicsEllipseItem
 from typing import List
+
+from PyQt5.QtWidgets import QGraphicsEllipseItem
 
 
 class GraphicEllipseItemWithID(QGraphicsEllipseItem):

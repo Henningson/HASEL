@@ -1,25 +1,16 @@
+import json
 import os
 import shutil
-import json
-import VFLabel.gui
+
 import cv2
+from PyQt5.QtCore import QRect, pyqtSignal
+from PyQt5.QtGui import QFont, QPainter, QPixmap
+from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QPushButton
 
-from PyQt5.QtWidgets import (
-    QWidget,
-    QPushButton,
-    QHBoxLayout,
-    QFileDialog,
-    QInputDialog,
-    QLineEdit,
-    QMainWindow,
-    QMenu,
-    QAction,
-)
-from PyQt5.QtGui import QPixmap, QPainter, QFont
-from PyQt5.QtCore import QEventLoop, pyqtSignal, QRect
-
-import VFLabel.gui.newProjectWidget, VFLabel.gui.mainMenuView
+import VFLabel.gui
 import VFLabel.gui.baseWindowWidget as baseWindowWidget
+import VFLabel.gui.mainMenuView
+import VFLabel.gui.newProjectWidget
 
 
 class StartWindowView(baseWindowWidget.BaseWindowWidget):

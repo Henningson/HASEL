@@ -1,10 +1,11 @@
+import os
+import random
+import string
+
+import cv2
+import numpy as np
 import torch
 import torchvision
-import numpy as np
-import os
-import cv2
-import string
-import random
 
 
 def random_ascii_string(

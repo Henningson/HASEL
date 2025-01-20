@@ -1,7 +1,8 @@
-import VFLabel.gui.zoomableViewWidget as zoomableViewWidget
-
 from typing import List
+
 from PyQt5.QtGui import QImage
+
+import VFLabel.gui.zoomableViewWidget as zoomableViewWidget
 
 
 class VideoViewWidget(zoomableViewWidget.ZoomableViewWidget):

@@ -1,15 +1,10 @@
-import VFLabel.gui.videoViewWidget as videoViewWidget
-import VFLabel.utils.enums as enums
-import VFLabel.gui.ellipseWithID as ellipseWithID
-import numpy as np
+from typing import List
 
-from typing import List
-from PyQt5.QtCore import QPointF, pyqtSignal
-from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QImage, QCursor
-from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem, QMessageBox
-import PyQt5.QtCore
-import PyQt5.Qt
-from typing import List
+import numpy as np
+from PyQt5.QtGui import QBrush, QColor, QImage, QPen
+from PyQt5.QtWidgets import QGraphicsEllipseItem, QMenu
+
+import VFLabel.gui.videoViewWidget as videoViewWidget
 
 
 class LabeledPointWidget(videoViewWidget.VideoViewWidget):

@@ -1,15 +1,15 @@
-from PyQt5.QtWidgets import QMainWindow, QAction, QToolBar, QFileDialog
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt
+import json
+import os
+
+import cv2
 from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QAction, QFileDialog, QMainWindow, QToolBar
 from tqdm import tqdm
 
-import os
-import json
-import cv2
-import VFLabel.gui
 import VFLabel.cv
-import VFLabel.gui.newProjectWidget, VFLabel.gui.mainMenuView
+import VFLabel.gui
+import VFLabel.gui.mainMenuView
+import VFLabel.gui.newProjectWidget
 
 
 class MainWindow(QMainWindow):

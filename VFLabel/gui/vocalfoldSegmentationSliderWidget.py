@@ -1,19 +1,8 @@
-from PyQt5.QtWidgets import (
-    QSlider,
-    QApplication,
-    QPushButton,
-    QHBoxLayout,
-    QWidget,
-    QVBoxLayout,
-    QLabel,
-    QStyle,
-    QStyleOptionSlider,
-)
-from PyQt5.QtGui import QPainter, QFont, QFontMetrics
-from PyQt5.QtCore import Qt
-from time import sleep
 import numpy as np
 import PyQt5.QtCore as QtCore
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QFontMetrics
+from PyQt5.QtWidgets import QHBoxLayout, QPushButton, QSlider
 
 
 class VocalfoldSegmentationSliderWidget(QSlider):

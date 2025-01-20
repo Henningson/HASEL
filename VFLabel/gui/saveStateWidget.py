@@ -1,16 +1,6 @@
-import sys
-
-from PyQt5.QtWidgets import (
-    QWidget,
-    QPushButton,
-    QHBoxLayout,
-    QVBoxLayout,
-    QTextEdit,
-    QLabel,
-    QApplication,
-)
-from PyQt5.QtCore import Qt
 import PyQt5.QtCore as QtCore
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 
 class SaveStateWidget(QWidget):

@@ -1,8 +1,9 @@
+from typing import List
+
 import cv2
 import numpy as np
-import VFLabel.cv.laserpoints
 
-from typing import List
+import VFLabel.cv.laserpoints
 
 
 # Input is a FRAME x GRID_HEIGHT x GRID_WIDTH x 2 array, that is generated e.g. in PointClickWidget.

@@ -1,58 +1,39 @@
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QVBoxLayout
-
-
-from PyQt5 import QtCore
-import numpy as np
-
-from PyQt5.QtWidgets import (
-    QApplication,
-    QWidget,
-    QVBoxLayout,
-    QSlider,
-    QPushButton,
-    QLabel,
-    QFileDialog,
-    QComboBox,
-    QMessageBox,
-)
-
-from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QPixmap, QImage, QCursor
+import json
 import os
+from typing import List
 
-import VFLabel.io as io
-
-import VFLabel.gui.cotrackerPointClickWidget
-import VFLabel.gui.pointViewWidget
-
-import VFLabel.nn.point_tracking
-
-import VFLabel.gui.labeledPointWidget
-import VFLabel.utils.transforms
-
-import VFLabel.gui.drawSegmentationWidget
-import VFLabel.gui.transformSegmentationWidget
-import VFLabel.gui.interpolateSegmentationWidget
-import VFLabel.gui.videoPlayerWidget
-import VFLabel.gui.videoViewWidget
-import VFLabel.gui.zoomableViewWidget
-import VFLabel.gui.videoOverlayWidget
-import VFLabel.gui.buttonGridWidget
-
-import VFLabel.utils.transforms
-import VFLabel.io.data
-import VFLabel.utils.utils
+import cv2
+import numpy as np
+import torch
+from PyQt5 import QtCore
+from PyQt5.QtGui import QCursor, QIcon, QImage
+from PyQt5.QtWidgets import (
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QPushButton,
+    QVBoxLayout,
+    QWidget,
+)
 
 import VFLabel.cv.point_interpolation as pi
 import VFLabel.cv.segmentation
-import json
-import cv2
-
-
-import torch
-
-from VFLabel.utils.defines import COLOR
-
-from typing import List
+import VFLabel.gui.buttonGridWidget
+import VFLabel.gui.cotrackerPointClickWidget
+import VFLabel.gui.drawSegmentationWidget
+import VFLabel.gui.interpolateSegmentationWidget
+import VFLabel.gui.labeledPointWidget
+import VFLabel.gui.pointViewWidget
+import VFLabel.gui.transformSegmentationWidget
+import VFLabel.gui.videoOverlayWidget
+import VFLabel.gui.videoPlayerWidget
+import VFLabel.gui.videoViewWidget
+import VFLabel.gui.zoomableViewWidget
+import VFLabel.io as io
+import VFLabel.io.data
+import VFLabel.nn.point_tracking
+import VFLabel.utils.transforms
+import VFLabel.utils.utils
 
 ##################### ^
 #         #         # |

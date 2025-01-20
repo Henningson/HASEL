@@ -1,8 +1,8 @@
-import torch
-import numpy as np
 import os
 from typing import List
 
+import numpy as np
+import torch
 from cotracker.predictor import CoTrackerPredictor
 
 
@@ -93,9 +93,11 @@ def track_points(
 
 
 if __name__ == "__main__":
-    from cotracker.utils.visualizer import Visualizer, read_video_from_path
-    import VFLabel.io.data as io
     import json
+
+    from cotracker.utils.visualizer import Visualizer, read_video_from_path
+
+    import VFLabel.io.data as io
 
     video = read_video_from_path("assets/test_data/test_video_1.avi")[:175]
     dict = io.dict_from_json("projects/test_project/clicked_laserpoints.json")

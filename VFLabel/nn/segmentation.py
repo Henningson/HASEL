@@ -1,26 +1,15 @@
-import torch
-import torch.optim as optim
-from torch.utils.data import DataLoader
-
 import os
-import torch.nn as nn
-import VFLabel.nn.dataset as dataset
-import VFLabel.nn.lr_scheduler as lr_scheduler
-import VFLabel.nn.train_binary_seg_model
+from typing import List
+
+import albumentations as A
+import numpy as np
+import segmentation_models_pytorch as smp
+import torch
+from albumentations.pytorch import ToTensorV2
+from tqdm import tqdm
 
 import VFLabel.io.data
-
-from VFLabel.utils.enums import NN_MODE
-import torch
-import csv
-from typing import List
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-
-import segmentation_models_pytorch as smp
-from segmentation_models_pytorch.encoders import get_preprocessing_fn
-from tqdm import tqdm
-import numpy as np
+import VFLabel.nn.train_binary_seg_model
 
 # TODO: Pass device along in functions instead of defining it globally
 DEVICE = "cpu"

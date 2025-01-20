@@ -1,6 +1,6 @@
 from PyQt5 import QtCore
-from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton
 from PyQt5.QtCore import QSize, pyqtSignal
+from PyQt5.QtWidgets import QGridLayout, QPushButton, QWidget
 
 from VFLabel.utils.enums import GRID_BUTTON_MODE
 

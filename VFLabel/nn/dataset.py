@@ -1,25 +1,18 @@
+import json
 import os
-import torch
-from torch.utils.data import Dataset
-import numpy as np
-import cv2
-
-import albumentations as A
-
-from VFLabel.utils.enums import NN_MODE
-from albumentations.pytorch import ToTensorV2
-
+import re
+from collections import Counter
 from typing import List
 
-
+import albumentations as A
 import cv2
+import numpy as np
+import torch
+from albumentations.pytorch import ToTensorV2
+from torch.utils.data import Dataset
 
 import VFLabel.utils.enums
-import numpy as np
-import re
-
-import json
-from collections import Counter
+from VFLabel.utils.enums import NN_MODE
 
 
 class HaselDataset(Dataset):

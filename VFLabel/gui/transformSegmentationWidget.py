@@ -1,14 +1,12 @@
-import VFLabel.gui.zoomableViewWidget as zoomableViewWidget
-import VFLabel.utils.enums as enums
-
 from typing import List
-from PyQt5.QtCore import QPointF, pyqtSignal
-from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor
-from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem, QGraphicsScene
-from PyQt5 import QtCore
-from PyQt5.QtGui import QImage
-import PyQt5.Qt
+
 import numpy as np
+from PyQt5 import QtCore
+from PyQt5.QtCore import QPointF, pyqtSignal
+from PyQt5.QtGui import QBrush, QColor, QImage, QPen, QPolygonF
+from PyQt5.QtWidgets import QMenu
+
+import VFLabel.gui.zoomableViewWidget as zoomableViewWidget
 
 
 class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):

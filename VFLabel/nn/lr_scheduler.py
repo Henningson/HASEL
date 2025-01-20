@@ -1,6 +1,3 @@
-import torch
-
-
 class PolynomialLR:
     def __init__(self, optimizer, total_iters=30, power=0.9, last_epoch=0):
         self._optimizer = optimizer

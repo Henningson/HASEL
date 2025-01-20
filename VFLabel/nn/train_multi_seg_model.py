@@ -1,19 +1,16 @@
-import torch
-import torch.optim as optim
-from torch.utils.data import DataLoader
-
 import os
-import torch.nn as nn
+
 import dataset
 import lr_scheduler
-
+import segmentation_models_pytorch as smp
+import torch
+import torch.nn as nn
+import torch.optim as optim
 import torchmetrics
 import torchmetrics.detection
+from torch.utils.data import DataLoader
 
 from VFLabel.utils.defines import NN_MODE
-import torch
-
-import segmentation_models_pytorch as smp
 
 # TODO: Pass device along in functions instead of defining it globally
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

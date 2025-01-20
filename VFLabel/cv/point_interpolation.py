@@ -1,16 +1,13 @@
 # In this document, we should implement the point implementation schemes.
-import VFLabel.cv.subpixel_point_estimation as subpixel_point_estimation
-import VFLabel.nn.models
-
-import albumentations as A
-from albumentations.pytorch import ToTensorV2
-import numpy as np
-import torch
 import re
 from typing import List
 
-from scipy.optimize import curve_fit
+import numpy as np
+import torch
 import torch.nn.functional as F
+
+import VFLabel.cv.subpixel_point_estimation as subpixel_point_estimation
+import VFLabel.nn.models
 
 
 def filter_points_not_on_vocalfold(
@@ -293,12 +290,14 @@ def smooth_points(points: torch.tensor) -> torch.tensor:
 
 
 if __name__ == "__main__":
-    from cotracker.utils.visualizer import Visualizer, read_video_from_path
-    import VFLabel.io.data as io
-    import VFLabel.utils.defines
     import json
     import os
+
     import matplotlib.pyplot as plt
+    from cotracker.utils.visualizer import Visualizer, read_video_from_path
+
+    import VFLabel.io.data as io
+    import VFLabel.utils.defines
 
     project_path = VFLabel.utils.defines.TEST_PROJECT_PATH
     video_path = os.path.join(project_path, "video")

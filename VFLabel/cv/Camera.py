@@ -1,29 +1,31 @@
+import json
+
 import numpy as np
 import scipy.io
-import json
+
 
 class Camera:
     def __init__(self, path, filetype="MAT"):
-        if filetype=="MAT":
+        if filetype == "MAT":
             self.readFromMAT(path)
-        
-        if filetype=="JSON":
+
+        if filetype == "JSON":
             self.readFromJSON(path)
 
     def readFromMAT(self, path):
         f = scipy.io.loadmat(path)
 
-        self.setIntrinsic(f['cam'][0]['A'][0])
-        self.setDistortionCoefficients(f['cam'][0][0]['kc'].squeeze())
+        self.setIntrinsic(f["cam"][0]["A"][0])
+        self.setDistortionCoefficients(f["cam"][0][0]["kc"].squeeze())
 
-    #TODO: Implement
+    # TODO: Implement
     def readFromJSON(self, path):
         with open(path) as file:
             # Load JSON File
             DICT = json.load(file)
 
-            self.setIntrinsic(np.array(DICT['Intrinsic']))
-            self.setDistortionCoefficients(np.array(DICT['DistortionCoefficients']))
+            self.setIntrinsic(np.array(DICT["Intrinsic"]))
+            self.setDistortionCoefficients(np.array(DICT["DistortionCoefficients"]))
 
     def setIntrinsic(self, mat):
         self._camera_matrix = mat

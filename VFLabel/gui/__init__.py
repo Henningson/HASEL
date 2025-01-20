@@ -1,28 +1,22 @@
-from .zoomableViewWidget import ZoomableViewWidget
-
-from .pointClickWidget import PointClickWidget
-from .videoPlayerWidget import VideoPlayerWidget
-
+from .baseWindowWidget import BaseWindowWidget
 from .drawSegmentationWidget import DrawSegmentationWidget
-from .transformSegmentationWidget import TransformSegmentationWidget
-from .interpolateSegmentationWidget import InterpolateSegmentationWidget
-from .videoViewWidget import VideoViewWidget
-from .videoOverlayWidget import VideoOverlayWidget
-
+from .glottisSegmentationView import GlottisSegmentationView
 from .glottisSegmentationWidget import GlottisSegmentationWidget
-from .vocalfoldSegmentationWidget import VocalfoldSegmentationWidget
-from .selectCycleView import SelectCycleView
-
-from .startWindowView import StartWindowView
-from .newProjectWidget import NewProjectWidget
-from .mainWindow import MainWindow
+from .interpolateSegmentationWidget import InterpolateSegmentationWidget
 from .mainMenuView import MainMenuView
-
+from .mainWindow import MainWindow
+from .newProjectWidget import NewProjectWidget
+from .pointClickWidget import PointClickWidget
+from .pointLabelingView import PointLabelingView
+from .pointLabelingWidget import PointLabelingWidget
+from .saveStateWidget import SaveStateWidget
+from .selectCycleView import SelectCycleView
+from .startWindowView import StartWindowView
+from .transformSegmentationWidget import TransformSegmentationWidget
+from .videoOverlayWidget import VideoOverlayWidget
+from .videoPlayerWidget import VideoPlayerWidget
+from .videoViewWidget import VideoViewWidget
 from .vocalfoldSegmentationSliderWidget import VocalfoldSegmentationSliderWidget
 from .vocalfoldSegmentationView import VocalfoldSegmentationView
-from .glottisSegmentationView import GlottisSegmentationView
-from .pointLabelingView import PointLabelingView
-from .saveStateWidget import SaveStateWidget
-from .baseWindowWidget import BaseWindowWidget
-
-from .pointLabelingWidget import PointLabelingWidget
+from .vocalfoldSegmentationWidget import VocalfoldSegmentationWidget
+from .zoomableViewWidget import ZoomableViewWidget

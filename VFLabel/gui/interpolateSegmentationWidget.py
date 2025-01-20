@@ -1,16 +1,13 @@
-import VFLabel.gui.zoomableViewWidget as zoomableViewWidget
-import VFLabel.utils.enums as enums
-import VFLabel.utils.transforms as transforms
-
 from typing import List
-from PyQt5.QtCore import QPointF, pyqtSignal, QPoint, QRect
-from PyQt5.QtGui import QIcon, QPen, QBrush, QPolygonF, QColor, QPixmap
-from PyQt5.QtWidgets import QGraphicsView, QMenu, QGraphicsEllipseItem, QGraphicsScene
-from PyQt5 import QtCore
-from PyQt5.QtGui import QImage
-import PyQt5.Qt
+
 import numpy as np
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5 import QtCore
+from PyQt5.QtCore import QPoint, QPointF, QRect
+from PyQt5.QtGui import QBrush, QColor, QImage, QPen, QPixmap, QPolygonF
+from PyQt5.QtWidgets import QMenu
+
+import VFLabel.gui.zoomableViewWidget as zoomableViewWidget
+import VFLabel.utils.transforms as transforms
 
 
 class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):

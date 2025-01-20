@@ -1,23 +1,19 @@
-import os
 import json
+import os
+
+from PyQt5.QtCore import QSize, Qt, pyqtSignal
+from PyQt5.QtGui import QFont, QIcon, QTextBlockFormat, QTextCursor
 from PyQt5.QtWidgets import (
-    QWidget,
-    QPushButton,
     QHBoxLayout,
-    QVBoxLayout,
-    QTextEdit,
     QLabel,
     QMessageBox,
-    QSpacerItem,
+    QPushButton,
     QSizePolicy,
+    QSpacerItem,
+    QTextEdit,
+    QVBoxLayout,
 )
-from PyQt5.QtGui import QFont, QTextCursor, QTextBlockFormat, QIcon
-from PyQt5.QtCore import Qt, QEventLoop, pyqtSignal, QSize
 
-import VFLabel.gui as gui
-import VFLabel.gui.glottisSegmentationView as glottisSegmentationView
-import VFLabel.gui.pointLabelingView as pointLabelingView
-import VFLabel.gui.vocalfoldSegmentationView as vocalfoldSegmentationView
 import VFLabel.gui.baseWindowWidget as baseWindowWidget
 
 
