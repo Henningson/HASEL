@@ -45,9 +45,7 @@ class GlottisSegmentationView(baseWindowWidget.BaseWindowWidget):
         )
         layout.addWidget(self.glottis_widget)
 
-        # Set up the main window
         self.setLayout(layout)
-        # self.glottis_widget = VFLabel.gui.glottisSegmentationWidget.GlottisSegmentationWidget(self.project_path, video_np)
         # Show the window
         self.show()
 

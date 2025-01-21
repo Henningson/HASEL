@@ -71,7 +71,8 @@ class WorkerSegmentation(QObject):
         )
 
         self.glottal_midlines = [
-            VFLabel.cv.analysis.glottal_midline(image) for image in tqdm(self.video)
+            VFLabel.cv.analysis.glottal_midline(image)
+            for image in tqdm(self.segmentations)
         ]
 
         self.signal_segmentation.emit(self.segmentations, self.glottal_midlines)
