@@ -193,6 +193,9 @@ class StartWindowView(baseWindowWidget.BaseWindowWidget):
 
         # create empty json files
         json_path_label_cycles = os.path.join(project_path, "label_cycles.json")
+        json_path_optimized_label_cycles = os.path.join(
+            project_path, "optimized_label_cycles.json"
+        )
         json_path_clicked_laserpts = os.path.join(
             project_path, "clicked_laserpoints.json"
         )
@@ -202,6 +205,9 @@ class StartWindowView(baseWindowWidget.BaseWindowWidget):
         json_path_vf_points = os.path.join(project_path, "vocalfold_points.json")
 
         with open(json_path_label_cycles, "w") as f:
+            pass
+
+        with open(json_path_optimized_label_cycles, "w") as f:
             pass
 
         with open(json_path_clicked_laserpts, "w") as f:

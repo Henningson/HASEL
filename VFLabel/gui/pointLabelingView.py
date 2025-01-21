@@ -35,7 +35,6 @@ class PointLabelingView(baseWindowWidget.BaseWindowWidget):
         ]
 
         videodata = VFLabel.io.data.read_video(*matching_files)
-        print("before")
         path_grid_json = os.path.join(self.project_path, "progress_status.json")
 
         with open(path_grid_json, "r+") as f:
@@ -53,6 +52,7 @@ class PointLabelingView(baseWindowWidget.BaseWindowWidget):
             cycle_end,
             videodata,
             self.project_path,
+            check_for_existing_data=True,
         )
 
         layout.addWidget(self.view)

@@ -37,7 +37,6 @@ class GlottisSegmentationView(baseWindowWidget.BaseWindowWidget):
         ]
 
         videodata = VFLabel.io.data.read_video(*matching_files)
-        print("before")
         # Set up the zoomable view
         self.glottis_widget = (
             VFLabel.gui.glottisSegmentationWidget.GlottisSegmentationWidget(

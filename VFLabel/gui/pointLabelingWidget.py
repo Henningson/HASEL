@@ -16,6 +16,8 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
+from PyQt5.QtCore import QPointF
+
 import VFLabel.cv.point_interpolation as pi
 import VFLabel.cv.segmentation
 import VFLabel.gui.buttonGridWidget
@@ -56,6 +58,7 @@ class PointLabelingWidget(QWidget):
         video: np.array,
         project_path: str,
         parent=None,
+        check_for_existing_data=False,
     ):
         super(PointLabelingWidget, self).__init__(parent)
 
@@ -67,6 +70,14 @@ class PointLabelingWidget(QWidget):
         self.path_predicted_points: str = os.path.join(
             self.path_project, "predicted_laserpoints.json"
         )
+        self.path_predicted_points_labels: str = os.path.join(
+            self.path_project, "label_cycles.json"
+        )
+
+        self.path_optimized_points_labels: str = os.path.join(
+            self.path_project, "optimized_label_cycles.json"
+        )
+
         self.path_optimized_points: str = os.path.join(
             self.path_project, "optimized_laserpoints.json"
         )
@@ -251,6 +262,118 @@ class PointLabelingWidget(QWidget):
         self.point_clicker_widget.point_removed.connect(self.button_grid.reset_button)
         self.point_clicker_widget.point_added.connect(self.trigger_next_laser_point)
 
+        if check_for_existing_data:
+            self.init_with_existing_data()
+
+    def init_with_existing_data(self):
+        # check if data available
+
+        # click points window and button grid
+        cl_pts_path = os.path.join(self.path_project, "clicked_laserpoints.json")
+        file_filled = os.stat(cl_pts_path).st_size
+
+        if not file_filled:
+            return False
+        else:
+
+            with open(cl_pts_path, "r+") as f:
+                file = json.load(f)
+                for i in range(50):
+                    for k in range(len(file[f"Frame{i}"])):
+                        element = file[f"Frame{i}"][k]
+
+                        # paint points in button grid
+                        self.button_grid.clicked_button(
+                            element["x_id"], element["y_id"]
+                        )
+                        # paint points in left window clicked laserpoints
+                        """self.point_clicker_widget.set_laser_index(
+                            element["x_id"], element["y_id"]
+                        )"""
+                        self.point_clicker_widget.add_point(
+                            QPointF(element["x_pos"], element["y_pos"])
+                        )
+
+        # Tracked points window
+        pr_pts_path = os.path.join(self.path_project, "predicted_laserpoints.json")
+        labels_path = os.path.join(self.path_project, "label_cycles.json")
+
+        file_filled = os.stat(pr_pts_path).st_size
+        file_labels_filled = os.stat(labels_path).st_size
+
+        if not file_filled or not file_labels_filled:
+            return
+        else:
+
+            with open(labels_path, "r+") as f:
+                file = json.load(f)
+                length = len(file[f"Frame0"])
+                labels = np.zeros([len(self.video), length])
+                for i in range(len(self.video)):
+                    for k in range(len(file[f"Frame{i}"])):
+                        labels[i, k] = file[f"Frame{i}"][k]["label"]
+
+            with open(pr_pts_path, "r+") as f:
+                file = json.load(f)
+                positions_np, ids_np = VFLabel.io.point_dict_to_cotracker(file)
+
+                points_positions = np.zeros([*np.shape(labels), 2])
+                points_ids = np.zeros([*np.shape(labels), 2])
+                for i in range(len(self.video)):
+                    arg = np.argwhere(positions_np[:, 0] == i)
+                    points_positions[i] = positions_np[arg, 1:][:, 0, :]
+
+                    arg = np.argwhere(ids_np[:, 0] == i)
+                    points_ids[i] = ids_np[arg, 1:][:, 0, :]
+
+            self.cotracker_widget.add_points_labels_and_ids(
+                points_positions, labels, points_ids
+            )
+
+        # optimized points window
+        op_pts_path = os.path.join(self.path_project, "optimized_laserpoints.json")
+
+        op_labels_path = os.path.join(self.path_project, "optimized_label_cycles.json")
+        if not os.path.isfile(op_labels_path):
+            with open(op_labels_path, "w") as f:
+                pass
+
+        file_filled = os.stat(op_pts_path).st_size
+        file_labels_filled = os.stat(op_labels_path).st_size
+
+        if not file_filled or not file_labels_filled:
+            return
+        else:
+
+            with open(op_labels_path, "r+") as f:
+                file = json.load(f)
+                labels = np.zeros([len(self.video), length]) * np.nan
+                for i in range(len(self.video)):
+                    for k in range(len(file[f"Frame{i}"])):
+                        labels[i, k] = file[f"Frame{i}"][k]["label"]
+
+            with open(op_pts_path, "r+") as f:
+                file = json.load(f)
+                positions_np, ids_np = VFLabel.io.point_dict_to_cotracker(file)
+
+                points_positions = np.zeros([*np.shape(labels), 2]) * np.nan
+                points_ids = np.zeros([*np.shape(labels), 2]) * np.nan
+                for i in range(len(self.video)):
+                    for k in range(len(file[f"Frame{i}"])):
+                        points_positions[i, k] = [
+                            file[f"Frame{i}"][k]["x_pos"],
+                            file[f"Frame{i}"][k]["y_pos"],
+                        ]
+
+                        points_ids[i, k] = [
+                            file[f"Frame{i}"][k]["x_id"],
+                            file[f"Frame{i}"][k]["y_id"],
+                        ]
+
+            self.optimized_points_widget.add_points_labels_and_ids(
+                points_positions, labels, points_ids
+            )
+
     def change_frame_label(self, value):
         if value < self.cycle_end:
             self.frame_label_left.setText(f"Click Points - Frame: {value}")
@@ -286,9 +409,35 @@ class PointLabelingWidget(QWidget):
         )
 
         VFLabel.io.write_points_to_json(self.path_predicted_points, numpy_arr)
+        self.write_visibility_to_json(
+            self.path_predicted_points_labels,
+            self.cotracker_widget.point_labels,
+            numpy_arr,
+        )
 
         if show_dialog:
             self.show_ok_dialog()
+
+    def write_visibility_to_json(
+        self, path: str, visibility: np.array, points: np.array, cycle_start: int = 0
+    ) -> None:
+        video_dict = {}
+        for frame_index, per_frame_points in enumerate(points):
+            label_list = []
+            label_values = visibility[frame_index]
+            point_ids = VFLabel.cv.get_point_indices_from_tensor(per_frame_points)
+
+            for label, id in zip(label_values, point_ids):
+                point_dict = {
+                    "label": label,
+                    "x_id": id[1].item(),
+                    "y_id": id[0].item(),
+                }
+                label_list.append(point_dict)
+
+            video_dict[f"Frame{cycle_start + frame_index}"] = label_list
+
+        VFLabel.io.write_json(path, video_dict)
 
     def save_optimized_points(self, show_dialog: bool = True) -> None:
         laserpoints = self.optimized_points_widget.point_positions
@@ -299,6 +448,11 @@ class PointLabelingWidget(QWidget):
         )
 
         VFLabel.io.write_points_to_json(self.path_optimized_points, numpy_arr)
+        self.write_visibility_to_json(
+            self.path_optimized_points_labels,
+            self.optimized_points_widget.point_labels.numpy().tolist(),
+            numpy_arr,
+        )
 
         if show_dialog:
             self.show_ok_dialog()
