@@ -322,6 +322,17 @@ class GlottisSegmentationWidget(QWidget):
         self.overlay_view.add_overlay(overlays)
 
         self.segmentation_view.redraw()
+
+        glottal_midline_dict = {}
+        for frame_index, midline_points in enumerate(self.glottal_midlines):
+            upper = midline_points[0]
+            lower = midline_points[1]
+
+            glottal_midline_dict[f"Frame{frame_index}"] = {
+                "Upper": upper.tolist() if upper is not None else [-1, -1],
+                "Lower": lower.tolist() if lower is not None else [-1, -1],
+            }
+        self.overlay_view.set_glottal_midlines_array(glottal_midline_dict)
         self.overlay_view.redraw()
 
     def save(self) -> None:

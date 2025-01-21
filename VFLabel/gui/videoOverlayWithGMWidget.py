@@ -68,3 +68,6 @@ class VideoOverlayGlottalMidlineWidget(videoOverlayWidget.VideoOverlayWidget):
             upper_point[0], upper_point[1], lower_point[0], lower_point[1], pen
         )
         self._glottal_midline_pointer.setOpacity(self._opacity)
+
+    def set_glottal_midlines_array(self, glottal_midline_array) -> None:
+        self.glottal_midlines = glottal_midline_array
