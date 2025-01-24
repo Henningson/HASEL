@@ -109,7 +109,6 @@ class HaselDataset(Dataset):
 
 class Specularity(Dataset):
     def __init__(self, base_path: str, mode: NN_MODE, transform=None):
-        path = None
         json_path = None
 
         if mode == NN_MODE.TRAIN:
@@ -131,12 +130,7 @@ class Specularity(Dataset):
             label = value["label"]
             rel_path = value["path"]
             image = cv2.imread(os.path.join(base_path, rel_path), 0)
-
-            image_copy = image.astype(float) / 255
-            image_copy = (image_copy - image_copy.min()) / (
-                image_copy.max() - image_copy.min()
-            )
-            image_copy *= 255
+            image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX)
             image_copy = image.astype(np.uint8)
 
             self.images.append(image_copy)
@@ -166,9 +160,10 @@ class Specularity(Dataset):
         image = self.images[index]
         label = self.labels[index]
 
-        image = self.transform(image=image)
+        if self.transform is not None:
+            image = self.transform(image=image)["image"]
 
-        return image["image"], torch.tensor([label])
+        return image, torch.tensor([label])
 
 
 class HLE_BAGLS_Fireflies_Dataset(Dataset):

@@ -206,5 +206,7 @@ class UNet(nn.Module):
 if __name__ == "__main__":
     x = torch.randn((4, 3, 512, 256))
     y = torch.randn((4, 2, 100))
-    model = UNet(in_channels=3, out_channels=3)
-    seg = model(x)
+    model = Kernel3Classificator()
+    a = 1
+    # model = UNet(in_channels=3, out_channels=3)
+    # seg = model(x)
