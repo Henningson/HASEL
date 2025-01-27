@@ -67,7 +67,7 @@ class VideoPlayerWidget(QWidget):
         if self._current_frame == 0:
             return
 
-        self._current_frame += 1
+        self._current_frame -= 1
         self.update_slider()
 
     def increment_frame(self, force: bool = False) -> None:

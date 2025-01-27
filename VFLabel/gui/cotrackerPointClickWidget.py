@@ -15,6 +15,8 @@ import VFLabel.utils.enums as enums
 class CotrackerPointClickWidget(videoViewWidget.VideoViewWidget):
     point_added = pyqtSignal()
     point_removed = pyqtSignal(int, int)
+    signal_increment_frame = pyqtSignal(bool)
+    signal_decrement_frame = pyqtSignal(bool)
 
     def __init__(
         self,
@@ -33,6 +35,8 @@ class CotrackerPointClickWidget(videoViewWidget.VideoViewWidget):
         self._pointsize: int = 7
 
         self._point_items: List[QGraphicsEllipseItem] = []
+
+        self._num_frames = len(video)
 
         self._image_width = video[0].width()
         self._image_height = video[0].height()
@@ -54,6 +58,11 @@ class CotrackerPointClickWidget(videoViewWidget.VideoViewWidget):
     def keyPressEvent(self, event) -> None:
         if event.key() == PyQt5.QtCore.Qt.Key_E:
             self.toggle_draw_mode()
+
+        if event.key() == PyQt5.QtCore.Qt.Key_Right:
+            self.frame_forward()
+        elif event.key() == PyQt5.QtCore.Qt.Key_Left:
+            self.frame_backward()
 
     def mousePressEvent(self, event) -> None:
         if (
@@ -83,12 +92,13 @@ class CotrackerPointClickWidget(videoViewWidget.VideoViewWidget):
         :type event: QContextMenuEvent
         """
         menu = QMenu()
-        menu.addAction("Zoom in               MouseWheel Up", self.zoomIn)
-        menu.addAction("Zoom out              MouseWheel Down", self.zoomOut)
-        menu.addAction("Toggle Edit Mode      E", self.toggle_draw_mode)
-        menu.addAction("Draw Mode ON", self.draw_mode_on)
-        menu.addAction("Draw Mode OFF", self.draw_mode_off)
-        menu.addAction("Remove Point          R", self.remove_last_point)
+        menu.addAction("Zoom in\tMouseWheel Up", self.zoomIn)
+        menu.addAction("Zoom out\tMouseWheel Down", self.zoomOut)
+        menu.addAction("Toggle Edit Mode\tE", self.toggle_draw_mode)
+        menu.addAction("Draw Mode ON", self.DRAW_MODE_on)
+        menu.addAction("Draw Mode OFF", self.DRAW_MODE_off)
+        menu.addAction("Frame forward\tRight Arrow", self.frame_forward)
+        menu.addAction("Frame backward\tLeft Arrow", self.frame_backward)
         menu.addAction("Reset View", self.zoomReset)
         menu.exec_(event.globalPos())
 
@@ -99,6 +109,19 @@ class CotrackerPointClickWidget(videoViewWidget.VideoViewWidget):
     def mouseReleaseEvent(self, event):
         super(CotrackerPointClickWidget, self).mouseReleaseEvent(event)
         self.setCursor(QCursor(PyQt5.QtCore.Qt.CrossCursor))
+
+    def frame_forward(self):
+        if self._current_frame == self._num_frames - 1:
+            return
+        self.change_frame(self._current_frame + 1)
+        self.signal_increment_frame.emit(True)
+
+    def frame_backward(self):
+        print(self._current_frame)
+        if self._current_frame >= self._num_frames:
+            return
+        self.change_frame(self._current_frame - 1)
+        self.signal_decrement_frame.emit(True)
 
     def toggle_remove_mode(self) -> None:
         self._draw_mode = enums.DRAW_MODE.OFF

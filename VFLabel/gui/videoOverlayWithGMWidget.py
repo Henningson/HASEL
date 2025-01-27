@@ -38,10 +38,13 @@ class VideoOverlayGlottalMidlineWidget(videoOverlayWidget.VideoOverlayWidget):
         menu.addAction("Zoom out\tMouseWheel Down", self.zoomOut)
         menu.addAction("Increase Opacity\t+", self.increaseOpacity)
         menu.addAction("Decrease Opactiy\t-", self.decreaseOpacity)
+        menu.addAction("Frame forward\tRight Arrow", self.frame_forward)
+        menu.addAction("Frame backward\tLeft Arrow", self.frame_backward)
         menu.addAction("Reset Zoom", self.zoomReset)
         menu.exec_(event.globalPos())
 
     def keyPressEvent(self, event) -> None:
+        super().keyPressEvent(event)
         if event.key() == QKeySequence("+"):
             self.increaseOpacity()
 

@@ -1,13 +1,19 @@
 from typing import List
 
 import numpy as np
+import PyQt5
 from PyQt5.QtGui import QBrush, QColor, QImage, QPen
 from PyQt5.QtWidgets import QGraphicsEllipseItem, QMenu
+from PyQt5.QtCore import pyqtSignal
 
 import VFLabel.gui.videoViewWidget as videoViewWidget
 
 
 class LabeledPointWidget(videoViewWidget.VideoViewWidget):
+
+    signal_increment_frame = pyqtSignal(bool)
+    signal_decrement_frame = pyqtSignal(bool)
+
     def __init__(
         self,
         video: List[QImage],
@@ -43,7 +49,10 @@ class LabeledPointWidget(videoViewWidget.VideoViewWidget):
         self._current_frame = 0
 
     def keyPressEvent(self, event) -> None:
-        self.change_frame(self._current_frame + 1)
+        if event.key() == PyQt5.QtCore.Qt.Key_Right:
+            self.frame_forward()
+        elif event.key() == PyQt5.QtCore.Qt.Key_Left:
+            self.frame_backward()
 
     def contextMenuEvent(self, event) -> None:
         """
@@ -53,10 +62,20 @@ class LabeledPointWidget(videoViewWidget.VideoViewWidget):
         :type event: QContextMenuEvent
         """
         menu = QMenu()
-        menu.addAction("Zoom in               MouseWheel Up", self.zoomIn)
-        menu.addAction("Zoom out              MouseWheel Down", self.zoomOut)
+        menu.addAction("Zoom in\tMouseWheel Up", self.zoomIn)
+        menu.addAction("Zoom out\tMouseWheel Down", self.zoomOut)
+        menu.addAction("Frame forward\tRight Arrow", self.frame_forward)
+        menu.addAction("Frame backward\tLeft Arrow", self.frame_backward)
         menu.addAction("Reset View", self.zoomReset)
         menu.exec_(event.globalPos())
+
+    def frame_forward(self):
+        self.change_frame(self._current_frame + 1)
+        self.signal_increment_frame.emit(True)
+
+    def frame_backward(self):
+        self.change_frame(self._current_frame - 1)
+        self.signal_decrement_frame.emit(True)
 
     def redraw(self) -> None:
         if self.images:

@@ -261,6 +261,25 @@ class PointLabelingWidget(QWidget):
         )
         self.point_clicker_widget.point_removed.connect(self.button_grid.reset_button)
         self.point_clicker_widget.point_added.connect(self.trigger_next_laser_point)
+        self.cotracker_widget.signal_increment_frame.connect(
+            self.video_player.increment_frame
+        )
+        self.cotracker_widget.signal_decrement_frame.connect(
+            self.video_player.decrement_frame
+        )
+        self.optimized_points_widget.signal_increment_frame.connect(
+            self.video_player.increment_frame
+        )
+        self.optimized_points_widget.signal_decrement_frame.connect(
+            self.video_player.decrement_frame
+        )
+
+        self.point_clicker_widget.signal_increment_frame.connect(
+            self.video_player.increment_frame
+        )
+        self.point_clicker_widget.signal_decrement_frame.connect(
+            self.video_player.decrement_frame
+        )
 
         if check_for_existing_data:
             self.init_with_existing_data()

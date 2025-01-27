@@ -2,7 +2,7 @@ from typing import List
 
 import numpy as np
 from PyQt5 import QtCore
-from PyQt5.QtCore import QPoint, QPointF, QRect
+from PyQt5.QtCore import QPoint, QPointF, QRect, pyqtSignal
 from PyQt5.QtGui import QBrush, QColor, QImage, QPen, QPixmap, QPolygonF
 from PyQt5.QtWidgets import QMenu
 
@@ -11,6 +11,10 @@ import VFLabel.utils.transforms as transforms
 
 
 class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
+
+    signal_increment_frame = pyqtSignal(bool)
+    signal_decrement_frame = pyqtSignal(bool)
+
     def __init__(
         self,
         images: List[QImage],
@@ -55,10 +59,11 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         :param event: The QContextMenuEvent containing information about the context menu event.
         :type event: QContextMenuEvent
         """
-        # TODO: can be deleted?! is the same as in zoomableviewwidget
         menu = QMenu()
         menu.addAction("Zoom in\tMouseWheel Up", self.zoomIn)
         menu.addAction("Zoom out\tMouseWheel Down", self.zoomOut)
+        menu.addAction("Frame forward\tRight Arrow", self.frame_forward)
+        menu.addAction("Frame backward\tLeft Arrow", self.frame_backward)
         menu.addAction("Reset Zoom", self.zoomReset)
         menu.exec_(event.globalPos())
 
@@ -272,28 +277,19 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         self._polygon_pointer.setRotation(lerped_rot)
         self._polygon_pointer.setPos(lerped_x_trans, lerped_y_trans)
 
+    def frame_forward(self):
+        self.change_frame(self._current_frame + 1)
+        self.signal_increment_frame.emit(True)
+
+    def frame_backward(self):
+        self.change_frame(self._current_frame - 1)
+        self.signal_decrement_frame.emit(True)
+
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Space:
-            self.toggle_zoom_mode()
-            return
-
-        if event.key() == QtCore.Qt.Key_I:
-            self.upscale()
-        elif event.key() == QtCore.Qt.Key_K:
-            self.downscale()
-        elif event.key() == QtCore.Qt.Key_L:
-            self.rotateClockwise()
-        elif event.key() == QtCore.Qt.Key_J:
-            self.rotateAntiClockwise()
-
-        elif event.key() == QtCore.Qt.Key_W:
-            self.move_up()
-        elif event.key() == QtCore.Qt.Key_A:
-            self.move_left()
-        elif event.key() == QtCore.Qt.Key_S:
-            self.move_down()
-        elif event.key() == QtCore.Qt.Key_D:
-            self.move_right()
+        if event.key() == QtCore.Qt.Key_Right:
+            self.frame_forward()
+        elif event.key() == QtCore.Qt.Key_Left:
+            self.frame_backward()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

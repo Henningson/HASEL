@@ -239,6 +239,26 @@ class GlottisSegmentationWidget(QWidget):
         self.alpha_slider.valueChanged.connect(self.change_opacity)
         self.video_player.slider.valueChanged.connect(self.change_frame)
         self.overlay_view.signal_opacity_slider.connect(self.update_alpha_slider)
+        self.video_view.signal_decrement_frame.connect(
+            self.video_player.decrement_frame
+        )
+        self.video_view.signal_increment_frame.connect(
+            self.video_player.increment_frame
+        )
+
+        self.segmentation_view.signal_decrement_frame.connect(
+            self.video_player.decrement_frame
+        )
+        self.segmentation_view.signal_increment_frame.connect(
+            self.video_player.increment_frame
+        )
+
+        self.overlay_view.signal_decrement_frame.connect(
+            self.video_player.decrement_frame
+        )
+        self.overlay_view.signal_increment_frame.connect(
+            self.video_player.increment_frame
+        )
 
     def change_frame_label(self, value):
         self.frame_label_left.setText(f"Input Video - Frame: {value}")

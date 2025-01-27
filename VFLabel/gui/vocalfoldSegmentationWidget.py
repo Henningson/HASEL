@@ -190,6 +190,13 @@ class VocalfoldSegmentationWidget(QWidget):
             self.interpolate_view.update_signal_current_marks
         )
 
+        self.interpolate_view.signal_increment_frame.connect(
+            self.video_player.increment_frame
+        )
+        self.interpolate_view.signal_decrement_frame.connect(
+            self.video_player.decrement_frame
+        )
+
         # connection to segment_slider
         self.signal_new_mark.connect(self.segment_slider.update_new_mark_signal)
         self.signal_remove_mark.connect(self.segment_slider.update_remove_mark_signal)
