@@ -2,11 +2,15 @@ from typing import List
 
 from PyQt5.QtGui import QImage, QPixmap
 from PyQt5.QtWidgets import QMenu
+from PyQt5.QtCore import pyqtSignal
 
 import VFLabel.gui.videoViewWidget as videoViewWidget
 
 
 class VideoOverlayWidget(videoViewWidget.VideoViewWidget):
+
+    signal_opacity_slider = pyqtSignal(int)
+
     def __init__(
         self,
         images: List[QImage],
@@ -24,6 +28,7 @@ class VideoOverlayWidget(videoViewWidget.VideoViewWidget):
 
         if self.overlay_images:
             self.set_overlay(self.overlay_images[0])
+            self.change_opacity_slider()
 
     def contextMenuEvent(self, event) -> None:
         """
@@ -43,13 +48,21 @@ class VideoOverlayWidget(videoViewWidget.VideoViewWidget):
         self._opacity += self._opacity_delta
 
         if self._opacity > 1.0:
-            self._opactiy = 1.0
+            self._opacity = 1.0
+
+        self.change_opacity_slider()
 
     def decreaseOpacity(self) -> None:
         self._opacity -= self._opacity_delta
 
-        if self._opactiy < 0.0:
-            self._opactiy = 0.0
+        if self._opacity < 0.0:
+            self._opacity = 0.0
+
+        self.change_opacity_slider()
+
+    def change_opacity_slider(self):
+        value = round(self._opacity * 100)
+        self.signal_opacity_slider.emit(value)
 
     def redraw(self) -> None:
         if self.images:
@@ -57,6 +70,7 @@ class VideoOverlayWidget(videoViewWidget.VideoViewWidget):
 
         if self.overlay_images:
             self.set_overlay(self.overlay_images[self._current_frame])
+            self.change_opacity_slider()
 
     def change_frame(self, frame: int) -> None:
         self._current_frame = frame

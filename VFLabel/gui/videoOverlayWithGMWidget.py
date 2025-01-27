@@ -1,7 +1,7 @@
 from typing import List
 
 import numpy as np
-from PyQt5.QtGui import QColor, QImage, QPen
+from PyQt5.QtGui import QColor, QImage, QPen, QKeySequence
 from PyQt5.QtWidgets import QMenu
 
 import VFLabel.gui.videoOverlayWidget as videoOverlayWidget
@@ -39,6 +39,13 @@ class VideoOverlayGlottalMidlineWidget(videoOverlayWidget.VideoOverlayWidget):
         menu.addAction("Increase Opacity      +", self.increaseOpacity)
         menu.addAction("Decrease Opactiy      -", self.decreaseOpacity)
         menu.exec_(event.globalPos())
+
+    def keyPressEvent(self, event) -> None:
+        if event.key() == QKeySequence("+"):
+            self.increaseOpacity()
+
+        if event.key() == QKeySequence("-"):
+            self.decreaseOpacity()
 
     def redraw(self) -> None:
         if self.images:

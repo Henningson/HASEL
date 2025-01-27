@@ -146,6 +146,7 @@ class GlottisSegmentationWidget(QWidget):
         self.opacity_label = QLabel("Opacity:")
         self.alpha_slider = QSlider(QtCore.Qt.Orientation.Horizontal)
         self.alpha_slider.setRange(0, 100)
+        self.alpha_slider.setValue(80)
 
         self.generate_button = QPushButton("Generate")
 
@@ -237,6 +238,7 @@ class GlottisSegmentationWidget(QWidget):
         self.generate_button.clicked.connect(self.generate_segmentations)
         self.alpha_slider.valueChanged.connect(self.change_opacity)
         self.video_player.slider.valueChanged.connect(self.change_frame)
+        self.overlay_view.signal_opacity_slider.connect(self.update_alpha_slider)
 
     def change_frame_label(self, value):
         self.frame_label_left.setText(f"Input Video - Frame: {value}")
@@ -359,6 +361,9 @@ class GlottisSegmentationWidget(QWidget):
 
     def change_opacity(self) -> None:
         self.overlay_view.set_opacity(self.alpha_slider.value() / 100)
+
+    def update_alpha_slider(self, alpha):
+        self.alpha_slider.setValue(alpha)
 
     def change_frame(self) -> None:
         self.video_view.change_frame(self.video_player.slider.value())
