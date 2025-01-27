@@ -21,10 +21,14 @@ class ProgressStateWidget(QWidget):
 
         # create finish and toBeContinued btns
         btn_finished = QPushButton("Yes, I am done", self)
-        btn_finished.setToolTip("This <b>button</b> ...")
+        btn_finished.setToolTip(
+            "This <b>button</b> sets the progress status to 'finished'."
+        )
         btn_finished.setFixedSize(120, 40)
         btn_continue = QPushButton("Continue next time", self)
-        btn_continue.setToolTip("This <b>button</b> ...")
+        btn_continue.setToolTip(
+            "This <b>button</b> sets the progress status to 'in progress'"
+        )
         btn_continue.setFixedSize(120, 40)
 
         # add functionality to btns

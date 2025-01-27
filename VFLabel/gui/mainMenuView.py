@@ -47,17 +47,23 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
         font = QFont("Arial", 20, QFont.Bold)
 
         btn_gl_seg = QPushButton("Glottis \nsegmentation", self)
-        btn_gl_seg.setToolTip("This <b>button</b> ...")
+        btn_gl_seg.setToolTip(
+            "In this step of the pipeline, the glottis is segmented and the midline of the glottis is determined. We supply different neural network architectures."
+        )
         btn_gl_seg.setFont(font)
         btn_gl_seg.setFixedSize(200, 100)
 
         btn_vf_seg = QPushButton("Vocal Fold \nsegmentation", self)
-        btn_vf_seg.setToolTip("This <b>button</b> ...")
+        btn_vf_seg.setToolTip(
+            "In this step of the pipeline the vocalfold is segmented. This is done by creating a mask of the vocal fold in the first frame. In the last frame, the vocal fold mask is transformed to match the vocal fold in this view. The other frames are interpolated."
+        )
         btn_vf_seg.setFont(font)
         btn_vf_seg.setFixedSize(200, 100)
 
         btn_pt_label = QPushButton("Point \nLabeling", self)
-        btn_pt_label.setToolTip("This <b>button</b> ...")
+        btn_pt_label.setToolTip(
+            "In this step of the pipeline, the laserpoints are marked and tracked over time."
+        )
         btn_pt_label.setFont(font)
         btn_pt_label.setFixedSize(200, 100)
 
@@ -79,7 +85,7 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
         # create close button
         font = QFont("Arial", 15, QFont.Bold)
         btn_close = QPushButton("Close", self)
-        btn_close.setToolTip("This <b>button</b> ...")
+        btn_close.setToolTip("This <b>button</b> closes this project")
         btn_close.setFont(font)
         btn_close.setFixedSize(100, 30)
 
