@@ -71,12 +71,12 @@ class DrawSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         :type event: QContextMenuEvent
         """
         menu = QMenu()
-        menu.addAction("Zoom in               MouseWheel Up", self.zoomIn)
-        menu.addAction("Zoom out              MouseWheel Down", self.zoomOut)
-        menu.addAction("Toggle Edit Mode      E", self.toggle_draw_mode)
+        menu.addAction("Zoom in\tMouseWheel Up", self.zoomIn)
+        menu.addAction("Zoom out\tMouseWheel Down", self.zoomOut)
+        menu.addAction("Toggle Edit Mode\te", self.toggle_draw_mode)
         menu.addAction("Draw Mode ON", self.draw_mode_on)
         menu.addAction("Draw Mode OFF", self.draw_mode_off)
-        menu.addAction("Remove Point          R", self.remove_last_point)
+        menu.addAction("Remove Point\tr", self.remove_last_point)
         menu.addAction("Reset View", self.zoomReset)
         menu.exec_(event.globalPos())
 

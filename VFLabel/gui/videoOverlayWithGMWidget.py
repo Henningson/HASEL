@@ -34,10 +34,11 @@ class VideoOverlayGlottalMidlineWidget(videoOverlayWidget.VideoOverlayWidget):
         :type event: QContextMenuEvent
         """
         menu = QMenu()
-        menu.addAction("Zoom in               MouseWheel Up", self.zoomIn)
-        menu.addAction("Zoom out              MouseWheel Down", self.zoomOut)
-        menu.addAction("Increase Opacity      +", self.increaseOpacity)
-        menu.addAction("Decrease Opactiy      -", self.decreaseOpacity)
+        menu.addAction("Zoom in\tMouseWheel Up", self.zoomIn)
+        menu.addAction("Zoom out\tMouseWheel Down", self.zoomOut)
+        menu.addAction("Increase Opacity\t+", self.increaseOpacity)
+        menu.addAction("Decrease Opactiy\t-", self.decreaseOpacity)
+        menu.addAction("Reset Zoom", self.zoomReset)
         menu.exec_(event.globalPos())
 
     def keyPressEvent(self, event) -> None:

@@ -76,8 +76,8 @@ class ZoomableViewWidget(QGraphicsView):
         :type event: QContextMenuEvent
         """
         menu = QMenu()
-        menu.addAction("Zoom in               MouseWheel Up", self.zoomIn)
-        menu.addAction("Zoom out              MouseWheel Down", self.zoomOut)
+        menu.addAction("Zoom in\tMouseWheel Up", self.zoomIn)
+        menu.addAction("Zoom out\tMouseWheel Down", self.zoomOut)
         menu.addAction("Reset Zoom", self.zoomReset)
         menu.exec_(event.globalPos())
 
@@ -101,6 +101,7 @@ class ZoomableViewWidget(QGraphicsView):
         """
         self._zoom = 1
         self.update_view()
+        self.fit_view()
 
     def zoom(self) -> float:
         """

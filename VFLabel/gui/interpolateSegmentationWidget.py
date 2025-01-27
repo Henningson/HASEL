@@ -55,9 +55,11 @@ class InterpolateSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         :param event: The QContextMenuEvent containing information about the context menu event.
         :type event: QContextMenuEvent
         """
+        # TODO: can be deleted?! is the same as in zoomableviewwidget
         menu = QMenu()
-        menu.addAction("Zoom in               MouseWheel Up", self.zoomIn)
-        menu.addAction("Zoom out              MouseWheel Down", self.zoomOut)
+        menu.addAction("Zoom in\tMouseWheel Up", self.zoomIn)
+        menu.addAction("Zoom out\tMouseWheel Down", self.zoomOut)
+        menu.addAction("Reset Zoom", self.zoomReset)
         menu.exec_(event.globalPos())
 
     def generate_segmentation_for_frame(self, index: int) -> np.array:

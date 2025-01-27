@@ -59,17 +59,18 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         :type event: QContextMenuEvent
         """
         menu = QMenu()
-        menu.addAction("Zoom in               MouseWheel Up", self.zoomIn)
-        menu.addAction("Zoom out              MouseWheel Down", self.zoomOut)
-        menu.addAction("Toggle Zoom-Mode T", self.toggle_zoom_mode)
-        menu.addAction("Upscale", self.upscale)
-        menu.addAction("Downscale", self.downscale)
-        menu.addAction("Rotate Clockwise", self.rotateClockwise)
-        menu.addAction("Rotate Anticlockwise", self.rotateAntiClockwise)
-        menu.addAction("Move Up", self.move_up)
-        menu.addAction("Move Down", self.move_down)
-        menu.addAction("Move Left", self.move_left)
-        menu.addAction("Move Right", self.move_right)
+        menu.addAction("Zoom in\tMouseWheel Up", self.zoomIn)
+        menu.addAction("Zoom out\tMouseWheel Down", self.zoomOut)
+        menu.addAction("Toggle Zoom-Mode\tt", self.toggle_zoom_mode)
+        menu.addAction("Upscale\ti", self.upscale)
+        menu.addAction("Downscale\tk", self.downscale)
+        menu.addAction("Rotate Clockwise\tl", self.rotateClockwise)
+        menu.addAction("Rotate Anticlockwise\tj", self.rotateAntiClockwise)
+        menu.addAction("Move Up\tw", self.move_up)
+        menu.addAction("Move Down\ts", self.move_down)
+        menu.addAction("Move Left\ta", self.move_left)
+        menu.addAction("Move Right\td", self.move_right)
+        menu.addAction("Reset Zoom", self.zoomReset)
         menu.exec_(event.globalPos())
 
     def toggle_zoom_mode(self) -> None:
@@ -142,8 +143,11 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
         if event.key() == QtCore.Qt.Key_Space:
             self.toggle_zoom_mode()
             return
+        # TODO: in context menu mit shortcut T, zusätzlich?
 
-        if event.key() == QtCore.Qt.Key_I:
+        if event.key() == QtCore.Qt.Key_T:
+            self.toggle_zoom_mode()
+        elif event.key() == QtCore.Qt.Key_I:
             self.upscale()
         elif event.key() == QtCore.Qt.Key_K:
             self.downscale()
@@ -151,7 +155,6 @@ class TransformSegmentationWidget(zoomableViewWidget.ZoomableViewWidget):
             self.rotateClockwise()
         elif event.key() == QtCore.Qt.Key_J:
             self.rotateAntiClockwise()
-
         elif event.key() == QtCore.Qt.Key_W:
             self.move_up()
         elif event.key() == QtCore.Qt.Key_A:
