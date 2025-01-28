@@ -56,7 +56,7 @@ Make a video here.
 # Regarding the  glottal segmentation
 Glottal Segmentations can also easily be generated from command line arguments, via the supplied script in the examples:
 ```
-python examples/scripts/segment_glottis --encoder mobilenet_v2 --image_folder PATH_TO_WHERE_THE_IMAGES_Are --save_folder OUTPUT_FOLDER
+python examples/scripts/segment_glottis --encoder mobilenet_v2 --image_folder PATH_TO_WHERE_THE_IMAGES_ARE --save_folder OUTPUT_FOLDER
 ```
 
 ##  Available CNNs
