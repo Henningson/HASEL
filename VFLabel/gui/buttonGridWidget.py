@@ -11,7 +11,7 @@ class ButtonGrid(QWidget):
     def __init__(self, grid_height: int = 18, grid_width: int = 18, parent=None):
         super(ButtonGrid, self).__init__()
 
-        button_size: int = 25
+        button_size: int = 30
 
         self.setLayout(QGridLayout())
         self.setFixedSize(QSize(button_size * grid_width, button_size * grid_height))

@@ -18,25 +18,6 @@ class MainWindow(QMainWindow):
 
         # general setup
         self.showMaximized()
-        # self.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.setStyleSheet(
-            """
-            QMainWindow {
-                background-color: rgb(255, 255, 255);
-            }
-
-            QMenuBar {
-                background: rgb(240, 248, 255);                 /* background*/
-                color: rgb(0, 0, 0);                            /* text color*/
-                border-top: 1px solid rgb(211, 211, 211);
-            }
-            QToolBar {
-                background: rgb(240, 248, 255);                 /* background*/
-                color: rgb(0, 0, 0);                            /* text color*/
-                border-bottom: 1px solid rgb(211, 211, 211);
-            }
-            """
-        )
 
         # setup menu bar
         self.setStatusBar(self.statusBar())
@@ -74,7 +55,7 @@ class MainWindow(QMainWindow):
 
         # tool close button
         tool_close_window = QAction(
-            QIcon(close_icon_path), "Close current window", self
+            QIcon.fromTheme("close"), "Close current window", self
         )
         tool_close_window.setToolTip("Close current window  Ctrl+c")
         tool_close_window.setShortcut("Ctrl+c")

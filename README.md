@@ -18,7 +18,7 @@ First, create the environment and install necessary packages.
 conda create --name VFLabel python=3.12
 pip install torch torchvision torchaudio
 conda install pyqt qtpy
-pip install torchmetrics albumentations imageio kornia segmentation-models-pytorch matplotlib flow_vis tensorboard tqdm
+pip install torchmetrics albumentations imageio kornia segmentation-models-pytorch matplotlib flow_vis tensorboard tqdm pyqtdarktheme-fork
 ```
 
 Next, install Hasel for **development**:
