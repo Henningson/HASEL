@@ -2,7 +2,7 @@ import json
 import os
 
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
-from PyQt5.QtGui import QFont, QIcon, QTextBlockFormat, QTextCursor
+from PyQt5.QtGui import QColor, QFont, QIcon, QTextBlockFormat, QTextCursor
 from PyQt5.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -67,7 +67,7 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
         btn_pt_label.setFont(font)
         btn_pt_label.setFixedSize(200, 100)
 
-        path_upload_icon = "assets/icons/file-download-import.svg"
+        path_upload_icon = "assets/icons/upload.svg"
 
         btn_upload_glottis_segm = QPushButton(QIcon(path_upload_icon), "")
         btn_upload_glottis_segm.setIconSize(QSize(50, 50))
@@ -90,7 +90,20 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
         btn_close.setFixedSize(100, 30)
 
         # create progress text bars
-        self.read_write_progress_state()
+        with open(self.progress_state_path, "r+") as prgrss_file:
+            file = json.load(prgrss_file)
+            self.progress_gl_seg = QTextEdit(file["progress_gl_seg"], readOnly=True)
+            self.progress_gl_seg.setFixedSize(200, 30)
+            self.progress_gl_seg.setTextColor(QColor(0, 0, 0))
+            self.color_progress_state(self.progress_gl_seg, file["progress_gl_seg"])
+            self.progress_vf_seg = QTextEdit(file["progress_vf_seg"], readOnly=True)
+            self.progress_vf_seg.setFixedSize(200, 30)
+            self.progress_vf_seg.setTextColor(QColor(0, 0, 0))
+            self.color_progress_state(self.progress_vf_seg, file["progress_vf_seg"])
+            self.progress_pt_label = QTextEdit(file["progress_pt_label"], readOnly=True)
+            self.progress_pt_label.setFixedSize(200, 30)
+            self.progress_vf_seg.setTextColor(QColor(0, 0, 0))
+            self.color_progress_state(self.progress_pt_label, file["progress_pt_label"])
 
         # centralize text of progress text bars
         self.centralize_text(self.progress_gl_seg)
@@ -196,26 +209,19 @@ class MainMenuView(baseWindowWidget.BaseWindowWidget):
     def open_pt_labeling(self) -> None:
         self.signal_open_pt_label_window.emit(self.project_path)
 
-    def read_write_progress_state(self):
-        with open(self.progress_state_path, "r+") as prgrss_file:
-            file = json.load(prgrss_file)
-            self.progress_gl_seg = QTextEdit(file["progress_gl_seg"], readOnly=True)
-            self.progress_gl_seg.setFixedSize(200, 30)
-            self.color_progress_state(self.progress_gl_seg, file["progress_gl_seg"])
-            self.progress_vf_seg = QTextEdit(file["progress_vf_seg"], readOnly=True)
-            self.progress_vf_seg.setFixedSize(200, 30)
-            self.color_progress_state(self.progress_vf_seg, file["progress_vf_seg"])
-            self.progress_pt_label = QTextEdit(file["progress_pt_label"], readOnly=True)
-            self.progress_pt_label.setFixedSize(200, 30)
-            self.color_progress_state(self.progress_pt_label, file["progress_pt_label"])
-
     def color_progress_state(self, state_variable, state: str):
         if state == "finished":
-            state_variable.setStyleSheet("background-color: rgb(144, 238, 144);")
+            state_variable.setStyleSheet(
+                "background-color: rgb(144, 238, 144); color: black;"
+            )
         elif state == "in progress":
-            state_variable.setStyleSheet("background-color: rgb(173, 216, 230);")
+            state_variable.setStyleSheet(
+                "background-color: rgb(173, 216, 230); color: black;"
+            )
         elif state == "not started":
-            state_variable.setStyleSheet("background-color: rgb(211, 211, 211);")
+            state_variable.setStyleSheet(
+                "background-color: rgb(211, 211, 211); color: black;"
+            )
         else:
             pass
 

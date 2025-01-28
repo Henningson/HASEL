@@ -46,9 +46,9 @@ class MainWindow(QMainWindow):
         self.menubar.addAction(menu_help_window)
 
         # icons for toolbar - icons from license-free page: https://uxwing.com/
-        close_icon_path = "assets/icons/close-square-line-icon.svg"
-        save_icon_path = "assets/icons/check-mark-box-line-icon.svg"
-        help_icon_path = "assets/icons/help-icon.svg"
+        close_icon_path = "assets/icons/x.svg"
+        save_icon_path = "assets/icons/checkmark.svg"
+        help_icon_path = "assets/icons/help.svg"
 
         # setup tool bar
         self.toolbar = QToolBar()

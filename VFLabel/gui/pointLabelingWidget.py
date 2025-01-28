@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 import torch
 from PyQt5 import QtCore
+from PyQt5.QtCore import QPointF
 from PyQt5.QtGui import QCursor, QIcon, QImage
 from PyQt5.QtWidgets import (
     QHBoxLayout,
@@ -15,8 +16,6 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
-from PyQt5.QtCore import QPointF
 
 import VFLabel.cv.point_interpolation as pi
 import VFLabel.cv.segmentation
@@ -145,26 +144,21 @@ class PointLabelingWidget(QWidget):
         self.frame_label_middle = QLabel(f"Tracked Points - Frame: 0")
         self.frame_label_right = QLabel(f"Optimized Points - Frame: 0")
 
-        help_icon_path = "assets/icons/help-icon.svg"
+        help_icon_path = "assets/icons/help.svg"
 
         help_track_button = QPushButton(QIcon(help_icon_path), "")
-        help_track_button.setStyleSheet("border: 0px solid #FFF")
         help_track_button.clicked.connect(self.help_track_buttons)
 
         help_optimize_button = QPushButton(QIcon(help_icon_path), "")
-        help_optimize_button.setStyleSheet("border: 0px solid #FFF")
         help_optimize_button.clicked.connect(self.help_optimize_buttons)
 
         help_grid_btn_button = QPushButton(QIcon(help_icon_path), "")
-        help_grid_btn_button.setStyleSheet("border: 0px solid #FFF")
         help_grid_btn_button.clicked.connect(self.help_grid_buttons)
 
         help_btn_button = QPushButton(QIcon(help_icon_path), "")
-        help_btn_button.setStyleSheet("border: 0px solid #FFF")
         help_btn_button.clicked.connect(self.help_different_buttons)
 
         help_left_frame_button = QPushButton(QIcon(help_icon_path), "")
-        help_left_frame_button.setStyleSheet("border: 0px solid #FFF")
         help_left_frame_button.clicked.connect(self.help_left_frame_dialog)
 
         point_clicker_label = QHBoxLayout()
@@ -174,7 +168,6 @@ class PointLabelingWidget(QWidget):
         point_clicker_label.addStretch(1)
 
         help_middle_frame_button = QPushButton(QIcon(help_icon_path), "")
-        help_middle_frame_button.setStyleSheet("border: 0px solid #FFF")
         help_middle_frame_button.clicked.connect(self.help_middle_frame_dialog)
 
         cotracker_label = QHBoxLayout()
@@ -184,7 +177,6 @@ class PointLabelingWidget(QWidget):
         cotracker_label.addStretch(1)
 
         help_right_frame_button = QPushButton(QIcon(help_icon_path), "")
-        help_right_frame_button.setStyleSheet("border: 0px solid #FFF")
         help_right_frame_button.clicked.connect(self.help_right_frame_dialog)
 
         optimized_points_label = QHBoxLayout()

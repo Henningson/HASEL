@@ -24,14 +24,12 @@ class StartWindowView(baseWindowWidget.BaseWindowWidget):
         # create layout
         box_layout = QHBoxLayout()
 
-        # create buttons
-        font = QFont("Arial", 20, QFont.Bold)
         btn_new = QPushButton("New Project", self)
+        btn_new.setTextSize(20)
         btn_new.setToolTip("This <b>button</b> creates a new project.")
-        btn_new.setFont(font)
         btn_open = QPushButton("Open Project", self)
+        btn_open.setTextSize(20)
         btn_open.setToolTip("This <b>button</b> opens an existing project.")
-        btn_open.setFont(font)
 
         # insert buttons in window
         box_layout.addStretch(1)

@@ -39,7 +39,8 @@ def segment_glottis(encoder: str, images: List[np.array]):
     )
 
     segmentations = []
-    for image in tqdm(images):
+
+    for image in images:
         augmentations = transform(image=image)
         image = augmentations["image"]
 
@@ -49,6 +50,7 @@ def segment_glottis(encoder: str, images: List[np.array]):
         sigmoid = pred_seg.sigmoid()
         segmentation = (sigmoid > 0.5) * 255
         segmentations.append(segmentation.detach().cpu().numpy())
+
     return segmentations
 
 

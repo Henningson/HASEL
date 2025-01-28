@@ -2,29 +2,29 @@ import json
 import os
 from typing import List
 
-from tqdm import tqdm
-
+import albumentations as A
 import cv2
 import numpy as np
+import segmentation_models_pytorch as smp
+import torch
+from albumentations.pytorch import ToTensorV2
 from PyQt5 import QtCore
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QHBoxLayout,
-    QSlider,
-    QPushButton,
-    QLabel,
-    QComboBox,
-    QMessageBox,
-    QDialog,
-)
-
+from PyQt5.QtCore import QObject, QSize, Qt, QThread, pyqtSignal
 from PyQt5.QtGui import QIcon, QMovie
-from PyQt5.QtCore import QThread, QObject, pyqtSignal, QSize, Qt
-import os
+from PyQt5.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QMessageBox,
+    QProgressDialog,
+    QPushButton,
+    QSlider,
+    QVBoxLayout,
+    QWidget,
+)
+from tqdm import tqdm
 
-import VFLabel.utils.transforms
 import VFLabel.cv.analysis
 import VFLabel.cv.segmentation
 import VFLabel.gui.drawSegmentationWidget
@@ -38,6 +38,7 @@ import VFLabel.io.data
 import VFLabel.nn.segmentation
 import VFLabel.utils.transforms
 import VFLabel.utils.utils
+from VFLabel.gui.progressDialog import ProgressDialog
 from VFLabel.utils.defines import COLOR
 
 ############################### ^
@@ -50,33 +51,6 @@ from VFLabel.utils.defines import COLOR
 ############################### |
 #  VIDPLAYE # DROP  # GENERATE# |
 ############################### v
-
-
-class WorkerSegmentation(QObject):
-    signal_segmentation = pyqtSignal(list, list)
-    finished = pyqtSignal()
-
-    def __init__(self, model_dropdown, video):
-        super().__init__()
-        self.model_dropdown = model_dropdown
-        self.video = video
-
-    def segmentation(self) -> None:
-
-        # Load model from dropdown
-        encoder = self.model_dropdown.currentText()
-
-        self.segmentations = VFLabel.nn.segmentation.segment_glottis(
-            encoder, self.video
-        )
-
-        self.glottal_midlines = [
-            VFLabel.cv.analysis.glottal_midline(image)
-            for image in tqdm(self.segmentations)
-        ]
-
-        self.signal_segmentation.emit(self.segmentations, self.glottal_midlines)
-        self.finished.emit()
 
 
 class GlottisSegmentationWidget(QWidget):
@@ -156,18 +130,15 @@ class GlottisSegmentationWidget(QWidget):
         self.frame_label_middle = QLabel(f"Segmentation - Frame: 0")
         self.frame_label_right = QLabel(f"Segmentation Overlay - Frame: 0")
 
-        help_icon_path = "assets/icons/help-icon.svg"
+        help_icon_path = "assets/icons/help.svg"
 
         help_opacity_button = QPushButton(QIcon(help_icon_path), "")
-        help_opacity_button.setStyleSheet("border: 0px solid #FFF")
         help_opacity_button.clicked.connect(self.help_opacity_dialog)
 
         help_model_button = QPushButton(QIcon(help_icon_path), "")
-        help_model_button.setStyleSheet("border: 0px solid #FFF")
         help_model_button.clicked.connect(self.help_model_dialog)
 
         help_left_frame_button = QPushButton(QIcon(help_icon_path), "")
-        help_left_frame_button.setStyleSheet("border: 0px solid #FFF")
         help_left_frame_button.clicked.connect(self.help_left_frame_dialog)
 
         video_view_label = QHBoxLayout()
@@ -177,7 +148,6 @@ class GlottisSegmentationWidget(QWidget):
         video_view_label.addStretch(1)
 
         help_right_frame_button = QPushButton(QIcon(help_icon_path), "")
-        help_right_frame_button.setStyleSheet("border: 0px solid #FFF")
         help_right_frame_button.clicked.connect(self.help_right_frame_dialog)
 
         overlay_view_label = QHBoxLayout()
@@ -187,7 +157,6 @@ class GlottisSegmentationWidget(QWidget):
         overlay_view_label.addStretch(1)
 
         help_middle_frame_button = QPushButton(QIcon(help_icon_path), "")
-        help_middle_frame_button.setStyleSheet("border: 0px solid #FFF")
         help_middle_frame_button.clicked.connect(self.help_middle_frame_dialog)
 
         segmentation_view_label = QHBoxLayout()
@@ -277,55 +246,48 @@ class GlottisSegmentationWidget(QWidget):
         return segmentations
 
     def generate_segmentations(self) -> None:
+        encoder = self.model_dropdown.currentText()
+        model_path = os.path.join("assets", "models", f"glottis_{encoder}.pth.tar")
 
-        # side thread
+        DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
-        # create side thread and worker function
-        self.thread = QThread()
+        model = smp.Unet(
+            encoder_name=encoder,  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+            encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
+            in_channels=3,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
+            classes=1,
+        ).to(DEVICE)
+        state_dict = torch.load(model_path, weights_only=True)
 
-        self.worker = WorkerSegmentation(self.model_dropdown, self.video)
-        self.worker.moveToThread(self.thread)
+        if "optimizer" in state_dict:
+            del state_dict["optimizer"]
 
-        # connect signal
-        self.thread.started.connect(self.worker.segmentation)
-        self.worker.signal_segmentation.connect(self.generate_segmentations_continued)
-        self.worker.finished.connect(self.thread.quit)
-        self.thread.finished.connect(self.thread.deleteLater)
+        model.load_state_dict(state_dict)
 
-        self.thread.start()
+        transform = A.Compose(
+            [
+                A.Normalize(),
+                ToTensorV2(),
+            ]
+        )
 
-        # Main Thread
+        self.segmentations = []
 
-        text = QLabel("Please wait ...")
-        text.setAlignment(Qt.AlignCenter)
+        for image in ProgressDialog(self.video, "Segmenting"):
+            augmentations = transform(image=image)
+            image = augmentations["image"]
 
-        # create waiting animation
-        gifFile = "assets/loading_symbol.gif"
-        self.movie = QMovie(gifFile)
-        self.movie.setScaledSize(QSize(50, 50))
-        self.movie_label = QLabel(self)
-        self.movie_label.setMovie(self.movie)
-        self.movie_label.setAlignment(Qt.AlignCenter)
-        self.movie.start()
+            image = image.to(device=DEVICE).unsqueeze(0)
 
-        layout = QVBoxLayout()
-        layout.addWidget(text)
-        layout.addWidget(self.movie_label)
+            pred_seg = model(image).squeeze()
+            sigmoid = pred_seg.sigmoid()
+            segmentation = (sigmoid > 0.5) * 255
+            self.segmentations.append(segmentation.detach().cpu().numpy())
 
-        # waiting window
-        self.dlg_wait = QDialog(self)
-        self.dlg_wait.setWindowTitle("Data is processed")
-        self.dlg_wait.setLayout(layout)
-        self.dlg_wait.setStyleSheet("background-color: white;")
-        self.dlg_wait.resize(QSize(400, 200))
-        self.dlg_wait.exec()
-
-    def generate_segmentations_continued(self, segmentation, midlines) -> None:
-
-        self.dlg_wait.accept()
-
-        self.segmentations = segmentation
-        self.glottal_midlines = midlines
+        self.glottal_midlines = [
+            VFLabel.cv.analysis.glottal_midline(image)
+            for image in ProgressDialog(self.segmentations, "Glottal Midline")
+        ]
 
         normalized = [image // 255 for image in self.segmentations]
         colored = [

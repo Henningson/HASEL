@@ -47,10 +47,8 @@ class VocalfoldSegmentationWidget(QWidget):
         self.project_path = project_path
 
         # find data for this task if they already exist
-        file_filled = self.download_data_from_project_folder()
+        file_filled = self.load_data_from_project_folder()
 
-        # layout initialization
-        self.setStyleSheet("background-color:white")
         vertical_layout = QVBoxLayout()
         horizontal_layout_top = QHBoxLayout()
         top_widget = QWidget()
@@ -122,14 +120,12 @@ class VocalfoldSegmentationWidget(QWidget):
         add_btn.clicked.connect(self.add_mark)
         remove_btn.clicked.connect(self.remove_mark)
 
-        help_icon_path = "assets/icons/help-icon.svg"
+        help_icon_path = "assets/icons/help.svg"
 
         help_segment_slider_button = QPushButton(QIcon(help_icon_path), "")
-        help_segment_slider_button.setStyleSheet("border: 0px solid #FFF")
         help_segment_slider_button.clicked.connect(self.help_segment_dialog)
 
         help_slider_button = QPushButton(QIcon(help_icon_path), "")
-        help_slider_button.setStyleSheet("border: 0px solid #FFF")
         help_slider_button.clicked.connect(self.help_slider_dialog)
         # self.save_button.clicked.connect(self.save)
 
@@ -256,11 +252,11 @@ class VocalfoldSegmentationWidget(QWidget):
             path = os.path.join(save_folder, f"{i:05d}.png")
             pixmap.save(path)
 
-        self.upload_existing_data()
+        self.save_segmentation_polygons()
         self.interpolate_view.change_frame(self.video_player.slider.value())
         self.setEnabled(True)
 
-    def upload_existing_data(self):
+    def save_segmentation_polygons(self):
         vf_path = os.path.join(self.project_path, "vocalfold_points.json")
 
         with open(vf_path, "w") as f:
@@ -362,18 +358,15 @@ class VocalfoldSegmentationWidget(QWidget):
             f"Interpolated Polygon - Current Frame: {self.video_player._current_frame}"
         )
 
-        help_icon_path = "assets/icons/help-icon.svg"
+        help_icon_path = "assets/icons/help.svg"
 
         help_first_frame_button = QPushButton(QIcon(help_icon_path), "")
-        help_first_frame_button.setStyleSheet("border: 0px solid #FFF")
         help_first_frame_button.clicked.connect(self.help_first_frame_dialog)
 
         help_last_frame_button = QPushButton(QIcon(help_icon_path), "")
-        help_last_frame_button.setStyleSheet("border: 0px solid #FFF")
         help_last_frame_button.clicked.connect(self.help_last_frame_dialog)
 
         help_current_frame_button = QPushButton(QIcon(help_icon_path), "")
-        help_current_frame_button.setStyleSheet("border: 0px solid #FFF")
         help_current_frame_button.clicked.connect(self.help_current_frame_dialog)
 
         # insert number text in window
@@ -423,7 +416,7 @@ class VocalfoldSegmentationWidget(QWidget):
         dlg.adjustSize()
         dlg.exec()
 
-    def download_data_from_project_folder(self):
+    def load_data_from_project_folder(self):
         vf_path = os.path.join(self.project_path, "vocalfold_points.json")
 
         file_filled = os.stat(vf_path).st_size

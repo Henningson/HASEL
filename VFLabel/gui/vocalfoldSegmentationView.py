@@ -58,7 +58,6 @@ class VocalfoldSegmentationView(baseWindowWidget.BaseWindowWidget):
             pass
 
     def help(self):
-        print("helpvf segm")
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help")
         dlg.setText(

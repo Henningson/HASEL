@@ -34,22 +34,6 @@ class VocalfoldSegmentationSliderWidget(QSlider):
         self.setLayout(self.layout)
 
         self.groove_width_margin = 35
-        self.setStyleSheet(
-            f"""
-            QSlider::handle:horizontal {{
-                background: rgb(0, 0, 255);
-                width: 0px;
-                height: 0px;
-
-            }}
-            QSlider::groove:horizontal {{
-                background: rgb(255, 255, 255);
-                height: 40px;
-                border: 1px solid #999;
-                margin-right: {self.groove_width_margin}px;
-            }}
-        """
-        )
 
     def set_marks(self, marks):
         self.marks = marks
