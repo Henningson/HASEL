@@ -13,6 +13,35 @@ import VFLabel.gui.mainMenuView
 import VFLabel.gui.newProjectWidget
 
 
+def append_to_file(file_path, text_to_append):
+    try:
+        # Open the file in append mode ('a')
+        with open(file_path, "a") as file:
+            # Write the text and add a newline
+            file.write(text_to_append + "\n")
+        print(f"Successfully appended: '{text_to_append}' to {file_path}")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+def read_last_nonempty_line(file_path):
+    try:
+        # Open the file in read mode
+        with open(file_path, "r") as file:
+            # Read all lines in reverse order
+            for line in reversed(file.readlines()):
+                # Strip whitespace and check if the line is nonempty
+                if line.strip():
+                    last_nonempty_line = line.strip()
+                    print(f"Last nonempty line: {last_nonempty_line}")
+                    return last_nonempty_line
+        return None
+    except FileNotFoundError:
+        print(f"Error: The file at {file_path} does not exist.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
 class StartWindowView(baseWindowWidget.BaseWindowWidget):
     signal_open_main_menu = pyqtSignal(str)
 
@@ -24,12 +53,19 @@ class StartWindowView(baseWindowWidget.BaseWindowWidget):
         # create layout
         box_layout = QHBoxLayout()
 
+        # create buttons
+        font = QFont("Arial", 20, QFont.Bold)
         btn_new = QPushButton("New Project", self)
-        btn_new.setTextSize(20)
         btn_new.setToolTip("This <b>button</b> creates a new project.")
+        btn_new.setFont(font)
         btn_open = QPushButton("Open Project", self)
-        btn_open.setTextSize(20)
         btn_open.setToolTip("This <b>button</b> opens an existing project.")
+        btn_open.setFont(font)
+        btn_recent = QPushButton("Open Recent", self)
+        btn_recent.setToolTip(
+            "This <b>button</b> opens the most recent opened project."
+        )
+        btn_recent.setFont(font)
 
         # insert buttons in window
         box_layout.addStretch(1)
@@ -37,10 +73,13 @@ class StartWindowView(baseWindowWidget.BaseWindowWidget):
         box_layout.addStretch(1)
         box_layout.addWidget(btn_open)
         box_layout.addStretch(1)
+        box_layout.addWidget(btn_recent)
+        box_layout.addStretch(1)
 
         # adding functionality to buttons
         btn_new.clicked.connect(self.create_new_project)
         btn_open.clicked.connect(self.open_project)
+        btn_recent.clicked.connect(self.open_recent_project)
 
         # set layout
         self.setLayout(box_layout)
@@ -77,7 +116,7 @@ class StartWindowView(baseWindowWidget.BaseWindowWidget):
             None
         """
         # upload video path
-        status = self.upload_new_video()
+        status = self.load_new_video()
         if not status:
             return
 
@@ -111,9 +150,17 @@ class StartWindowView(baseWindowWidget.BaseWindowWidget):
             project_path = self.create_folder_structure(
                 self.name_input, video_path=self.video_path
             )
+
+            append_to_file("assets/temp/recent_projects", project_path)
             self.open_main_window(project_path)
 
-    def upload_new_video(self) -> int:
+    def open_recent_project(self) -> None:
+        most_recent_path = read_last_nonempty_line("assets/temp/recent_projects")
+
+        if most_recent_path:
+            self.open_main_window(most_recent_path)
+
+    def load_new_video(self) -> int:
         """Opens file manager to upload video
 
         This method:
@@ -152,6 +199,8 @@ class StartWindowView(baseWindowWidget.BaseWindowWidget):
         if status_fd == QFileDialog.Accepted:
             folder_path = fd.selectedFiles()[0]
             if folder_path:
+                append_to_file("assets/temp/recent_projects", folder_path)
+
                 self.open_main_window(folder_path)
 
     def open_main_window(self, project_path) -> None:
