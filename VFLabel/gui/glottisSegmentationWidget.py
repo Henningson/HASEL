@@ -265,7 +265,9 @@ class GlottisSegmentationWidget(QWidget):
             in_channels=3,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
             classes=1,
         ).to(DEVICE)
-        state_dict = torch.load(model_path, weights_only=True)
+        state_dict = torch.load(
+            model_path, map_location=torch.device(DEVICE), weights_only=True
+        )
 
         if "optimizer" in state_dict:
             del state_dict["optimizer"]
