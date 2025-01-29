@@ -33,173 +33,182 @@ class BaseMainMenue(baseWindow.BaseWindow):
             self.project_path, "progress_status.json"
         )
 
-        # create layout
-        boxh_btn_layout = QHBoxLayout()
-        boxh_txt_layout = QHBoxLayout()
-        boxh_close_layout = QHBoxLayout()
-        boxh_num_layout = QHBoxLayout()
-        boxv_layout = QVBoxLayout()
-
         # create different options buttons
         font = QFont("Arial", 20, QFont.Bold)
 
-        btn_gl_seg = QPushButton("Glottis\nSegmentation", self)
-        btn_gl_seg.setToolTip(
+        button_glottis_segmentation = QPushButton("Glottis\nSegmentation", self)
+        button_glottis_segmentation.setToolTip(
             "In this step of the pipeline, the glottis is segmented and the midline of the glottis is determined. We supply different neural network architectures."
         )
-        btn_gl_seg.setFont(font)
-        btn_gl_seg.setFixedSize(200, 100)
+        button_glottis_segmentation.setFont(font)
+        button_glottis_segmentation.setFixedSize(200, 100)
 
-        btn_vf_seg = QPushButton("Vocal Fold\nSegmentation", self)
-        btn_vf_seg.setToolTip(
+        button_vocalfold_segmentation = QPushButton("Vocal Fold\nSegmentation", self)
+        button_vocalfold_segmentation.setToolTip(
             "In this step of the pipeline the vocalfold is segmented. This is done by creating a mask of the vocal fold in the first frame. In the last frame, the vocal fold mask is transformed to match the vocal fold in this view. The other frames are interpolated."
         )
-        btn_vf_seg.setFont(font)
-        btn_vf_seg.setFixedSize(200, 100)
+        button_vocalfold_segmentation.setFont(font)
+        button_vocalfold_segmentation.setFixedSize(200, 100)
 
-        btn_pt_label = QPushButton("Point\nLabeling", self)
-        btn_pt_label.setToolTip(
+        button_point_tracking = QPushButton("Point\nLabeling", self)
+        button_point_tracking.setToolTip(
             "Here, only a single visible point needs to be selected and they get tracked automatically."
         )
-        btn_pt_label.setFont(font)
-        btn_pt_label.setFixedSize(200, 100)
+        button_point_tracking.setFont(font)
+        button_point_tracking.setFixedSize(200, 100)
 
-        btn_manual_point_clicking = QPushButton("Semi-Manual\nPoint Labeling", self)
-        btn_manual_point_clicking.setToolTip(
+        button_point_clicking = QPushButton("Semi-Manual\nPoint Labeling", self)
+        button_point_clicking.setToolTip(
             "If some points were lost or inadequate in the previous step, use this to reassess points semi manually."
         )
-        btn_manual_point_clicking.setFont(font)
-        btn_manual_point_clicking.setFixedSize(200, 100)
+        button_point_clicking.setFont(font)
+        button_point_clicking.setFixedSize(200, 100)
 
         path_upload_icon = "assets/icons/upload.svg"
-
-        btn_upload_glottis_segm = QPushButton(QIcon(path_upload_icon), "")
-        btn_upload_glottis_segm.setIconSize(QSize(50, 50))
-        btn_upload_glottis_segm.setStyleSheet("border: 0px solid;")
-        btn_upload_glottis_segm.setToolTip("Upload glottis segmentation data")
-        btn_upload_glottis_segm.clicked.connect(self.upload_glottis_segmentation_data)
+        button_load_glottis_segmentation = QPushButton(QIcon(path_upload_icon), "")
+        button_load_glottis_segmentation.setIconSize(QSize(50, 50))
+        button_load_glottis_segmentation.setStyleSheet("border: 0px solid;")
+        button_load_glottis_segmentation.setToolTip("Upload glottis segmentation data")
+        button_load_glottis_segmentation.clicked.connect(
+            self.upload_glottis_segmentation_data
+        )
 
         horizontal_spacer = QSpacerItem(
             60, 20, QSizePolicy.Minimum, QSizePolicy.Expanding
         )
-        horizontal_spacer_2 = QSpacerItem(
-            60, 20, QSizePolicy.Minimum, QSizePolicy.Expanding
-        )
-
         # create close button
         font = QFont("Arial", 15, QFont.Bold)
-        btn_close = QPushButton("Close", self)
-        btn_close.setToolTip("This <b>button</b> closes this project")
-        btn_close.setFont(font)
-        btn_close.setFixedSize(100, 30)
+        button_close = QPushButton("Close", self)
+        button_close.setToolTip("This <b>button</b> closes this project")
+        button_close.setFont(font)
+        button_close.setFixedSize(100, 30)
 
         # create progress text bars
         with open(self.progress_state_path, "r+") as prgrss_file:
             file = json.load(prgrss_file)
-            self.progress_gl_seg = QTextEdit(file["progress_gl_seg"], readOnly=True)
-            self.progress_gl_seg.setFixedSize(200, 30)
-            self.progress_gl_seg.setTextColor(QColor(0, 0, 0))
-            self.color_progress_state(self.progress_gl_seg, file["progress_gl_seg"])
+            self.progress_glottis_segmentation = QTextEdit(
+                file["progress_gl_seg"], readOnly=True
+            )
+            self.progress_glottis_segmentation.setFixedSize(200, 30)
+            self.progress_glottis_segmentation.setTextColor(QColor(0, 0, 0))
+            self.color_progress_state(
+                self.progress_glottis_segmentation, file["progress_gl_seg"]
+            )
 
-            self.progress_vf_seg = QTextEdit(file["progress_vf_seg"], readOnly=True)
-            self.progress_vf_seg.setFixedSize(200, 30)
-            self.progress_vf_seg.setTextColor(QColor(0, 0, 0))
-            self.color_progress_state(self.progress_vf_seg, file["progress_vf_seg"])
+            self.progress_vocalfold_segmentation = QTextEdit(
+                file["progress_vf_seg"], readOnly=True
+            )
+            self.progress_vocalfold_segmentation.setFixedSize(200, 30)
+            self.progress_vocalfold_segmentation.setTextColor(QColor(0, 0, 0))
+            self.color_progress_state(
+                self.progress_vocalfold_segmentation, file["progress_vf_seg"]
+            )
 
-            self.progress_pt_label = QTextEdit(file["progress_pt_label"], readOnly=True)
-            self.progress_pt_label.setFixedSize(200, 30)
-            self.progress_pt_label.setTextColor(QColor(0, 0, 0))
-            self.color_progress_state(self.progress_pt_label, file["progress_pt_label"])
+            self.progress_point_tracking = QTextEdit(
+                file["progress_pt_label"], readOnly=True
+            )
+            self.progress_point_tracking.setFixedSize(200, 30)
+            self.progress_point_tracking.setTextColor(QColor(0, 0, 0))
+            self.color_progress_state(
+                self.progress_point_tracking, file["progress_pt_label"]
+            )
 
-            self.progress_manual_point_clicking = QTextEdit(
+            self.progress_point_clicking = QTextEdit(
                 file["progress_manual_pt_label"], readOnly=True
             )
-            self.progress_manual_point_clicking.setFixedSize(200, 30)
-            self.progress_manual_point_clicking.setTextColor(QColor(0, 0, 0))
+            self.progress_point_clicking.setFixedSize(200, 30)
+            self.progress_point_clicking.setTextColor(QColor(0, 0, 0))
             self.color_progress_state(
-                self.progress_manual_point_clicking, file["progress_manual_pt_label"]
+                self.progress_point_clicking, file["progress_manual_pt_label"]
             )
 
         # centralize text of progress text bars
-        self.centralize_text(self.progress_gl_seg)
-        self.centralize_text(self.progress_vf_seg)
-        self.centralize_text(self.progress_pt_label)
-        self.centralize_text(self.progress_manual_point_clicking)
+        self.centralize_text(self.progress_glottis_segmentation)
+        self.centralize_text(self.progress_vocalfold_segmentation)
+        self.centralize_text(self.progress_point_tracking)
+        self.centralize_text(self.progress_point_clicking)
 
         # create number text bars
-        num_gl_seg = QLabel("1.")
-        num_gl_seg.setFixedSize(200, 30)
-        num_vf_seg = QLabel("2.")
-        num_vf_seg.setFixedSize(200, 30)
-        num_pt_label = QLabel("3.")
-        num_pt_label.setFixedSize(200, 30)
-        num_manual_pt_label = QLabel("4.")
-        num_manual_pt_label.setFixedSize(200, 30)
+        label_glottis_segmentation = QLabel("1.")
+        label_glottis_segmentation.setFixedSize(200, 30)
+        label_vocalfold_segmentation = QLabel("2.")
+        label_vocalfold_segmentation.setFixedSize(200, 30)
+        label_point_tracking = QLabel("3.")
+        label_point_tracking.setFixedSize(200, 30)
+        label_point_clicking = QLabel("4.")
+        label_point_clicking.setFixedSize(200, 30)
 
         # centralize text of progress num bars
-        num_gl_seg.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        num_vf_seg.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        num_pt_label.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-        num_manual_pt_label.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        label_glottis_segmentation.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        label_vocalfold_segmentation.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        label_point_tracking.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+        label_point_clicking.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
+
+        # create layout
+        horizontal_button_layout = QHBoxLayout()
+        horizontal_progress_layout = QHBoxLayout()
+        horizontal_close_layout = QHBoxLayout()
+        horizontal_index_layout = QHBoxLayout()
+        overarching_vertical_layout = QVBoxLayout()
 
         # insert buttons in window
-        boxh_btn_layout.addStretch(1)
-        boxh_btn_layout.addWidget(btn_gl_seg)
-        boxh_btn_layout.addWidget(btn_upload_glottis_segm)
-        boxh_btn_layout.addStretch(1)
-        boxh_btn_layout.addWidget(btn_vf_seg)
-        boxh_btn_layout.addStretch(1)
-        boxh_btn_layout.addWidget(btn_pt_label)
-        boxh_btn_layout.addStretch(1)
-        boxh_num_layout.addWidget(btn_manual_point_clicking)
-        boxh_btn_layout.addStretch(1)
+        horizontal_button_layout.addStretch(1)
+        horizontal_button_layout.addWidget(button_glottis_segmentation)
+        horizontal_button_layout.addWidget(button_load_glottis_segmentation)
+        horizontal_button_layout.addStretch(1)
+        horizontal_button_layout.addWidget(button_vocalfold_segmentation)
+        horizontal_button_layout.addStretch(1)
+        horizontal_button_layout.addWidget(button_point_tracking)
+        horizontal_button_layout.addStretch(1)
+        horizontal_button_layout.addWidget(button_point_clicking)
+        horizontal_button_layout.addStretch(1)
 
         # insert progress text in window
-        boxh_txt_layout.addStretch(1)
-        boxh_txt_layout.addWidget(self.progress_gl_seg)
-        boxh_txt_layout.addItem(horizontal_spacer)
-        boxh_txt_layout.addStretch(1)
-        boxh_txt_layout.addWidget(self.progress_vf_seg)
-        boxh_txt_layout.addStretch(1)
-        boxh_txt_layout.addWidget(self.progress_pt_label)
-        boxh_txt_layout.addStretch(1)
-        boxh_txt_layout.addWidget(self.progress_manual_point_clicking)
-        boxh_txt_layout.addStretch(1)
+        horizontal_progress_layout.addStretch(1)
+        horizontal_progress_layout.addWidget(self.progress_glottis_segmentation)
+        horizontal_progress_layout.addItem(horizontal_spacer)
+        horizontal_progress_layout.addStretch(1)
+        horizontal_progress_layout.addWidget(self.progress_vocalfold_segmentation)
+        horizontal_progress_layout.addStretch(1)
+        horizontal_progress_layout.addWidget(self.progress_point_tracking)
+        horizontal_progress_layout.addStretch(1)
+        horizontal_progress_layout.addWidget(self.progress_point_clicking)
+        horizontal_progress_layout.addStretch(1)
 
         # insert number text in window
-        boxh_num_layout.addStretch(1)
-        boxh_num_layout.addWidget(num_gl_seg)
-        boxh_num_layout.addItem(horizontal_spacer_2)
-        boxh_num_layout.addStretch(1)
-        boxh_num_layout.addWidget(num_vf_seg)
-        boxh_num_layout.addStretch(1)
-        boxh_num_layout.addWidget(num_pt_label)
-        boxh_num_layout.addStretch(1)
-        boxh_num_layout.addWidget(num_manual_pt_label)
-        boxh_num_layout.addStretch(1)
+        horizontal_index_layout.addStretch(1)
+        horizontal_index_layout.addWidget(label_glottis_segmentation)
+        horizontal_index_layout.addItem(horizontal_spacer)
+        horizontal_index_layout.addStretch(1)
+        horizontal_index_layout.addWidget(label_vocalfold_segmentation)
+        horizontal_index_layout.addStretch(1)
+        horizontal_index_layout.addWidget(label_point_tracking)
+        horizontal_index_layout.addStretch(1)
+        horizontal_index_layout.addWidget(label_point_clicking)
+        horizontal_index_layout.addStretch(1)
 
         # insert close button in window
-        boxh_close_layout.addStretch(1)
-        boxh_close_layout.addWidget(btn_close)
+        horizontal_close_layout.addStretch(1)
+        horizontal_close_layout.addWidget(button_close)
 
         # combine layouts
-        boxv_layout.setContentsMargins(50, 50, 50, 50)
-        boxv_layout.addStretch(1)
-        boxv_layout.addLayout(boxh_num_layout)
-        boxv_layout.addLayout(boxh_btn_layout)
-        boxv_layout.addLayout(boxh_txt_layout)
-        boxv_layout.addStretch(1)
-        boxv_layout.addLayout(boxh_close_layout)
+        overarching_vertical_layout.setContentsMargins(50, 50, 50, 50)
+        overarching_vertical_layout.addStretch(1)
+        overarching_vertical_layout.addLayout(horizontal_index_layout)
+        overarching_vertical_layout.addLayout(horizontal_button_layout)
+        overarching_vertical_layout.addLayout(horizontal_progress_layout)
+        overarching_vertical_layout.addStretch(1)
+        overarching_vertical_layout.addLayout(horizontal_close_layout)
 
         # adding functionality to buttons
-        btn_gl_seg.clicked.connect(self.open_glottis_segmentation)
-        btn_vf_seg.clicked.connect(self.open_vf_segmentation)
-        btn_pt_label.clicked.connect(self.open_point_clicking)
-        btn_manual_point_clicking.clicked.connect(self.open_manual_point_clicking)
-        btn_close.clicked.connect(self.close_window)
+        button_glottis_segmentation.clicked.connect(self.open_glottis_segmentation)
+        button_vocalfold_segmentation.clicked.connect(self.open_vf_segmentation)
+        button_point_tracking.clicked.connect(self.open_point_clicking)
+        button_point_clicking.clicked.connect(self.open_manual_point_clicking)
+        button_close.clicked.connect(self.close_window)
 
         # set layout
-        self.setLayout(boxv_layout)
+        self.setLayout(overarching_vertical_layout)
 
         # show window
         self.show()
