@@ -63,7 +63,6 @@ class GlottisSegmentationView(baseWindowWidget.BaseWindowWidget):
             pass
 
     def help(self):
-        print("help gl segm")
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help")
         dlg.setText(

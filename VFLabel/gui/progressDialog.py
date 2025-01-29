@@ -22,7 +22,6 @@ class ProgressDialog:
     def __iter__(self):
         for i, item in enumerate(self.iterable):
             self.progress.setValue(i)
-            QApplication.processEvents()  # Allow GUI to update
             yield item
         self.progress.close()
 

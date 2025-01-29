@@ -1,27 +1,54 @@
 import os
 import cv2
 
-from PyQt5.QtCore import Qt, QLineF, QPoint
+from typing import List
+
+from PyQt5.QtCore import Qt, QLineF, QPoint, QRect
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QApplication, QMenu
+from PyQt5.QtGui import QBrush, QColor, QCursor, QImage, QPen
 import PyQt5.QtCore as QtCore
+import numpy as np
+
 
 import gui.videoViewWidget
 import VFLabel.utils.transforms as transforms
 import VFLabel.utils.enums as enums
+from VFLabel.gui.progressDialog import ProgressDialog
+
 from VFLabel.utils.defines import COLOR
 
 
 class GlottisSegmentationMaskView(gui.videoViewWidget.VideoViewWidget):
-    def __init__(self, segmentation_video, project_path, parent=None):
+    def __init__(self, segmentation_video, project_path: str, parent=None):
         super().__init__(segmentation_video, parent)
+
+        self.setMouseTracking(True)
         self.previous_point = None
         self.segmentation_video = segmentation_video
         self.project_path = project_path
         self.draw_mode = enums.DRAW_MODE.OFF
-        self.img_np = None
-        self.list_old_points = []
-        self.last_current_frame = 0
+
+        self.brush_size = 20
+        self.brush = QBrush(QColor(0, 0, 0, 0))
+        self.pen = QPen(QColor(128, 128, 128, 255))
+        self.drawing_brush = None
+
+        self.per_frame_circles = (
+            [[] for _ in range(len(self.images))] if segmentation_video else None
+        )  # Holds the drawn circles for each frame.
+        self.added_circles_stack = (
+            [] if segmentation_video else None
+        )  # Holds the frames, which had points added last.
+
+    def add_video(self, video: List[QImage]) -> None:
+        self.images = video
+        self._num_frames = len(self.images)
+
+        self.per_frame_circles = [
+            [] for _ in range(len(self.images))
+        ]  # Holds the drawn circles for each frame.
+        self.added_circles_stack = []  # Holds the frames, which had points added last.
 
     def contextMenuEvent(self, event):
         menu = QMenu()
@@ -29,92 +56,123 @@ class GlottisSegmentationMaskView(gui.videoViewWidget.VideoViewWidget):
         menu.addAction("Zoom out\tMouseWheel Down", self.zoomOut)
         menu.addAction("Frame forward\tRight Arrow", self.frame_forward)
         menu.addAction("Frame backward\tLeft Arrow", self.frame_backward)
+        menu.addAction("Increase brush size\t+", self.increase_brush_size)
+        menu.addAction("Decrease brush size\t-", self.decrease_brush_size)
+        menu.addAction("Undo\tr", self.undo)
         menu.addAction("Reset Zoom", self.zoomReset)
-        menu.addAction("Reset last edit\tr", self.remove_last_drawing)
+        menu.addAction("Recompute Segmentations", self.generate_new_segmentations)
         menu.exec_(event.globalPos())
 
     def keyPressEvent(self, event):
+        if not self.images:
+            return
+
         super().keyPressEvent(event)
+        if event.key() == QtCore.Qt.Key_Plus:
+            self.increase_brush_size()
+
+        if event.key() == QtCore.Qt.Key_Minus:
+            self.decrease_brush_size()
+
         if event.key() == QtCore.Qt.Key_R:
-            self.remove_last_drawing()
+            self.undo()
 
     def mousePressEvent(self, event):
-        if self.draw_mode.value:
-            if self._current_frame != self.last_current_frame:
-                self.list_old_points = []
-            if event.button() == Qt.LeftButton:
-                self.previous_point = self.mapToScene(event.pos())
-                pos = self.previous_point.toPoint()
+        if not self.images:
+            return
 
+        if self.draw_mode == enums.DRAW_MODE.ON:
+            mouse_cursor_position = self.mapToScene(event.pos())
+
+            if event.button() == Qt.LeftButton:
                 height = self.images[self._current_frame].height()
                 width = self.images[self._current_frame].width()
 
-                if 0 <= pos.x() < width and 0 <= pos.y() < height:
-                    if self.images[self._current_frame].pixelColor(pos) != QColor(
-                        0, 0, 0
-                    ):
-                        self.list_old_points.append(pos)
-                    self.images[self._current_frame].setPixelColor(pos, QColor(0, 0, 0))
+                if (
+                    0 <= mouse_cursor_position.x() < width
+                    and 0 <= mouse_cursor_position.y() < height
+                ):
+                    circle_pointer = self.scene().addEllipse(
+                        mouse_cursor_position.x() - self.brush_size / 2,
+                        mouse_cursor_position.y() - self.brush_size / 2,
+                        self.brush_size,
+                        self.brush_size,
+                        QPen(QColor(0, 0, 0)),
+                        QBrush(QColor(0, 0, 0)),
+                    )
+                    self.per_frame_circles[self._current_frame].append(circle_pointer)
+                    self.added_circles_stack.append(self._current_frame)
 
-                self.last_current_frame = self._current_frame
                 self.redraw()
+        else:
+            if self.drawing_brush:
+                self.scene().removeItem(self.drawing_brush)
+                self.redraw()
+            super().mousePressEvent(event)
+
+    def generate_new_segmentations(self) -> List[QImage]:
+        images = []
+        for i in range(len(self.images)):
+            self.change_frame(i)
+            self.fit_view()
+
+            focusRect = self.scene().items()[0].boundingRect()
+            topLeft = self.mapFromScene(focusRect.topLeft())
+            bottomRight = self.mapFromScene(focusRect.bottomRight())
+
+            pixmap = self.grab().copy(QRect(topLeft, bottomRight))
+            pixmap = pixmap.scaled(
+                self.images[0].width(), self.images[0].height(), transformMode=0
+            )
+            images.append(pixmap.toImage().convertToFormat(QImage.Format_RGB888))
+
+        self.images = images
+        return self.images
 
     def mouseMoveEvent(self, event):
-        if self.draw_mode.value:
-            if self._current_frame != self.last_current_frame:
-                self.list_old_points = []
-            if self.previous_point:
-                current_point = self.mapToScene(event.pos())
+        if self.draw_mode == enums.DRAW_MODE.ON:
+            mouse_cursor_position = self.mapToScene(event.pos())
 
-                list_points = []
+            if not self.drawing_brush:
+                self.drawing_brush = self.scene().addEllipse(
+                    mouse_cursor_position.x() - self.brush_size / 2,
+                    mouse_cursor_position.y() - self.brush_size / 2,
+                    self.brush_size,
+                    self.brush_size,
+                    self.pen,
+                    self.brush,
+                )
+            else:
+                self.drawing_brush.setRect(
+                    mouse_cursor_position.x() - self.brush_size / 2,
+                    mouse_cursor_position.y() - self.brush_size / 2,
+                    self.brush_size,
+                    self.brush_size,
+                )
 
-                line = QLineF(self.previous_point, current_point)
-                for i in range(0, 100):
-                    i = 0.01 * i
+                # self.redraw()
 
-                    pos = line.pointAt(i).toPoint()
-
-                    height = self.images[self._current_frame].height()
-                    width = self.images[self._current_frame].width()
-
-                    if 0 <= pos.x() < width and 0 <= pos.y() < height:
-                        if self.images[self._current_frame].pixelColor(pos) != QColor(
-                            0, 0, 0
-                        ):
-                            list_points.append(pos)
-                        self.images[self._current_frame].setPixelColor(
-                            pos, QColor(0, 0, 0)
-                        )
-
-                self.previous_point = current_point
-                if list_points:
-                    self.list_old_points.append(list_points)
-                self.last_current_frame = self._current_frame
-                self.redraw()
-
-    def change_draw_state(self, state):
-        if state == 2:
+    def toggle_draw_state(self):
+        self.setFocus()
+        if self.draw_mode == enums.DRAW_MODE.OFF:
             self.draw_mode = enums.DRAW_MODE.ON
-        elif state == 0:
+        elif self.draw_mode == enums.DRAW_MODE.ON:
             self.draw_mode = enums.DRAW_MODE.OFF
-        else:
-            pass
 
-    def remove_last_drawing(self):
-        if self._current_frame == self.last_current_frame:
-            if len(self.list_old_points):
-                points = self.list_old_points.pop()
-                if isinstance(points, QPoint):
-                    points = [points]
+    def increase_brush_size(self) -> None:
+        self.brush_size += 1
 
-                for p in points:
-                    self.images[self._current_frame].setPixelColor(
-                        p, QColor(102, 194, 165)
-                    )
+    def decrease_brush_size(self) -> None:
+        self.brush_size = 0 if self.brush_size <= 1 else self.brush_size - 1
 
-                self.redraw()
-        else:
-            self.list_old_points = []
+    def undo(self):
+        if len(self.added_circles_stack) == 0:
+            return
+
+        frame = self.added_circles_stack.pop()
+        self.per_frame_circles[frame].pop()
+
+        self.redraw()
 
     def mouseReleaseEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -129,6 +187,20 @@ class GlottisSegmentationMaskView(gui.videoViewWidget.VideoViewWidget):
 
         return images_list
 
+    def redraw(self) -> None:
+        for item in self.scene().items():
+            self.scene().removeItem(item)
+
+        if self.images:
+            self.set_image(self.images[self._current_frame])
+
+        if self.per_frame_circles:
+            for ellipse in self.per_frame_circles[self._current_frame]:
+                self.scene().addItem(ellipse)
+
+        if self.drawing_brush:
+            self.scene().addItem(self.drawing_brush)
+
     def save_segmentation_mask(self):
         QApplication.processEvents()
         save_folder = os.path.join(self.project_path, "glottis_segmentation")
@@ -136,8 +208,8 @@ class GlottisSegmentationMaskView(gui.videoViewWidget.VideoViewWidget):
 
         images_list = self.qImage_list_2_black_white_np_list(self.images)
 
-        self.img_np = images_list
-
-        for frame_index, seg in enumerate(images_list):
+        for frame_index, seg in enumerate(
+            ProgressDialog(images_list, "Saving Segmentations")
+        ):
             image_save_path = os.path.join(save_folder, f"{frame_index:05d}.png")
             cv2.imwrite(image_save_path, seg)

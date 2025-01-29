@@ -126,7 +126,7 @@ class GlottisSegmentationWidget(QWidget):
         self.save_button = QPushButton("Save")
 
         self.edit_mask_button = QCheckBox("Edit Mask")
-        self.reload_overlay_button = QPushButton("Reload Overlay")
+        self.reload_overlay_button = QPushButton("Recompute Midline")
 
         self.frame_label_left = QLabel("Input Video - Frame: 0")
         self.frame_label_middle = QLabel(f"Segmentation - Frame: 0")
@@ -208,9 +208,7 @@ class GlottisSegmentationWidget(QWidget):
         self.setLayout(vertical_layout)
 
         self.save_button.clicked.connect(self.save)
-        self.edit_mask_button.stateChanged.connect(
-            self.segmentation_view.change_draw_state
-        )
+        self.edit_mask_button.clicked.connect(self.segmentation_view.toggle_draw_state)
         self.reload_overlay_button.clicked.connect(self.reload_overlay)
         self.generate_button.clicked.connect(self.generate_segmentations)
         self.alpha_slider.valueChanged.connect(self.change_opacity)
@@ -331,13 +329,16 @@ class GlottisSegmentationWidget(QWidget):
         self.overlay_view.redraw()
 
     def save(self) -> None:
-        glottal_midlines_path = os.path.join(self.project_path, "glottal_midlines.json")
         self.segmentation_view.save_segmentation_mask()
+        images_list = self.segmentation_view.qImage_list_2_black_white_np_list(
+            self.segmentation_view.images
+        )
+
+        glottal_midlines_path = os.path.join(self.project_path, "glottal_midlines.json")
+
         self.glottal_midlines = [
             self.calculate_glottis_midline_one_frame(image)
-            for image in ProgressDialog(
-                self.segmentation_view.img_np, "Glottal Midline"
-            )
+            for image in ProgressDialog(images_list, "Glottal Midline")
         ]
 
         glottal_midline_dict = {}
@@ -364,16 +365,16 @@ class GlottisSegmentationWidget(QWidget):
         return midline
 
     def reload_overlay(self):
-        images_list = self.segmentation_view.qImage_list_2_black_white_np_list(
-            self.segmentation_view.images
-        )
+        images = self.segmentation_view.generate_new_segmentations()
+
+        images = self.segmentation_view.qImage_list_2_black_white_np_list(images)
 
         # glottis segmentation
-        for idx, img in enumerate(images_list):
-            images_list[idx][np.sum(img, axis=-1) > 0] = COLOR.GLOTTIS
+        for idx, img in enumerate(images):
+            images[idx][np.sum(img, axis=-1) > 0] = COLOR.GLOTTIS
 
         segmentations_with_alpha = [
-            VFLabel.utils.utils.add_alpha_to_segmentations(seg) for seg in images_list
+            VFLabel.utils.utils.add_alpha_to_segmentations(seg) for seg in images
         ]
 
         overlays = VFLabel.utils.transforms.vid_2_QImage(segmentations_with_alpha)
@@ -382,7 +383,7 @@ class GlottisSegmentationWidget(QWidget):
         # glottal midline
         self.glottal_midlines = [
             self.calculate_glottis_midline_one_frame(image)
-            for image in ProgressDialog(images_list, "Glottal Midline")
+            for image in ProgressDialog(images, "Glottal Midline")
         ]
 
         glottal_midline_dict = {}
