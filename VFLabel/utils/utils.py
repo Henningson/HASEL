@@ -127,69 +127,6 @@ def add_alpha_to_segmentations(image):
     return image_with_alpha
 
 
-def draw_points(gt_image, gt_points, pred_points):
-    blank = gt_image.copy() * 255
-
-    concat = None
-    for i in range(blank.shape[0]):
-        im = cv2.cvtColor(blank[i], cv2.COLOR_GRAY2BGR)
-        im = draw_per_batch(im, gt_points, color=(255, 0, 0))
-        im = draw_per_batch(im, pred_points[i], color=(0, 255, 0))
-
-        if i == 0:
-            concat = im
-        else:
-            concat = cv2.vconcat([concat, im])
-
-    plt.imshow(concat, cmap="gray", interpolation="bicubic")
-    plt.xticks([]), plt.yticks([])  # to hide tick values on X and Y axis
-    plt.show()
-
-
-def draw_segmentation(predictions, axis=1, x=2, y=4):
-    seg = predictions.argmax(dim=1).unsqueeze(0)
-    colors = [
-        torch.tensor([0, 0, 0], device=DEVICE),
-        torch.tensor([0, 255, 0], device=DEVICE),
-        torch.tensor([255, 255, 255], device=DEVICE),
-    ]
-    seg = class_to_color(seg, colors)
-
-    fig = plt.figure()
-    for i in range(seg.shape[0]):
-        ax = fig.add_subplot(x, y, i + 1, projection="rectilinear")
-        heat = seg[i, :, :, :].clone().detach().cpu().numpy()
-        # heat /= heat.max()
-        ax.imshow(np.moveaxis(heat, 0, -1), cmap="gray", interpolation="bicubic")
-        ax.set_xticks([])
-        ax.set_yticks([])  # to hide tick values on X and Y axis
-    plt.show()
-
-
-def draw_images(images, x=2, y=4):
-    fig = plt.figure()
-    for i in range(images.shape[0]):
-        ax = fig.add_subplot(x, y, i + 1, projection="rectilinear")
-        heat = images[i, 0, :, :].clone().detach().cpu().numpy()
-        # heat /= heat.max()
-        ax.imshow(heat, cmap="gray", interpolation="bicubic")
-        ax.set_xticks([])
-        ax.set_yticks([])  # to hide tick values on X and Y axis
-    plt.show()
-
-
-def draw_heatmap(prediction, axis=0, x=2, y=4):
-    fig = plt.figure()
-    for i in range(prediction.shape[0]):
-        ax = fig.add_subplot(x, y, i + 1, projection="rectilinear")
-        heat = prediction[i, axis, :, :].clone().detach().cpu().numpy()
-        # heat /= heat.max()
-        ax.imshow(heat, cmap="plasma", interpolation="bicubic")
-        ax.set_xticks([])
-        ax.set_yticks([])  # to hide tick values on X and Y axis
-    plt.show()
-
-
 def draw_per_batch(im, points, color=(255, 255, 255)):
     points = points.astype(np.int32)
     points = points[:, [1, 0]]
