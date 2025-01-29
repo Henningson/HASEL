@@ -87,7 +87,7 @@ def class_to_color(prediction, class_colors, device="cuda"):
     for class_idx, color in enumerate(class_colors):
         mask = class_idx == torch.max(prediction, dim=1)[0]
         curr_color = color.reshape(1, 3, 1, 1)
-        segment = mask * curr_color  # should have shape 1, 3, 100, 100
+        segment = mask * curr_color
         output += segment
 
     return output
@@ -101,7 +101,7 @@ def class_to_color_np(prediction, class_colors):
     for class_idx, color in enumerate(class_colors):
         mask = class_idx == prediction
         curr_color = color.reshape(1, 3, 1, 1)
-        segment = mask * curr_color  # should have shape 1, 3, 100, 100
+        segment = mask * curr_color
         output += segment
 
     # Return CV Style image: WIDTH x HEIGHT x CHANNELS
