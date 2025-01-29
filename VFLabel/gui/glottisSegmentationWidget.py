@@ -355,9 +355,9 @@ class GlottisSegmentationWidget(QWidget):
             json.dump(glottal_midline_dict, outfile)
 
     def calculate_glottis_midline_one_frame(self, image: np.array):
-        if np.shape(image)[-1] == 4:
+        if image.shape[-1] == 4:
             midline = VFLabel.cv.analysis.glottal_midline(image[:, :, 0:3])
-        elif np.shape(image)[-1] == 3:
+        elif image.shape[-1] == 3:
             midline = VFLabel.cv.analysis.glottal_midline(image)
         else:
             midline = None
@@ -365,16 +365,24 @@ class GlottisSegmentationWidget(QWidget):
         return midline
 
     def reload_overlay(self):
+        last_mode = self.segmentation_view.draw_mode
+        self.segmentation_view.draw_mode = VFLabel.utils.enums.DRAW_MODE.OFF
+        self.segmentation_view.redraw()
+
         images = self.segmentation_view.generate_new_segmentations()
 
-        images = self.segmentation_view.qImage_list_2_black_white_np_list(images)
+        images_bw = self.segmentation_view.qImage_list_2_black_white_np_list(images)
+        images_colored = [
+            VFLabel.utils.transforms.qImage_2_np(image) for image in images
+        ]
 
         # glottis segmentation
-        for idx, img in enumerate(images):
-            images[idx][np.sum(img, axis=-1) > 0] = COLOR.GLOTTIS
+        # for idx, img in enumerate(images):
+        #    images[idx][np.sum(img, axis=-1) > 0] = COLOR.GLOTTIS
 
         segmentations_with_alpha = [
-            VFLabel.utils.utils.add_alpha_to_segmentations(seg) for seg in images
+            VFLabel.utils.utils.add_alpha_to_segmentations(seg)
+            for seg in images_colored
         ]
 
         overlays = VFLabel.utils.transforms.vid_2_QImage(segmentations_with_alpha)
@@ -383,7 +391,7 @@ class GlottisSegmentationWidget(QWidget):
         # glottal midline
         self.glottal_midlines = [
             self.calculate_glottis_midline_one_frame(image)
-            for image in ProgressDialog(images, "Glottal Midline")
+            for image in ProgressDialog(images_bw, "Glottal Midline")
         ]
 
         glottal_midline_dict = {}
@@ -396,6 +404,8 @@ class GlottisSegmentationWidget(QWidget):
                 "Lower": lower.tolist() if lower is not None else [-1, -1],
             }
         self.overlay_view.set_glottal_midlines_array(glottal_midline_dict)
+
+        self.segmentation_view.draw_mode = last_mode
         self.overlay_view.redraw()
 
     def change_opacity(self) -> None:

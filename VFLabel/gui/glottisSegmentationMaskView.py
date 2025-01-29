@@ -3,10 +3,10 @@ import cv2
 
 from typing import List
 
-from PyQt5.QtCore import Qt, QLineF, QPoint, QRect
+from PyQt5.QtCore import Qt, QLineF, QPoint, QRect, QRectF
 from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QApplication, QMenu
-from PyQt5.QtGui import QBrush, QColor, QCursor, QImage, QPen
+from PyQt5.QtWidgets import QApplication, QMenu, QGraphicsPixmapItem
+from PyQt5.QtGui import QBrush, QColor, QCursor, QImage, QPen, QPainter, QPixmap
 import PyQt5.QtCore as QtCore
 import numpy as np
 
@@ -112,21 +112,40 @@ class GlottisSegmentationMaskView(gui.videoViewWidget.VideoViewWidget):
 
     def generate_new_segmentations(self) -> List[QImage]:
         images = []
+
+        current_frame = self._current_frame
         for i in range(len(self.images)):
+            if i == 85:
+                a = 1
             self.change_frame(i)
             self.fit_view()
 
-            focusRect = self.scene().items()[0].boundingRect()
-            topLeft = self.mapFromScene(focusRect.topLeft())
-            bottomRight = self.mapFromScene(focusRect.bottomRight())
-
-            pixmap = self.grab().copy(QRect(topLeft, bottomRight))
-            pixmap = pixmap.scaled(
-                self.images[0].width(), self.images[0].height(), transformMode=0
+            pixmap_item = next(
+                (
+                    item
+                    for item in self.scene().items()
+                    if isinstance(item, QGraphicsPixmapItem)
+                ),
+                None,
             )
-            images.append(pixmap.toImage().convertToFormat(QImage.Format_RGB888))
+            focus_rect = pixmap_item.boundingRect()  # Get the scene dimensions
+            topLeft = self.mapFromScene(focus_rect.topLeft()) + QPoint(1, 1)
+            bottomRight = self.mapFromScene(focus_rect.bottomRight()) - QPoint(1, 1)
+
+            pixmap = QPixmap(self.images[0].width(), self.images[0].height())
+            painter = QPainter(pixmap)
+            self.render(
+                painter,
+                QRectF(0, 0, self.images[0].width(), self.images[0].height()),
+                QRect(topLeft, bottomRight),
+            )  # Render the scene onto the pixmap
+            painter.end()
+            qimage = pixmap.toImage().convertToFormat(QImage.Format_RGB888)
+            images.append(qimage)
 
         self.images = images
+        self.change_frame(current_frame)
+
         return self.images
 
     def mouseMoveEvent(self, event):
@@ -157,6 +176,7 @@ class GlottisSegmentationMaskView(gui.videoViewWidget.VideoViewWidget):
         if self.draw_mode == enums.DRAW_MODE.OFF:
             self.draw_mode = enums.DRAW_MODE.ON
         elif self.draw_mode == enums.DRAW_MODE.ON:
+            self.redraw()
             self.draw_mode = enums.DRAW_MODE.OFF
 
     def increase_brush_size(self) -> None:
@@ -182,7 +202,8 @@ class GlottisSegmentationMaskView(gui.videoViewWidget.VideoViewWidget):
         images_list = []
         for img in images:
             img_np = transforms.qImage_2_np(img)
-            img_np[img_np > 0] = 255
+            mask = np.all(img_np == COLOR.GLOTTIS, axis=-1)
+            img_np[mask] = np.array([255, 255, 255])
             images_list.append(img_np)
 
         return images_list
@@ -198,7 +219,7 @@ class GlottisSegmentationMaskView(gui.videoViewWidget.VideoViewWidget):
             for ellipse in self.per_frame_circles[self._current_frame]:
                 self.scene().addItem(ellipse)
 
-        if self.drawing_brush:
+        if self.drawing_brush and self.draw_mode == enums.DRAW_MODE.ON:
             self.scene().addItem(self.drawing_brush)
 
     def save_segmentation_mask(self):

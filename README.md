@@ -43,10 +43,17 @@ cd ../VFLabel
 mkdir assets/models
 cd assets/models
 wget https://huggingface.co/facebook/cotracker3/resolve/main/scaled_offline.pth
-cd .../..
+cd ../..
 ```
 
-Finally, download the glottis segmentation networks from [here](https://drive.google.com/drive/folders/1U525TcxZ1nhIp5yNJiyW-avK6qZG4rVV?usp=sharing) and move them to ```assets/models/```.
+At last, create a recent projects file for faster access.
+```
+mkdir assets/temp
+touch assets/temp/recent_projects
+```
+
+
+Finally, download the supplied neural networks from [here](https://drive.google.com/drive/folders/1U525TcxZ1nhIp5yNJiyW-avK6qZG4rVV?usp=sharing) and move them to ```assets/models/```.
 
 # How to use Hasel
 Make a video here.
