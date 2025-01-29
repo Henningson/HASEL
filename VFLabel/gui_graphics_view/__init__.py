@@ -4,7 +4,7 @@ from .interpolateSegmentation import InterpolateSegmentation
 from .labeledPoints import LabeledPoints
 from .pointClicker import PointClicker
 from .pointClickerCotracker import PointClickerCotracker
-from .repairPoints import RepairPoints
+from .manualPointClicker import ManualPointClicker
 from .segmentationDrawer import SegmentationDrawer
 from .segmentationOverlay import SegmentationOverlay
 from .segmentationOverlayWithGlottalMidline import SegmentationOverlayWithGlottalMidline

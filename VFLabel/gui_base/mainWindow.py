@@ -9,6 +9,7 @@ from tqdm import tqdm
 import VFLabel.cv
 import VFLabel.gui_base
 import VFLabel.gui_base.baseMainMenue
+import VFLabel.gui_base.baseManualPointClick
 import VFLabel.gui_dialog.newProject
 
 
@@ -123,6 +124,10 @@ class MainWindow(QMainWindow):
             self.upload_glottis_data_video
         )
 
+        self.main_menu.signal_open_manual_point_clicking_window.connect(
+            self.open_manual_point_clicking_window
+        )
+
         # make it visible in main window
         self.setCentralWidget(self.main_menu)
 
@@ -168,19 +173,23 @@ class MainWindow(QMainWindow):
         # make it visible in main window
         self.setCentralWidget(self.pt_labeling_window)
 
-    def open_point_repair_window(self, project_path):
+    def open_manual_point_clicking_window(self, project_path):
         self.tool_save_window.setVisible(True)
         # new title
-        self.setWindowTitle(f"HASEL - Repair Points - {project_path}")
+        self.setWindowTitle(f"HASEL - Manual Point Clicking - {project_path}")
 
         # setup window and its signals
-        self.pt_repair_window = VFLabel.gui_base.basePointClick.BasePointClick(
-            project_path, self
+        self.manual_point_click_window = (
+            VFLabel.gui_base.baseManualPointClick.BaseManualPointClick(
+                project_path, self
+            )
         )
-        self.pt_repair_window.signal_open_main_menu.connect(self.open_main_menu)
+        self.manual_point_click_window.signal_open_main_menu.connect(
+            self.open_main_menu
+        )
 
         # make it visible in main window
-        self.setCentralWidget(self.pt_labeling_window)
+        self.setCentralWidget(self.manual_point_click_window)
 
     def close_current_window(self) -> None:
         # called when "close current window" in menubar is triggered

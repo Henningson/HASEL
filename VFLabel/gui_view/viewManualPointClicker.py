@@ -24,7 +24,7 @@ import VFLabel.gui_graphics_view.segmentationDrawer
 import VFLabel.gui_graphics_view.interpolateSegmentation
 import VFLabel.gui_graphics_view.labeledPoints
 import VFLabel.gui_graphics_view.showPoints
-import VFLabel.gui_graphics_view.repairPoints
+import VFLabel.gui_graphics_view.manualPointClicker
 import VFLabel.gui_graphics_view.transformableSegmentation
 import VFLabel.gui_graphics_view.segmentationOverlay
 import VFLabel.gui_widgets.videoPlayerBar
@@ -37,7 +37,7 @@ import VFLabel.utils.transforms
 import VFLabel.utils.utils
 
 
-class PointRepairView(QWidget):
+class ManualPointClickerView(QWidget):
     def __init__(
         self,
         grid_height: int,
@@ -47,7 +47,7 @@ class PointRepairView(QWidget):
         parent=None,
         check_for_existing_data=False,
     ):
-        super(PointRepairView, self).__init__(parent)
+        super(ManualPointClickerView, self).__init__(parent)
 
         # Setup paths
         self.path_project: str = project_path
@@ -61,7 +61,7 @@ class PointRepairView(QWidget):
         )
 
         self.path_final_optimized_points: str = os.path.join(
-            self.path_project, "final_optimized.json"
+            self.path_project, "final_optimized_laserpoints.json"
         )
 
         self.path_vf_segmentations: str = os.path.join(
@@ -80,7 +80,7 @@ class PointRepairView(QWidget):
         qvideo: List[QImage] = VFLabel.utils.transforms.vid_2_QImage(video)
 
         self.point_repair_widget = (
-            VFLabel.gui_graphics_view.repairPoints.RepairPointWidget(
+            VFLabel.gui_graphics_view.manualPointClicker.ManualPointClicker(
                 qvideo, grid_height=grid_height, grid_width=grid_width
             )
         )
@@ -114,13 +114,10 @@ class PointRepairView(QWidget):
         frame_label_widget = QWidget()
 
         # create number text bars
-        self.frame_label_left = QLabel("Repair Points - Frame: 0")
-        self.frame_label_right = QLabel(f"Optimized Points - Frame: 0")
+        self.semi_manual_label = QLabel("Select Points - Frame: 0")
+        self.optimized_points_label = QLabel(f"Optimized Points - Frame: 0")
 
         help_icon_path = "assets/icons/help.svg"
-
-        help_track_button = QPushButton(QIcon(help_icon_path), "")
-        help_track_button.clicked.connect(self.help_track_buttons)
 
         help_optimize_button = QPushButton(QIcon(help_icon_path), "")
         help_optimize_button.clicked.connect(self.help_optimize_buttons)
@@ -136,7 +133,7 @@ class PointRepairView(QWidget):
 
         point_clicker_label = QHBoxLayout()
         point_clicker_label.addStretch(1)
-        point_clicker_label.addWidget(self.frame_label_left)
+        point_clicker_label.addWidget(self.semi_manual_label)
         point_clicker_label.addWidget(help_left_frame_button)
         point_clicker_label.addStretch(1)
 
@@ -145,18 +142,8 @@ class PointRepairView(QWidget):
 
         cotracker_label = QHBoxLayout()
         cotracker_label.addStretch(1)
-        cotracker_label.addWidget(self.frame_label_middle)
         cotracker_label.addWidget(help_middle_frame_button)
         cotracker_label.addStretch(1)
-
-        help_right_frame_button = QPushButton(QIcon(help_icon_path), "")
-        help_right_frame_button.clicked.connect(self.help_right_frame_dialog)
-
-        optimized_points_label = QHBoxLayout()
-        optimized_points_label.addStretch(1)
-        optimized_points_label.addWidget(self.frame_label_right)
-        optimized_points_label.addWidget(help_right_frame_button)
-        optimized_points_label.addStretch(1)
 
         grid_button_widget = QWidget()
         grid_button_layout = QVBoxLayout()
@@ -179,7 +166,7 @@ class PointRepairView(QWidget):
 
         vertical_optimized_points_widget = QWidget()
         vertical_optimized_points = QVBoxLayout()
-        vertical_optimized_points.addLayout(optimized_points_label)
+        vertical_optimized_points.addWidget(self.optimized_points_label)
         vertical_optimized_points.addWidget(self.optimized_points_widget)
         vertical_optimized_points_widget.setLayout(vertical_optimized_points)
 
@@ -187,10 +174,7 @@ class PointRepairView(QWidget):
         horizontal_layout_top.addWidget(vertical_point_repair_widget)
         horizontal_layout_top.addWidget(vertical_optimized_points_widget)
         top_widget.setLayout(horizontal_layout_top)
-
         horizontal_layout_bot.addWidget(self.video_player)
-        horizontal_layout_bot.addWidget(self.button_track_points)
-        horizontal_layout_bot.addWidget(help_track_button)
         horizontal_layout_bot.addWidget(self.button_optimize_points)
         horizontal_layout_bot.addWidget(help_optimize_button)
         horizontal_layout_bot.addWidget(self.button_save)
@@ -208,7 +192,6 @@ class PointRepairView(QWidget):
 
         self.button_save.clicked.connect(self.save)
         self.button_grid.buttonSignal.connect(self.point_repair_widget.set_laser_index)
-        self.button_track_points.clicked.connect(self.track_points)
         self.button_optimize_points.clicked.connect(self.optimize_points)
 
         self.button_disable_modes
@@ -234,13 +217,16 @@ class PointRepairView(QWidget):
         )
 
         if check_for_existing_data:
-            self.init_with_existing_data()
+            self.load_existing_data()
 
     def load_existing_data(self):
         # Tracked points window
         predicted_points_path = os.path.join(
             self.path_project, "predicted_laserpoints.json"
         )
+
+        if not os.path.exists(predicted_points_path):
+            return
 
         file_filled = os.stat(predicted_points_path).st_size
 
@@ -279,6 +265,7 @@ class PointRepairView(QWidget):
 
             with open(op_labels_path, "r+") as f:
                 file = json.load(f)
+                length = len(file[f"Frame0"])
                 labels = np.zeros([len(self.video), length]) * np.nan
                 for i in range(len(self.video)):
                     for k in range(len(file[f"Frame{i}"])):
@@ -307,9 +294,8 @@ class PointRepairView(QWidget):
             )
 
     def change_frame_label(self, value):
-        if value < self.cycle_end:
-            self.frame_label_left.setText(f"Repair Points - Frame: {value}")
-        self.frame_label_right.setText(f"Optimized Points - Frame: {value}")
+        self.semi_manual_label.setText(f"Select Points - Frame: {value}")
+        self.optimized_points_label.setText(f"Optimized Points - Frame: {value}")
 
     def show_ok_dialog(self) -> None:
         dlg = QMessageBox(self)
@@ -444,6 +430,17 @@ class PointRepairView(QWidget):
                 segmentation,
             )
 
+    def save_clicked_points(self, show_dialog: bool = True) -> None:
+        self.disable_modes()
+
+        laserpoints = self.point_clicker_widget.point_positions
+        VFLabel.io.write_points_to_json(
+            self.path_repaired_points, laserpoints, self.cycle_start
+        )
+
+        if show_dialog:
+            self.show_ok_dialog()
+
     def set_draw_mode(self) -> None:
         self.setCursor(QCursor(QtCore.Qt.CrossCursor))
         self.point_repair_widget.DRAW_MODE_on()
@@ -540,18 +537,7 @@ class PointRepairView(QWidget):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help - Optimize points")
         dlg.setText(
-            "Tracks, optimize and filters points based on the tracking information coming from the previous step 'Track Points'."
-        )
-        dlg.setStandardButtons(QMessageBox.Ok)
-        dlg.setIcon(QMessageBox.Information)
-        dlg.adjustSize()
-        dlg.exec()
-
-    def help_track_buttons(self):
-        dlg = QMessageBox(self)
-        dlg.setWindowTitle("Help - Track points")
-        dlg.setText(
-            "By pressing this button, a neural network is activated tracking the clicked points through the different frames."
+            "Tracks, optimize and filters points based on the tracking information coming from the previously localized points."
         )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)

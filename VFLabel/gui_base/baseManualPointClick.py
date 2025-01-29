@@ -13,7 +13,7 @@ import VFLabel.io
 import VFLabel.utils.utils
 
 
-class BasePointClick(baseWindow.BaseWindow):
+class BaseManualPointClick(baseWindow.BaseWindow):
     signal_open_main_menu = pyqtSignal(str)
 
     def __init__(self, project_path, parent=None):
@@ -41,14 +41,10 @@ class BasePointClick(baseWindow.BaseWindow):
             grid_width = int(file["grid_x"])
             grid_height = int(file["grid_y"])
 
-        cycle_start = 0
-        cycle_end = 50
         # Set up the zoomable view
-        self.view = VFLabel.gui_view.viewPointClicker.PointClickerView(
+        self.view = VFLabel.gui_view.viewManualPointClicker.ManualPointClickerView(
             grid_height,
             grid_width,
-            cycle_start,
-            cycle_end,
             videodata,
             self.project_path,
             check_for_existing_data=True,

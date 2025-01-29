@@ -9,11 +9,6 @@ class ProgressStateWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__()
-
-        self.init_window()
-
-    def init_window(self):
-        # definition of question text
         question_text = QLabel(
             "Did you finish this step \n or would you like to continue next time?"
         )

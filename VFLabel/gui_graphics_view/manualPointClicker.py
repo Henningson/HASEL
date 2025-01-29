@@ -12,7 +12,7 @@ import VFLabel.gui_graphics_view.zoomableVideo as zoomableVideo
 import VFLabel.utils.enums as enums
 
 
-class RepairPoints(zoomableVideo.ZoomableVideo):
+class ManualPointClicker(zoomableVideo.ZoomableVideo):
     point_added = pyqtSignal()
     point_removed = pyqtSignal(int, int)
     signal_increment_frame = pyqtSignal(bool)
@@ -25,7 +25,7 @@ class RepairPoints(zoomableVideo.ZoomableVideo):
         grid_height: int = 18,
         parent=None,
     ):
-        super(RepairPoints, self).__init__(video, parent)
+        super(ManualPointClicker, self).__init__(video, parent)
         self._draw_mode = enums.DRAW_MODE.OFF
         self._remove_mode = enums.DRAW_MODE.OFF
 
