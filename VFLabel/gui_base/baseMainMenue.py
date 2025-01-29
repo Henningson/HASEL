@@ -23,6 +23,7 @@ class BaseMainMenue(baseWindow.BaseWindow):
     signal_close_main_menu_window = pyqtSignal()
     signal_open_glottis_segm_window = pyqtSignal(str)
     signal_open_pt_label_window = pyqtSignal(str)
+    signal_open_repair_point_window = pyqtSignal(str)
 
     signal_upload_glottis_segmentation = pyqtSignal(bool)
 
@@ -32,9 +33,6 @@ class BaseMainMenue(baseWindow.BaseWindow):
         self.progress_state_path = os.path.join(
             self.project_path, "progress_status.json"
         )
-        self.init_window()
-
-    def init_window(self) -> None:
 
         # create layout
         boxh_btn_layout = QHBoxLayout()
@@ -51,21 +49,28 @@ class BaseMainMenue(baseWindow.BaseWindow):
             "In this step of the pipeline, the glottis is segmented and the midline of the glottis is determined. We supply different neural network architectures."
         )
         btn_gl_seg.setFont(font)
-        btn_gl_seg.setFixedSize(200, 100)
+        btn_gl_seg.setMinimumSize(200, 100)
 
         btn_vf_seg = QPushButton("Vocal Fold \nsegmentation", self)
         btn_vf_seg.setToolTip(
             "In this step of the pipeline the vocalfold is segmented. This is done by creating a mask of the vocal fold in the first frame. In the last frame, the vocal fold mask is transformed to match the vocal fold in this view. The other frames are interpolated."
         )
         btn_vf_seg.setFont(font)
-        btn_vf_seg.setFixedSize(200, 100)
+        btn_vf_seg.setMinimumSize(200, 100)
 
         btn_pt_label = QPushButton("Point \nLabeling", self)
         btn_pt_label.setToolTip(
-            "In this step of the pipeline, the laserpoints are marked and tracked over time."
+            "Here, only a single visible point needs to be selected and they get tracked automatically."
         )
         btn_pt_label.setFont(font)
-        btn_pt_label.setFixedSize(200, 100)
+        btn_pt_label.setMinimumSize(200, 100)
+
+        btn_manual_point_clicking = QPushButton("Semi-Manual Point Labeling", self)
+        btn_manual_point_clicking.setToolTip(
+            "If some points were lost or inadequate in the previous step, use this to reassess points semi manually."
+        )
+        btn_manual_point_clicking.setFont(font)
+        btn_manual_point_clicking.setMinimumSize(200, 100)
 
         path_upload_icon = "assets/icons/upload.svg"
 
@@ -87,23 +92,34 @@ class BaseMainMenue(baseWindow.BaseWindow):
         btn_close = QPushButton("Close", self)
         btn_close.setToolTip("This <b>button</b> closes this project")
         btn_close.setFont(font)
-        btn_close.setFixedSize(100, 30)
+        btn_close.setMinimumSize(100, 30)
 
         # create progress text bars
         with open(self.progress_state_path, "r+") as prgrss_file:
             file = json.load(prgrss_file)
             self.progress_gl_seg = QTextEdit(file["progress_gl_seg"], readOnly=True)
-            self.progress_gl_seg.setFixedSize(200, 30)
+            self.progress_gl_seg.setMinimumSize(200, 30)
             self.progress_gl_seg.setTextColor(QColor(0, 0, 0))
             self.color_progress_state(self.progress_gl_seg, file["progress_gl_seg"])
+
             self.progress_vf_seg = QTextEdit(file["progress_vf_seg"], readOnly=True)
-            self.progress_vf_seg.setFixedSize(200, 30)
+            self.progress_vf_seg.setMinimumSize(200, 30)
             self.progress_vf_seg.setTextColor(QColor(0, 0, 0))
             self.color_progress_state(self.progress_vf_seg, file["progress_vf_seg"])
+
             self.progress_pt_label = QTextEdit(file["progress_pt_label"], readOnly=True)
-            self.progress_pt_label.setFixedSize(200, 30)
-            self.progress_vf_seg.setTextColor(QColor(0, 0, 0))
+            self.progress_pt_label.setMinimumSize(200, 30)
+            self.progress_pt_label.setTextColor(QColor(0, 0, 0))
             self.color_progress_state(self.progress_pt_label, file["progress_pt_label"])
+
+            self.progress_manual_pt_label = QTextEdit(
+                file["progress_manual_pt_label"], readOnly=True
+            )
+            self.progress_manual_pt_label.setMinimumSize(200, 30)
+            self.progress_manual_pt_label.setTextColor(QColor(0, 0, 0))
+            self.color_progress_state(
+                self.progress_manual_pt_label, file["progress_manual_pt_label"]
+            )
 
         # centralize text of progress text bars
         self.centralize_text(self.progress_gl_seg)
@@ -112,11 +128,11 @@ class BaseMainMenue(baseWindow.BaseWindow):
 
         # create number text bars
         num_gl_seg = QLabel("1.")
-        num_gl_seg.setFixedSize(200, 30)
+        num_gl_seg.setMinimumSize(200, 30)
         num_vf_seg = QLabel("2.")
-        num_vf_seg.setFixedSize(200, 30)
+        num_vf_seg.setMinimumSize(200, 30)
         num_pt_label = QLabel("3.")
-        num_pt_label.setFixedSize(200, 30)
+        num_pt_label.setMinimumSize(200, 30)
 
         # centralize text of progress num bars
         num_gl_seg.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
@@ -132,6 +148,8 @@ class BaseMainMenue(baseWindow.BaseWindow):
         boxh_btn_layout.addStretch(1)
         boxh_btn_layout.addWidget(btn_pt_label)
         boxh_btn_layout.addStretch(1)
+        boxh_num_layout.addWidget(btn_manual_point_clicking)
+        boxh_btn_layout.addStretch(1)
 
         # insert progress text in window
         boxh_txt_layout.addStretch(1)
@@ -141,6 +159,8 @@ class BaseMainMenue(baseWindow.BaseWindow):
         boxh_txt_layout.addWidget(self.progress_vf_seg)
         boxh_txt_layout.addStretch(1)
         boxh_txt_layout.addWidget(self.progress_pt_label)
+        boxh_txt_layout.addStretch(1)
+        boxh_txt_layout.addWidget(self.progress_manual_point_clicking)
         boxh_txt_layout.addStretch(1)
 
         # insert number text in window

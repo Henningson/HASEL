@@ -33,7 +33,6 @@ def read_last_nonempty_line(file_path):
                 # Strip whitespace and check if the line is nonempty
                 if line.strip():
                     last_nonempty_line = line.strip()
-                    print(f"Last nonempty line: {last_nonempty_line}")
                     return last_nonempty_line
         return None
     except FileNotFoundError:

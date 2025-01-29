@@ -11,8 +11,7 @@ class NewProjectDialog(QDialog):
         # TODO: incorporate video name as proposed project name
         # TODO: Abfangen wenn Name schon existiert
         # Basic setup
-        self.setGeometry(300, 300, 500, 100)
-        self.setWindowTitle("New project")
+        self.setWindowTitle("New Project")
 
         layout = QFormLayout()
 
