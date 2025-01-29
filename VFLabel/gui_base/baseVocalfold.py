@@ -68,7 +68,6 @@ class BaseVocalfold(baseWindow.BaseWindow):
         dlg.exec()
 
     def save_current_state(self):
-        print("save vf segm")
         self.view.save()
 
     def close_window(self) -> None:

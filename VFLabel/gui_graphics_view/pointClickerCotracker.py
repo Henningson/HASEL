@@ -117,7 +117,6 @@ class PointClickerCotracker(zoomableVideo.ZoomableVideo):
         self.signal_increment_frame.emit(True)
 
     def frame_backward(self):
-        print(self._current_frame)
         if self._current_frame >= self._num_frames:
             return
         self.change_frame(self._current_frame - 1)

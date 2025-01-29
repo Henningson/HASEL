@@ -75,7 +75,6 @@ class TransformableSegmentation(zoomableViewWidget.Zoomable):
 
     def toggle_zoom_mode(self) -> None:
         self._zoom_mode = not self._zoom_mode
-        print(f"Zoom Mode: {self._zoom_mode}")
 
     def get_transform(self) -> List[float]:
         return self.x_translation, self.y_translation, self.scale, self.rotation_angle

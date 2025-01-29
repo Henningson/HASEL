@@ -14,14 +14,10 @@ import VFLabel.gui_dialog.newProject
 
 
 def append_to_file(file_path, text_to_append):
-    try:
-        # Open the file in append mode ('a')
-        with open(file_path, "a") as file:
-            # Write the text and add a newline
-            file.write(text_to_append + "\n")
-        print(f"Successfully appended: '{text_to_append}' to {file_path}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
+    # Open the file in append mode ('a')
+    with open(file_path, "a") as file:
+        # Write the text and add a newline
+        file.write(text_to_append + "\n")
 
 
 def read_last_nonempty_line(file_path):
@@ -271,7 +267,6 @@ class BaseStartWindow(baseWindow.BaseWindow):
             os.path.join(current_dir, "assets", "starting_progress_status.json"),
             json_path_progress_status,
         )
-        print("done")
         with open(json_path_progress_status, "r+") as f:
             file = json.load(f)
             file["grid_x"] = self.gridx

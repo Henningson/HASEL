@@ -48,7 +48,6 @@ class BaseGlottis(baseWindow.BaseWindow):
         self.show()
 
     def save_current_state(self):
-        print("save glottis segmentation")
         self.glottis_widget.save()
 
     def update_progress(self, progress) -> None:

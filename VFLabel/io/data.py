@@ -17,7 +17,6 @@ def create_image_data(image_dir, video_file):
     except:
         pass
 
-    print("ffmpeg -i {0} {1}/%05d.png".format(video_file, image_dir))
     os.system(
         "ffmpeg -i {0} -start_number 0 {1}/%05d.png".format(video_file, image_dir)
     )
