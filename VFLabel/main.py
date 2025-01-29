@@ -1,4 +1,3 @@
-# We can start the program in this file.
 import sys
 
 import gui_base
