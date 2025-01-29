@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import (
 
 import VFLabel.gui.drawSegmentationWidget
 import VFLabel.gui.interpolateSegmentationWidget
+import VFLabel.gui.progressDialog
 import VFLabel.gui.transformSegmentationWidget
 import VFLabel.gui.videoPlayerWidget
 import VFLabel.gui.vocalfoldSegmentationSliderWidget
@@ -241,7 +242,9 @@ class VocalfoldSegmentationWidget(QWidget):
             self.setEnabled(True)
             return
 
-        for i in range(self.video_player.get_video_length()):
+        for i in VFLabel.gui.progressDialog.ProgressDialog(
+            range(self.video_player.get_video_length()), "Saving VF Segmentations"
+        ):
             pixmap = self.interpolate_view.generate_segmentation_for_frame(i)
 
             if pixmap == np.array([-1]):
