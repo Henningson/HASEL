@@ -40,6 +40,22 @@ def np_2_QImage(image: np.array) -> QImage:
     )
 
 
+def qImage_2_np(qimage: QImage) -> np.array:
+    if qimage.format() == QImage.Format_RGB888:
+        width = qimage.width()
+        height = qimage.height()
+        ptr = qimage.bits()
+        ptr.setsize(height * width * 3)
+        return np.array(ptr).reshape((height, width, 3))
+
+    elif qimage.format() == QImage.Format_RGBA8888:
+        width = qimage.width()
+        height = qimage.height()
+        ptr = qimage.bits()
+        ptr.setsize(height * width * 4)
+        return np.array(ptr).reshape((height, width, 4))
+
+
 # We assume NumPy-Style format [NUM_FRAMES, HEIGHT, WIDTH, CHANNEL]
 def vid_2_QImage(video: np.array) -> List[QImage]:
     return [np_2_QImage(image) for image in video]

@@ -20,3 +20,4 @@ from .vocalfoldSegmentationSliderWidget import VocalfoldSegmentationSliderWidget
 from .vocalfoldSegmentationView import VocalfoldSegmentationView
 from .vocalfoldSegmentationWidget import VocalfoldSegmentationWidget
 from .zoomableViewWidget import ZoomableViewWidget
+from .glottisSegmentationMaskView import GlottisSegmentationMaskView

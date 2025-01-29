@@ -9,21 +9,18 @@ import segmentation_models_pytorch as smp
 import torch
 from albumentations.pytorch import ToTensorV2
 from PyQt5 import QtCore
-from PyQt5.QtCore import QObject, QSize, Qt, QThread, pyqtSignal
-from PyQt5.QtGui import QIcon, QMovie
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QComboBox,
-    QDialog,
     QHBoxLayout,
     QLabel,
     QMessageBox,
-    QProgressDialog,
     QPushButton,
     QSlider,
     QVBoxLayout,
     QWidget,
+    QCheckBox,
 )
-from tqdm import tqdm
 
 import VFLabel.cv.analysis
 import VFLabel.cv.segmentation
@@ -91,8 +88,10 @@ class GlottisSegmentationWidget(QWidget):
             )
 
         self.video_view = VFLabel.gui.videoViewWidget.VideoViewWidget(qvideo)
-        self.segmentation_view = VFLabel.gui.videoViewWidget.VideoViewWidget(
-            qvideo_segmentations if self.segmentations else None
+        self.segmentation_view = VFLabel.gui.GlottisSegmentationMaskView(
+            qvideo_segmentations if self.segmentations else None,
+            project_path,
+            self,
         )
         self.overlay_view = (
             VFLabel.gui.videoOverlayWithGMWidget.VideoOverlayGlottalMidlineWidget(
@@ -125,6 +124,9 @@ class GlottisSegmentationWidget(QWidget):
         self.generate_button = QPushButton("Generate")
 
         self.save_button = QPushButton("Save")
+
+        self.edit_mask_button = QCheckBox("Edit Mask")
+        self.reload_overlay_button = QPushButton("Reload Overlay")
 
         self.frame_label_left = QLabel("Input Video - Frame: 0")
         self.frame_label_middle = QLabel(f"Segmentation - Frame: 0")
@@ -194,6 +196,8 @@ class GlottisSegmentationWidget(QWidget):
         horizontal_layout_bot.addWidget(self.generate_button)
         horizontal_layout_bot.addWidget(self.video_player)
         horizontal_layout_bot.addWidget(self.save_button)
+        horizontal_layout_bot.addWidget(self.edit_mask_button)
+        horizontal_layout_bot.addWidget(self.reload_overlay_button)
         horizontal_layout_bot.addWidget(self.opacity_label)
         horizontal_layout_bot.addWidget(help_opacity_button)
         horizontal_layout_bot.addWidget(self.alpha_slider)
@@ -204,6 +208,10 @@ class GlottisSegmentationWidget(QWidget):
         self.setLayout(vertical_layout)
 
         self.save_button.clicked.connect(self.save)
+        self.edit_mask_button.stateChanged.connect(
+            self.segmentation_view.change_draw_state
+        )
+        self.reload_overlay_button.clicked.connect(self.reload_overlay)
         self.generate_button.clicked.connect(self.generate_segmentations)
         self.alpha_slider.valueChanged.connect(self.change_opacity)
         self.video_player.slider.valueChanged.connect(self.change_frame)
@@ -321,8 +329,14 @@ class GlottisSegmentationWidget(QWidget):
         self.overlay_view.redraw()
 
     def save(self) -> None:
-        segmentation_path = os.path.join(self.project_path, "glottis_segmentation")
         glottal_midlines_path = os.path.join(self.project_path, "glottal_midlines.json")
+        self.segmentation_view.save_segmentation_mask()
+        self.glottal_midlines = [
+            self.calculate_glottis_midline_one_frame(image)
+            for image in ProgressDialog(
+                self.segmentation_view.img_np, "Glottal Midline"
+            )
+        ]
 
         glottal_midline_dict = {}
         for frame_index, midline_points in enumerate(self.glottal_midlines):
@@ -337,9 +351,49 @@ class GlottisSegmentationWidget(QWidget):
         with open(glottal_midlines_path, "w+") as outfile:
             json.dump(glottal_midline_dict, outfile)
 
-        for frame_index, seg in enumerate(self.segmentations):
-            image_save_path = os.path.join(segmentation_path, f"{frame_index:05d}.png")
-            cv2.imwrite(image_save_path, seg)
+    def calculate_glottis_midline_one_frame(self, image: np.array):
+        if np.shape(image)[-1] == 4:
+            midline = VFLabel.cv.analysis.glottal_midline(image[:, :, 0:3])
+        elif np.shape(image)[-1] == 3:
+            midline = VFLabel.cv.analysis.glottal_midline(image)
+        else:
+            midline = None
+
+        return midline
+
+    def reload_overlay(self):
+        images_list = self.segmentation_view.qImage_list_2_black_white_np_list(
+            self.segmentation_view.images
+        )
+
+        # glottis segmentation
+        for idx, img in enumerate(images_list):
+            images_list[idx][np.sum(img, axis=-1) > 0] = COLOR.GLOTTIS
+
+        segmentations_with_alpha = [
+            VFLabel.utils.utils.add_alpha_to_segmentations(seg) for seg in images_list
+        ]
+
+        overlays = VFLabel.utils.transforms.vid_2_QImage(segmentations_with_alpha)
+        self.overlay_view.add_overlay(overlays)
+
+        # glottal midline
+        self.glottal_midlines = [
+            self.calculate_glottis_midline_one_frame(image)
+            for image in ProgressDialog(images_list, "Glottal Midline")
+        ]
+
+        glottal_midline_dict = {}
+        for frame_index, midline_points in enumerate(self.glottal_midlines):
+            upper = midline_points[0]
+            lower = midline_points[1]
+
+            glottal_midline_dict[f"Frame{frame_index}"] = {
+                "Upper": upper.tolist() if upper is not None else [-1, -1],
+                "Lower": lower.tolist() if lower is not None else [-1, -1],
+            }
+        self.overlay_view.set_glottal_midlines_array(glottal_midline_dict)
+        self.overlay_view.redraw()
 
     def change_opacity(self) -> None:
         self.overlay_view.set_opacity(self.alpha_slider.value() / 100)
@@ -366,7 +420,7 @@ class GlottisSegmentationWidget(QWidget):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Help - Segmentation View")
         dlg.setText(
-            "This window shows the segmentation mask for each frame. To generate the mask click 'Generate'"
+            "This window shows the segmentation mask for each frame. To generate the mask click 'Generate'. After generation, the mask can be manually adjusted (false green areas can be removed)."
         )
         dlg.setStandardButtons(QMessageBox.Ok)
         dlg.setIcon(QMessageBox.Information)

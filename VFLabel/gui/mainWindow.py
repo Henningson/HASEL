@@ -55,7 +55,7 @@ class MainWindow(QMainWindow):
 
         # tool close button
         tool_close_window = QAction(
-            QIcon.fromTheme("close"), "Close current window", self
+            QIcon(f"{close_icon_path}"), "Close current window", self
         )
         tool_close_window.setToolTip("Close current window  Ctrl+c")
         tool_close_window.setShortcut("Ctrl+c")
