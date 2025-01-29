@@ -12,7 +12,7 @@ from typing import List
 from PyQt5.QtGui import QImage
 import PyQt5.QtCore
 
-import VFLabel.gui.cropAndSPPWidget
+import VFLabel.gui_graphics_view.cropAndSubpixelPoints
 import VFLabel.utils.defines
 import VFLabel.nn.point_tracking
 import VFLabel.cv.point_interpolation as pi
@@ -60,8 +60,10 @@ if __name__ == "__main__":
                 np.repeat(crops[:, :, :, None], 3, 3)
             )
             # Set up the zoomable view
-            self.view_1 = VFLabel.gui.cropAndSPPWidget.CropAndSPPWidget(
-                qvideo, subpix_points_on_crops
+            self.view_1 = (
+                VFLabel.gui_graphics_view.cropAndSubpixelPoints.CropAndSubpixelPoints(
+                    qvideo, subpix_points_on_crops
+                )
             )
             layout.addWidget(self.view_1)
 

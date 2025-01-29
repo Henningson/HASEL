@@ -12,7 +12,7 @@ from typing import List
 from PyQt5.QtGui import QImage
 import PyQt5.QtCore
 
-import VFLabel.gui.labeledPointWidget
+import VFLabel.gui_graphics_view.labeledPoints
 import VFLabel.utils.defines
 import VFLabel.nn.point_tracking
 import VFLabel.cv.point_interpolation as pi
@@ -85,11 +85,11 @@ if __name__ == "__main__":
             video_rgb = np.array(io.read_images_from_folder(video_path))[:175]
             qvideo: List[QImage] = VFLabel.utils.transforms.vid_2_QImage(video_rgb)
             # Set up the zoomable view
-            self.view_1 = VFLabel.gui.labeledPointWidget.LabeledPointWidget(qvideo)
+            self.view_1 = VFLabel.gui_graphics_view.labeledPoints.LabeledPoints(qvideo)
             self.view_1.add_points_and_classes(points, classifications)
             layout.addWidget(self.view_1)
 
-            self.view_2 = VFLabel.gui.labeledPointWidget.LabeledPointWidget(qvideo)
+            self.view_2 = VFLabel.gui_graphics_view.labeledPoints.LabeledPoints(qvideo)
             self.view_2.add_points_and_classes(filtered_points, classifications)
             layout.addWidget(self.view_2)
 

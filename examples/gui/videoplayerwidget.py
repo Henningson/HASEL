@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QImage
 
-import VFLabel.gui
+import VFLabel.gui_base
 
 if __name__ == "__main__":
 
@@ -23,7 +23,7 @@ if __name__ == "__main__":
             layout = QVBoxLayout(central_widget)
 
             # Set up the zoomable view
-            view = VFLabel.gui.VideoPlayerWidget(100, 25)
+            view = VFLabel.gui_base.VideoPlayerBarWidget(100, 25)
             layout.addWidget(view)
 
             # Set up the main window

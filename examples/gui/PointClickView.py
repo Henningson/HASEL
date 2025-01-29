@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtGui import QImage
 
-import VFLabel.gui.pointLabelingWidget
+import VFLabel.gui_base.viewPointClicker
 import VFLabel.utils.defines
 
 if __name__ == "__main__":
@@ -28,7 +28,7 @@ if __name__ == "__main__":
             grid_height = 18
             grid_width = 18
             # Set up the zoomable view
-            view = VFLabel.gui.pointLabelingWidget.PointLabelingWidget(
+            view = VFLabel.gui_base.viewPointClicker.PointClickerView(
                 grid_height,
                 grid_width,
                 0,

@@ -11,7 +11,7 @@ from PyQt5.QtGui import QImage
 
 from PyQt5.QtCore import QPointF
 
-import VFLabel.gui
+import VFLabel.gui_base
 
 
 if __name__ == "__main__":
@@ -33,7 +33,7 @@ if __name__ == "__main__":
             ]
             image = QImage("assets/test_data/test_image.png")
 
-            view = VFLabel.gui.TransformSegmentationWidget(
+            view = VFLabel.gui_base.TransformableSegmentation(
                 image, polygon_points=point_list
             )
             layout.addWidget(view)

@@ -1,18 +1,11 @@
 import sys
+import torch
 
-from PyQt5.QtWidgets import (
-    QApplication,
-    QGraphicsScene,
-    QMainWindow,
-    QVBoxLayout,
-    QWidget,  #
-    QMessageBox,
-)
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 from typing import List
 from PyQt5.QtGui import QImage
-import PyQt5.QtCore
 
-import VFLabel.gui.pointViewWidget
+import VFLabel.gui_graphics_view.showPoints
 import VFLabel.utils.defines
 import VFLabel.nn.point_tracking
 import numpy as np
@@ -33,13 +26,16 @@ if __name__ == "__main__":
 
             qvideo: List[QImage] = VFLabel.utils.transforms.vid_2_QImage(videodata)
             # Set up the zoomable view
-            self.view = VFLabel.gui.pointViewWidget.PointViewWidget(qvideo)
+            self.view = VFLabel.gui_graphics_view.showPoints.PointShower(qvideo)
             layout.addWidget(self.view)
 
             video = VFLabel.io.data.read_video("assets/test_data/test_video_1.avi")
+            device = "cuda" if torch.cuda.is_available() else "cpu"
             pred_points, pred_visibility = (
                 VFLabel.nn.point_tracking.track_points_windowed(
-                    video, np.array([[0.0, 128.0, 256.0], [0.0, 138.0, 295.0]])
+                    video,
+                    np.array([[0.0, 128.0, 256.0], [0.0, 138.0, 295.0]]),
+                    device=device,
                 )
             )
 
