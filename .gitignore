@@ -142,3 +142,4 @@ Dataset*
 data/*
 *.zip
 *.csv
+assets/temp/recent_projects
