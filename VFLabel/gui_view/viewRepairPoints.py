@@ -36,16 +36,6 @@ import VFLabel.nn.point_tracking
 import VFLabel.utils.transforms
 import VFLabel.utils.utils
 
-##################### ^
-#         #         # |
-#         #         # |
-#  GRID   #  VIDEO  # |
-#         #         # |
-#  DRAW   #         # |
-#  REMOVE #         # |
-##################### |
-#  VWP    # SAVE    #
-
 
 class PointRepairView(QWidget):
     def __init__(
