@@ -178,9 +178,7 @@ class ManualPointClicker(zoomableVideo.ZoomableVideo):
             self.scene().removeItem(clicked_item)
             self._point_items.remove(clicked_item)
             x_id, y_id = clicked_item.getID()
-
-            for i in range(self._num_frames):
-                self.point_positions[i, y_id, x_id] = np.nan
+            self.point_positions[:, y_id, x_id] = np.nan
 
             self.point_removed.emit(x_id, y_id)
 
@@ -239,7 +237,7 @@ class ManualPointClicker(zoomableVideo.ZoomableVideo):
 
         current_points = self.point_positions[self._current_frame].reshape(-1, 2)
         filtered_points = current_points[~np.isnan(current_points).any(axis=1)]
-        ids = self.get_point_indices()[:, [1, 2]]
+        ids = self.get_point_indices()[:, [2, 1]]
         for point, point_id in zip(filtered_points, ids):
             ellipse_item = ellipseWithID.GraphicEllipseItemWithID(
                 point[0] - self._pointsize / 2,
@@ -259,6 +257,3 @@ class ManualPointClicker(zoomableVideo.ZoomableVideo):
 
         # Get x, y indices of valid points
         return np.argwhere(mask)
-
-    def get_point_indices_at_current(self) -> np.array:
-        return self.get_point_indices(self._current_frame)
