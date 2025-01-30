@@ -232,7 +232,9 @@ def labels_to_numpy_array(
     return base
 
 
-def write_points_to_json(path: str, points: np.array, cycle_start: int = 0) -> None:
+def write_points_to_json(
+    path: str, points: np.array, cycle_start: int = 0, save: bool = True
+) -> dict:
     video_dict = {}
     for frame_index, per_frame_points in enumerate(points):
         point_list = []
@@ -249,6 +251,31 @@ def write_points_to_json(path: str, points: np.array, cycle_start: int = 0) -> N
             point_list.append(point_dict)
 
         video_dict[f"Frame{cycle_start + frame_index}"] = point_list
+
+    if save:
+        write_json(path, video_dict)
+
+    return video_dict
+
+
+def write_visibility_to_json(
+    path: str, visibility: np.array, points: np.array, cycle_start: int = 0
+) -> None:
+    video_dict = {}
+    for frame_index, per_frame_points in enumerate(points):
+        label_list = []
+        label_values = visibility[frame_index]
+        point_ids = VFLabel.cv.get_point_indices_from_tensor(per_frame_points)
+
+        for label, id in zip(label_values, point_ids):
+            point_dict = {
+                "label": label,
+                "x_id": id[1].item(),
+                "y_id": id[0].item(),
+            }
+            label_list.append(point_dict)
+
+        video_dict[f"Frame{cycle_start + frame_index}"] = label_list
 
     write_json(path, video_dict)
 

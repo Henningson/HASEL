@@ -64,6 +64,10 @@ class ManualPointClickerView(QWidget):
             self.path_project, "final_optimized_laserpoints.json"
         )
 
+        self.path_final_optimized_points_labels: str = os.path.join(
+            self.path_project, "final_optimized_laserpoints_labels.json"
+        )
+
         self.path_vf_segmentations: str = os.path.join(
             self.path_project, "vocalfold_segmentation"
         )
@@ -188,7 +192,7 @@ class ManualPointClickerView(QWidget):
         self.button_draw.clicked.connect(self.set_draw_mode)
         self.button_remove.clicked.connect(self.set_remove_mode)
         self.button_disable_modes.clicked.connect(self.disable_modes)
-        self.button_finished_clicking.clicked.connect(self.save_clicked_points)
+        self.button_finished_clicking.clicked.connect(self.save_repaired_points)
 
         self.button_save.clicked.connect(self.save)
         self.button_grid.buttonSignal.connect(self.point_repair_widget.set_laser_index)
@@ -217,61 +221,81 @@ class ManualPointClickerView(QWidget):
         )
 
         if check_for_existing_data:
-            self.load_existing_data()
+            self.load_points_to_optimize()
+            self.load_optimized_points()
+            self.point_repair_widget.redraw()
+            self.optimized_points_widget.redraw()
 
-    def load_existing_data(self):
+    def load_points_to_optimize(self) -> None:
         # Tracked points window
-        predicted_points_path = os.path.join(
-            self.path_project, "predicted_laserpoints.json"
-        )
-
-        if not os.path.exists(predicted_points_path):
+        if not os.path.exists(self.path_tracked_points) and not os.path.exists(
+            self.path_repaired_points
+        ):
             return
 
-        file_filled = os.stat(predicted_points_path).st_size
+        load_from_path = None
+        if os.path.exists(self.path_tracked_points):
+            load_from_path = self.path_tracked_points
 
-        if not file_filled:
+        if os.path.exists(self.path_repaired_points):
+            load_from_path = self.path_repaired_points
+
+        # Clicked repaired points take precedenced over the tracked points with cotracker.
+        # But if we generated points with cotracker before, load those.
+
+        # Check if file is not empty
+        if not os.stat(load_from_path).st_size:
             return
 
-        with open(predicted_points_path, "r+") as f:
-            file = json.load(f)
-            positions_np, ids_np = VFLabel.io.point_dict_to_cotracker(file)
+        # First load tracked or already repaired points.
+        with open(load_from_path, "r+") as f:
+            dict = json.load(f)
+            array_points = VFLabel.io.point_dict_to_numpy(
+                dict,
+                self.grid_width,
+                self.grid_height,
+                self.video_player.get_video_length(),
+            )
 
-            points_positions = np.zeros([*np.shape(labels), 2])
-            points_ids = np.zeros([*np.shape(labels), 2])
-            for i in range(len(self.video)):
-                arg = np.argwhere(positions_np[:, 0] == i)
-                points_positions[i] = positions_np[arg, 1:][:, 0, :]
+            self.point_repair_widget.point_positions = array_points
 
-                arg = np.argwhere(ids_np[:, 0] == i)
-                points_ids[i] = ids_np[arg, 1:][:, 0, :]
+            for y in range(self.grid_height):
+                for x in range(self.grid_width):
+                    point_per_frame = array_points[:, y, x]
+                    contains_value = np.any(~np.isnan(point_per_frame))
 
-        self.point_repair_widget.add_point(points_positions, labels, points_ids)
+                    if contains_value:
+                        button = self.button_grid.getButton(x, y)
+                        button.setActivated()
 
-        # optimized points window
-        op_pts_path = os.path.join(self.path_project, "optimized_laserpoints.json")
+    def load_optimized_points(self) -> None:
+        optimized_points_path = self.path_final_optimized_points
+        optimized_labels_path = self.path_final_optimized_points_labels
 
-        op_labels_path = os.path.join(self.path_project, "optimized_label_cycles.json")
-        if not os.path.isfile(op_labels_path):
-            with open(op_labels_path, "w") as f:
+        if not os.path.exists(optimized_points_path) or not os.path.exists(
+            optimized_labels_path
+        ):
+            return
+
+        if not os.path.isfile(optimized_labels_path):
+            with open(optimized_labels_path, "w") as f:
                 pass
 
-        file_filled = os.stat(op_pts_path).st_size
-        file_labels_filled = os.stat(op_labels_path).st_size
+        file_filled = os.stat(optimized_points_path).st_size
+        file_labels_filled = os.stat(optimized_labels_path).st_size
 
         if not file_filled or not file_labels_filled:
             return
         else:
 
-            with open(op_labels_path, "r+") as f:
+            with open(optimized_labels_path, "r+") as f:
                 file = json.load(f)
-                length = len(file[f"Frame0"])
-                labels = np.zeros([len(self.video), length]) * np.nan
+                labels = np.zeros([len(self.video), len(file["Frame0"])]) * np.nan
                 for i in range(len(self.video)):
                     for k in range(len(file[f"Frame{i}"])):
                         labels[i, k] = file[f"Frame{i}"][k]["label"]
 
-            with open(op_pts_path, "r+") as f:
+            with open(optimized_points_path, "r+") as f:
                 file = json.load(f)
                 positions_np, ids_np = VFLabel.io.point_dict_to_cotracker(file)
 
@@ -309,9 +333,7 @@ class ManualPointClickerView(QWidget):
         self.disable_modes()
 
         laserpoints = self.point_repair_widget.point_positions
-        VFLabel.io.write_points_to_json(
-            self.path_repaired_points, laserpoints, self.cycle_start
-        )
+        VFLabel.io.write_points_to_json(self.path_repaired_points, laserpoints, 0)
 
         if show_dialog:
             self.show_ok_dialog()
@@ -324,9 +346,9 @@ class ManualPointClickerView(QWidget):
             laserpoints, ids, self.grid_width, self.grid_height
         )
 
-        VFLabel.io.write_points_to_json(self.path_optimized_points, numpy_arr)
-        self.write_visibility_to_json(
-            self.path_final_optimized_points,
+        VFLabel.io.write_points_to_json(self.path_final_optimized_points, numpy_arr)
+        VFLabel.io.write_visibility_to_json(
+            self.path_final_optimized_points_labels,
             self.optimized_points_widget.point_labels.numpy().tolist(),
             numpy_arr,
         )
@@ -335,33 +357,49 @@ class ManualPointClickerView(QWidget):
             self.show_ok_dialog()
 
     def optimize_points(self) -> None:
-        dict = io.dict_from_json(
-            os.path.join(self.path_project, "predicted_laserpoints.json")
+        if not os.path.exists(self.path_repaired_points):
+            print("Please press Finished Clicking after you're done.")
+            return
+
+        dict = io.dict_from_json(self.path_repaired_points)
+        points = io.point_dict_to_numpy(
+            dict,
+            self.grid_width,
+            self.grid_height,
+            self.video_player.get_video_length(),
         )
-        points, ids = io.point_dict_to_cotracker(dict)
 
         video = self.video if self.video.shape[-1] == 1 else self.video[:, :, :, :1]
 
-        classifications, crops = pi.classify_points(points, video)
+        # classifications, crops = pi.classify_points(points, video)
+
+        points = torch.from_numpy(points)
+        points = pi.fill_nan_border_values_2d(points)
+        points = pi.interpolate_nans_2d(points)
+
+        # We're just interested in the dictionary, no need to save it.
+        point_dict = io.write_points_to_json("", points.numpy(), 0, False)
+
+        cotracker_styled_points, ids = io.point_dict_to_cotracker(point_dict)
+
+        classifications, crops = pi.classify_points(cotracker_styled_points, video)
 
         points_subpix, _ = pi.compute_subpixel_points(
-            torch.from_numpy(points),
+            torch.from_numpy(cotracker_styled_points),
             classifications,
             torch.from_numpy(video),
-            len(dict["Frame0"]),
+            num_points_per_frame=cotracker_styled_points.shape[0] // len(video),
         )
 
         points_subpix = pi.smooth_points(points_subpix)
-        # points_subpix = pi.fill_nan_border_values(points_subpix)
 
-        # NEED TO TRANSFORM N x 3 OR WHATEVER TO NUM FRAMES x NUM POINTS x WHATEVER
-        points = points.reshape(self.video.shape[0], len(dict["Frame0"]), 3)[
-            :, :, [1, 2]
-        ]
-        points_subpix = points_subpix.permute(1, 0, 2).numpy()
         classifications = classifications.reshape(
             self.video.shape[0], len(dict["Frame0"])
         )
+        # points_subpix = pi.fill_nan_border_values(points_subpix)
+
+        # NEED TO TRANSFORM N x 3 OR WHATEVER TO NUM FRAMES x NUM POINTS x WHATEVER
+        points_subpix = points_subpix.permute(1, 0, 2).numpy()
 
         vocalfold_segmentations = np.array(
             io.read_images_from_folder(self.path_vf_segmentations, is_gray=True)
@@ -373,7 +411,7 @@ class ManualPointClickerView(QWidget):
             points_subpix, vocalfold_segmentations
         )
         filtered_points = pi.filter_points_on_glottis(
-            points_subpix, glottis_segmentations
+            filtered_points, glottis_segmentations
         )
 
         self.optimized_points_widget.add_points_labels_and_ids(
@@ -383,63 +421,7 @@ class ManualPointClickerView(QWidget):
         self.save_optimized_points(show_dialog=False)
 
     def save(self) -> None:
-        dlg = QMessageBox(self)
-        dlg.setWindowTitle("Are you sure?")
-        dlg.setText(f"Are you sure?")
-        dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        dlg.setIcon(QMessageBox.Question)
-        button = dlg.exec()
-
-        if button == QMessageBox.No:
-            return
-
-        path = os.path.join(self.path_project, "laserpoint_segmentations")
-        json_path = os.path.join(self.path_project, "clicked_laserpoints.json")
-
-        laserpoints = self.point_repair_widget.point_positions
-
-        video_dict = {}
-        for frame_index, per_frame_points in enumerate(laserpoints):
-            point_list = []
-            point_coordinates = VFLabel.cv.get_points_from_tensor(per_frame_points)
-            point_ids = VFLabel.cv.get_point_indices_from_tensor(per_frame_points)
-
-            for point, id in zip(point_coordinates, point_ids):
-                point_dict = {
-                    "x_pos": point[0].item(),
-                    "y_pos": point[1].item(),
-                    "x_id": id[1].item(),
-                    "y_id": id[0].item(),
-                }
-                point_list.append(point_dict)
-
-            video_dict[f"Frame{self.cycle_start + frame_index}"] = point_list
-
-        with open(json_path, "w") as outfile:
-            json.dump(video_dict, outfile)
-
-        segmentations = VFLabel.cv.generate_laserpoint_segmentations(
-            self.point_repair_widget.point_positions,
-            self.point_repair_widget._image_height,
-            self.point_repair_widget._image_width,
-        )
-
-        for frame_index, segmentation in enumerate(segmentations):
-            cv2.imwrite(
-                os.path.join(path, f"{self.cycle_start + frame_index:05d}.png"),
-                segmentation,
-            )
-
-    def save_clicked_points(self, show_dialog: bool = True) -> None:
-        self.disable_modes()
-
-        laserpoints = self.point_clicker_widget.point_positions
-        VFLabel.io.write_points_to_json(
-            self.path_repaired_points, laserpoints, self.cycle_start
-        )
-
-        if show_dialog:
-            self.show_ok_dialog()
+        self.save_optimized_points()
 
     def set_draw_mode(self) -> None:
         self.setCursor(QCursor(QtCore.Qt.CrossCursor))

@@ -218,7 +218,6 @@ def compute_subpixel_points(
 
 
 def fill_nan_border_values(points: torch.tensor) -> torch.tensor:
-
     for point_index, point_over_time in enumerate(points):
         nan_count_start = 0
         nan_count_end = 0
@@ -239,8 +238,10 @@ def fill_nan_border_values(points: torch.tensor) -> torch.tensor:
             else:
                 break
 
-        if nan_count_end == nan_count_start:
-            # Only nans, here we do nothing. Could also check that beforehand.
+        if (
+            nan_count_start == nan_count_end
+            and nan_count_start == point_over_time.shape[0]
+        ):
             continue
 
         if nan_count_end != 0:
@@ -252,6 +253,82 @@ def fill_nan_border_values(points: torch.tensor) -> torch.tensor:
             point_over_time.permute(1, 0), (nan_count_start, nan_count_end), "replicate"
         ).permute(1, 0)
         points[point_index] = point_over_time
+
+    return points
+
+
+def fill_nan_border_values_2d(points: torch.tensor) -> torch.tensor:
+    # Points should be in FRAMELENGTH x HEIGHT x WIDTH x 2
+    FRAMES, HEIGHT, WIDTH, DIMENSIONS = points.shape
+    for y in range(HEIGHT):
+        for x in range(WIDTH):
+            nan_count_start = 0
+            nan_count_end = 0
+
+            point_over_time = points[:, y, x, :]
+            nan_mask = torch.isnan(point_over_time[:, 0])
+
+            for val in nan_mask:
+                # Count nans at beginning of sequence
+                if val:
+                    nan_count_start += 1
+                else:
+                    break
+
+            for val in nan_mask.flip(0):
+                # Count nans at end of sequence
+                if val:
+                    nan_count_end += 1
+                else:
+                    break
+
+            if nan_count_start == nan_count_end and nan_count_start == FRAMES:
+                continue
+
+            if nan_count_end != 0:
+                point_over_time = point_over_time[nan_count_start:-nan_count_end]
+            else:
+                point_over_time = point_over_time[nan_count_start:]
+
+            point_over_time = torch.nn.functional.pad(
+                point_over_time.permute(1, 0),
+                (nan_count_start, nan_count_end),
+                "replicate",
+            ).permute(1, 0)
+            points[:, y, x, :] = point_over_time
+
+    return points
+
+
+def interpolate_nans_2d(points: torch.tensor) -> torch.tensor:
+    # Points should be in FRAMELENGTH x HEIGHT x WIDTH x 2
+    FRAMES, HEIGHT, WIDTH, DIMENSIONS = points.shape
+    for y in range(HEIGHT):
+        for x in range(WIDTH):
+            point_over_time = points[:, y, x, :]
+            nan_mask = torch.isnan(point_over_time[:, 0]) * 1
+            compute_string = "".join(map(str, nan_mask.squeeze().tolist()))
+            # Replace 0s with V for visible
+            if nan_mask.sum() == FRAMES:
+                continue
+
+            for frame_index, label in enumerate(compute_string):
+                if label == "0":
+                    continue
+
+                prev_v_index = compute_string.rfind("0", 0, frame_index)
+                next_v_index = compute_string.find("0", frame_index + 1)
+
+                lerp_alpha = (frame_index - prev_v_index) / (
+                    next_v_index - prev_v_index
+                )
+                point_a = point_over_time[prev_v_index]
+                point_b = point_over_time[next_v_index]
+                lerped_point = VFLabel.utils.transforms.lerp(
+                    point_a, point_b, lerp_alpha
+                )
+
+                points[frame_index, y, x] = lerped_point
 
     return points
 

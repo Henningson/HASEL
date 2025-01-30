@@ -449,27 +449,6 @@ class PointClickerView(QWidget):
         if show_dialog:
             self.show_ok_dialog()
 
-    def write_visibility_to_json(
-        self, path: str, visibility: np.array, points: np.array, cycle_start: int = 0
-    ) -> None:
-        video_dict = {}
-        for frame_index, per_frame_points in enumerate(points):
-            label_list = []
-            label_values = visibility[frame_index]
-            point_ids = VFLabel.cv.get_point_indices_from_tensor(per_frame_points)
-
-            for label, id in zip(label_values, point_ids):
-                point_dict = {
-                    "label": label,
-                    "x_id": id[1].item(),
-                    "y_id": id[0].item(),
-                }
-                label_list.append(point_dict)
-
-            video_dict[f"Frame{cycle_start + frame_index}"] = label_list
-
-        VFLabel.io.write_json(path, video_dict)
-
     def save_optimized_points(self, show_dialog: bool = True) -> None:
         laserpoints = self.optimized_points_widget.point_positions
         ids = self.optimized_points_widget.point_ids.astype(int)
@@ -479,7 +458,7 @@ class PointClickerView(QWidget):
         )
 
         VFLabel.io.write_points_to_json(self.path_optimized_points, numpy_arr)
-        self.write_visibility_to_json(
+        VFLabel.io.write_visibility_to_json(
             self.path_optimized_points_labels,
             self.optimized_points_widget.point_labels.numpy().tolist(),
             numpy_arr,
@@ -543,7 +522,7 @@ class PointClickerView(QWidget):
             points_subpix, vocalfold_segmentations
         )
         filtered_points = pi.filter_points_on_glottis(
-            points_subpix, glottis_segmentations
+            filtered_points, glottis_segmentations
         )
 
         self.optimized_points_widget.add_points_labels_and_ids(
@@ -553,52 +532,7 @@ class PointClickerView(QWidget):
         self.save_optimized_points(show_dialog=False)
 
     def save(self) -> None:
-        dlg = QMessageBox(self)
-        dlg.setWindowTitle("Are you sure?")
-        dlg.setText(f"Are you sure?")
-        dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        dlg.setIcon(QMessageBox.Question)
-        button = dlg.exec()
-
-        if button == QMessageBox.No:
-            return
-
-        path = os.path.join(self.path_project, "laserpoint_segmentations")
-        json_path = os.path.join(self.path_project, "clicked_laserpoints.json")
-
-        laserpoints = self.point_clicker_widget.point_positions
-
-        video_dict = {}
-        for frame_index, per_frame_points in enumerate(laserpoints):
-            point_list = []
-            point_coordinates = VFLabel.cv.get_points_from_tensor(per_frame_points)
-            point_ids = VFLabel.cv.get_point_indices_from_tensor(per_frame_points)
-
-            for point, id in zip(point_coordinates, point_ids):
-                point_dict = {
-                    "x_pos": point[0].item(),
-                    "y_pos": point[1].item(),
-                    "x_id": id[1].item(),
-                    "y_id": id[0].item(),
-                }
-                point_list.append(point_dict)
-
-            video_dict[f"Frame{self.cycle_start + frame_index}"] = point_list
-
-        with open(json_path, "w") as outfile:
-            json.dump(video_dict, outfile)
-
-        segmentations = VFLabel.cv.generate_laserpoint_segmentations(
-            self.point_clicker_widget.point_positions,
-            self.point_clicker_widget._image_height,
-            self.point_clicker_widget._image_width,
-        )
-
-        for frame_index, segmentation in enumerate(segmentations):
-            cv2.imwrite(
-                os.path.join(path, f"{self.cycle_start + frame_index:05d}.png"),
-                segmentation,
-            )
+        self.save_optimized_points()
 
     def set_draw_mode(self) -> None:
         self.setCursor(QCursor(QtCore.Qt.CrossCursor))
