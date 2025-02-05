@@ -1,6 +1,3 @@
-Certainly! Here’s the complete content formatted for a markdown file:
-
-```markdown
 # Python Library Coding Guidelines
 
 This document provides guidelines to ensure the code in our library is consistent, clean, and easy to maintain. All contributors should follow these rules when writing code.
@@ -19,8 +16,6 @@ def add_numbers(x: int, y: int) -> int:
     """Adds two numbers and returns the result."""
     return x + y
 ```
-
----
 
 ## 2. Code Formatting: Black
 
