@@ -19,17 +19,17 @@ from PyQt5.QtWidgets import (
 
 import VFLabel.cv.point_interpolation as pi
 import VFLabel.cv.segmentation
-import VFLabel.gui_widgets.buttonGrid
-import VFLabel.gui_graphics_view.pointClickerCotracker
-import VFLabel.gui_graphics_view.segmentationDrawer
 import VFLabel.gui_graphics_view.interpolateSegmentation
 import VFLabel.gui_graphics_view.labeledPoints
+import VFLabel.gui_graphics_view.pointClickerCotracker
+import VFLabel.gui_graphics_view.segmentationDrawer
+import VFLabel.gui_graphics_view.segmentationOverlay
 import VFLabel.gui_graphics_view.showPoints
 import VFLabel.gui_graphics_view.transformableSegmentation
-import VFLabel.gui_graphics_view.segmentationOverlay
-import VFLabel.gui_widgets.videoPlayerBar
-import VFLabel.gui_graphics_view.zoomableVideo
 import VFLabel.gui_graphics_view.zoomable
+import VFLabel.gui_graphics_view.zoomableVideo
+import VFLabel.gui_widgets.buttonGrid
+import VFLabel.gui_widgets.videoPlayerBar
 import VFLabel.io as io
 import VFLabel.io.data
 import VFLabel.nn.point_tracking
@@ -440,7 +440,7 @@ class PointClickerView(QWidget):
         )
 
         VFLabel.io.write_points_to_json(self.path_predicted_points, numpy_arr)
-        self.write_visibility_to_json(
+        VFLabel.io.write_visibility_to_json(
             self.path_predicted_points_labels,
             self.cotracker_widget.point_labels,
             numpy_arr,

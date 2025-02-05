@@ -146,7 +146,7 @@ def compute_subpixel_points(
         compute_string = compute_string.replace("0", "E")
         compute_string = compute_string.replace("1", "E")
         compute_string = compute_string.replace("2", "E")
-        print(compute_string)
+        # print(compute_string)
 
         # Compute sub-pixel position for each point labeled as visible (V)
         for frame_index, label in enumerate(compute_string):

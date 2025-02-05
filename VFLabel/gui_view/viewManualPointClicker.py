@@ -19,17 +19,17 @@ from PyQt5.QtWidgets import (
 
 import VFLabel.cv.point_interpolation as pi
 import VFLabel.cv.segmentation
-import VFLabel.gui_widgets.buttonGrid
-import VFLabel.gui_graphics_view.segmentationDrawer
 import VFLabel.gui_graphics_view.interpolateSegmentation
 import VFLabel.gui_graphics_view.labeledPoints
-import VFLabel.gui_graphics_view.showPoints
 import VFLabel.gui_graphics_view.manualPointClicker
-import VFLabel.gui_graphics_view.transformableSegmentation
+import VFLabel.gui_graphics_view.segmentationDrawer
 import VFLabel.gui_graphics_view.segmentationOverlay
-import VFLabel.gui_widgets.videoPlayerBar
-import VFLabel.gui_graphics_view.zoomableVideo
+import VFLabel.gui_graphics_view.showPoints
+import VFLabel.gui_graphics_view.transformableSegmentation
 import VFLabel.gui_graphics_view.zoomable
+import VFLabel.gui_graphics_view.zoomableVideo
+import VFLabel.gui_widgets.buttonGrid
+import VFLabel.gui_widgets.videoPlayerBar
 import VFLabel.io as io
 import VFLabel.io.data
 import VFLabel.nn.point_tracking
@@ -290,28 +290,48 @@ class ManualPointClickerView(QWidget):
 
             with open(optimized_labels_path, "r+") as f:
                 file = json.load(f)
-                labels = np.zeros([len(self.video), len(file["Frame0"])]) * np.nan
+                labels = []
                 for i in range(len(self.video)):
-                    for k in range(len(file[f"Frame{i}"])):
-                        labels[i, k] = file[f"Frame{i}"][k]["label"]
+                    num_labels_in_frame = len(file[f"Frame{i}"])
+
+                    if num_labels_in_frame == 0:
+                        labels.append(np.array([np.nan]))
+
+                    per_frame_labels = np.ones(num_labels_in_frame) * np.nan
+                    for k in range(num_labels_in_frame):
+                        per_frame_labels[k] = file[f"Frame{i}"][k]["label"]
+
+                    labels.append(per_frame_labels)
 
             with open(optimized_points_path, "r+") as f:
                 file = json.load(f)
                 positions_np, ids_np = VFLabel.io.point_dict_to_cotracker(file)
 
-                points_positions = np.zeros([*np.shape(labels), 2]) * np.nan
-                points_ids = np.zeros([*np.shape(labels), 2]) * np.nan
+                points_positions = []
+                points_ids = []
                 for i in range(len(self.video)):
-                    for k in range(len(file[f"Frame{i}"])):
-                        points_positions[i, k] = [
+                    num_points_in_frame = len(file[f"Frame{i}"])
+                    if num_points_in_frame == 0:
+                        points_positions.append(np.array([np.nan]))
+                        points_ids.append(np.array([np.nan]))
+
+                    point_pos_per_frame = np.ones([num_points_in_frame, 2]) * np.nan
+                    point_ids_per_frame = (
+                        np.ones([num_points_in_frame, 2], dtype=int) * np.nan
+                    )
+                    for k in range(num_points_in_frame):
+                        point_pos_per_frame[k] = [
                             file[f"Frame{i}"][k]["x_pos"],
                             file[f"Frame{i}"][k]["y_pos"],
                         ]
 
-                        points_ids[i, k] = [
+                        point_ids_per_frame[k] = [
                             file[f"Frame{i}"][k]["x_id"],
                             file[f"Frame{i}"][k]["y_id"],
                         ]
+
+                        points_positions.append(point_pos_per_frame)
+                        points_ids.append(point_ids_per_frame)
 
             self.optimized_points_widget.add_points_labels_and_ids(
                 points_positions, labels, points_ids

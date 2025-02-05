@@ -7,8 +7,8 @@ from PyQt5.QtWidgets import QMessageBox, QVBoxLayout
 import VFLabel.gui_base
 import VFLabel.gui_base.baseWindow as baseWindow
 import VFLabel.gui_view.viewGlottis
-import VFLabel.gui_widgets.progressState
 import VFLabel.gui_view.viewVocalfold
+import VFLabel.gui_widgets.progressState
 import VFLabel.io
 import VFLabel.utils.utils
 
@@ -109,7 +109,7 @@ class BaseManualPointClick(baseWindow.BaseWindow):
 
         with open(progress_state_path, "r+") as prgrss_file:
             file = json.load(prgrss_file)
-            file["progress_pt_label"] = self.progress
+            file["progress_manual_pt_label"] = self.progress
             prgrss_file.seek(0)
             prgrss_file.truncate()
             json.dump(file, prgrss_file, indent=4)

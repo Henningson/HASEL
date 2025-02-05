@@ -7,8 +7,8 @@ from PyQt5.QtCore import QPointF, pyqtSignal
 from PyQt5.QtGui import QBrush, QColor, QCursor, QImage, QPen
 from PyQt5.QtWidgets import QGraphicsEllipseItem, QGraphicsView, QMenu, QMessageBox
 
-import VFLabel.gui_widgets.ellipseWithID as ellipseWithID
 import VFLabel.gui_graphics_view.zoomableVideo as zoomableVideo
+import VFLabel.gui_widgets.ellipseWithID as ellipseWithID
 import VFLabel.utils.enums as enums
 
 
@@ -234,7 +234,7 @@ class PointClickerCotracker(zoomableVideo.ZoomableVideo):
 
         current_points = self.point_positions.reshape(-1, 2)
         filtered_points = current_points[~np.isnan(current_points).any(axis=1)]
-        ids = self.get_point_indices()[:, [1, 2]]
+        ids = self.get_point_indices()[:, [2, 1]]
         for point, point_id in zip(filtered_points, ids):
             ellipse_item = ellipseWithID.GraphicEllipseItemWithID(
                 point[0] - self._pointsize / 2,
