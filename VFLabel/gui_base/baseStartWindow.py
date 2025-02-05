@@ -8,8 +8,8 @@ from PyQt5.QtGui import QFont, QPainter, QPixmap
 from PyQt5.QtWidgets import QFileDialog, QHBoxLayout, QPushButton
 
 import VFLabel.gui_base
-import VFLabel.gui_base.baseWindow as baseWindow
 import VFLabel.gui_base.baseMainMenue
+import VFLabel.gui_base.baseWindow as baseWindow
 import VFLabel.gui_dialog.newProject
 
 
@@ -146,11 +146,11 @@ class BaseStartWindow(baseWindow.BaseWindow):
                 self.name_input, video_path=self.video_path
             )
 
-            append_to_file("assets/temp/recent_projects", project_path)
+            append_to_file("assets/recent_projects", project_path)
             self.open_main_window(project_path)
 
     def open_recent_project(self) -> None:
-        most_recent_path = read_last_nonempty_line("assets/temp/recent_projects")
+        most_recent_path = read_last_nonempty_line("assets/recent_projects")
 
         if most_recent_path:
             self.open_main_window(most_recent_path)
@@ -194,7 +194,7 @@ class BaseStartWindow(baseWindow.BaseWindow):
         if status_fd == QFileDialog.Accepted:
             folder_path = fd.selectedFiles()[0]
             if folder_path:
-                append_to_file("assets/temp/recent_projects", folder_path)
+                append_to_file("assets/recent_projects", folder_path)
 
                 self.open_main_window(folder_path)
 
