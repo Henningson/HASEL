@@ -48,8 +48,7 @@ cd ../..
 
 At last, create a recent projects file for faster access.
 ```
-mkdir assets/temp
-touch assets/temp/recent_projects
+touch assets/recent_projects
 ```
 
 
