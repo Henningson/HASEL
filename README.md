@@ -8,12 +8,11 @@ This tool enables to robustly and rapidly generate data of:
 
 
 
-
-
 # Installation
-Please follow these instructions to make sure that Hasel runs as intended.
+We supply a ```requirements.txt``` and a ```environment.yml``` inside the projects rootfolder.
+Should both of these not work, please follow these instructions to make sure that Hasel runs as intended.
 In general, we recommend a current nvidia graphics on par with a quadro RTX 4000.
-First, create the environment and install necessary packages.
+First, create the conda environment and install necessary packages.
 ```
 conda create --name VFLabel python=3.12
 pip install torch torchvision torchaudio
